@@ -1,0 +1,296 @@
+
+*{
+    font-weight:700;
+}
+
+body{
+    background: rgb(129, 170, 216);
+    font-size:35px;
+    color:aliceblue;
+    height:Auto;
+}
+canvas{
+    display:block;
+    margin:0 auto;
+}
+#game-container {
+    position: relative;
+    width: 1280px;
+    height: 768px;
+    display:block;
+    margin:0 auto;
+}
+.wave-display {
+    margin: 5px 0;
+    font-size: 50px;
+    font-weight: bold;
+}
+
+.game-over{
+    font-size: 200px;
+    font-weight: bold;
+    color:#d1d1d1;
+    font-family: 'Sour Gummy', cursive;
+    position:absolute;
+    top:0;
+    bottom:0;
+    left:0;
+    right:0;
+    display:none;
+    justify-content:center;
+    align-items:center;
+    -webkit-text-stroke: 3px rgb(42, 42, 42);
+}
+.win{
+    font-size: 200px;
+    font-weight: bold;
+    color:#d1d1d1;
+    font-family: 'Sour Gummy', cursive;
+    position:absolute;
+    top:0;
+    bottom:0;
+    left:0;
+    right:0;
+    display:none;
+    justify-content:center;
+    align-items:center;
+    -webkit-text-stroke: 3px rgb(42, 42, 42);
+}
+.tower-option {
+    position: absolute;
+    width: 144px;
+    height: 144px;
+    border-radius: 50%;
+    display: none;
+    pointer-events: auto;
+    background: rgba(61, 61, 61, 0);
+}
+
+
+.tower-options {
+    position: absolute;
+    width: 90px;
+    height: 90px;
+    background-size: 100% 100%; 
+    background-repeat: no-repeat;
+    background-position: center;
+    background-color:#acacac;   
+    border-radius: 10%;         
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease-in-out;
+    border:#4d4d4d 5px solid;
+}
+.tower-cost{
+    position:absolute;
+    top:80px;
+    background:linear-gradient(90deg, #939393 , #bbb8bd);
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    border: 6px solid rgba(53, 53, 53, 0.9);
+    width:50px;
+    height:20px;
+    border-radius:0 0 10px 10px;
+    color:rgb(218, 150, 24);
+    font-family:'Sour Gummy', cursive;
+    text-shadow: 0 1px 0 rgba(200, 96, 11, 0.859), 0 3px 6px rgba(255, 132, 0, 0.623);
+    font-size:20px;
+    
+}
+.cost{
+    filter:brightness(150%)
+}
+.tower-options:hover {
+    transform: scale(1.05);
+    border-color: #3e3e3e;
+    box-shadow: 0 0 12px 2px rgba(100, 150, 200, 0.2);
+}
+.tower-options img {
+    width: 100%;
+    height: 100%;
+    
+    object-fit: contain;
+    pointer-events: none;
+}
+
+#tower-menu {
+    position: fixed;
+    width: 250px;
+    height: 250px;
+    border: 6px solid rgba(53, 53, 53, 0.9);
+    border-radius: 50%;
+    display: none;
+    background: none;
+    box-shadow: none;
+    z-index: 1000;
+    transform: translate(-50%, -50%);
+}
+
+.close-btn {
+    position: absolute;
+    width: 40px;
+    height: 40px;
+    bottom:-30px;
+    left: 52%;
+    transform: translateX(-50%);
+    border-radius: 50%;
+    border: 2px solid rgba(51, 51, 51, 0.8);
+    background:rgb(177, 177, 177);
+    color: rgba(51, 51, 51, 0.8);
+    font-size: 24px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    padding: 0;
+}
+
+.close-btn:hover {
+    transform: translateX(-50%) scale(1.15);
+    background:rgb(88, 88, 88);
+}
+
+#tower-upgrade-menu {
+    display: none;
+    position: absolute;
+    width: 220px; /* Made smaller */
+    background: rgba(30, 30, 30, 0.9);
+    border: 4px solid;
+    border-image-slice: 1;
+    border-image-source: linear-gradient(to bottom right, #ff00ff, #8a2be2);
+    border-radius: 15px;
+    padding: 10px;
+    font-family: 'Cause', cursive;
+    color: white;
+    z-index: 1001;
+    font-size: 16px;
+    box-shadow: 0 0 20px rgba(138, 43, 226, 0.7);
+}
+
+#upgrade-menu-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 8px;
+}
+
+#close-upgrade-menu {
+    background: none;
+    border: none;
+    color: rgb(148, 14, 210);
+    font-size: 25px;
+    font-weight: bold;
+    cursor: pointer;
+    padding:15px;
+    transition: color 0.2s ease-in-out;
+    border-radius:50%;
+    border:3px solid rgb(162, 14, 230);
+    bottom:-50px;
+    transition:all 0.3s ease;
+
+}
+
+#close-upgrade-menu:hover {
+    color: #ff00ff;
+    border-radius:50%;
+    border:3px solid #f338cd;
+    transition:all 0.3s ease;
+}
+
+#tower-stats-display p {
+    margin: 4px 0;
+}
+.tower-stats {
+    font-size: 20px;
+    background:linear-gradient(90deg,#f338cd,#8a2be2);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color:transparent;
+    font-weight:700;
+}
+#tower-name-level {
+    font-size: 30px;
+    font-weight: 800;
+    text-align: center;
+}
+#tower-stats-display span {
+    font-weight: bold;
+    color: #f0f0f0;
+}
+
+#upgrade-button, #sell-button {
+    width: 100%;
+    padding: 8px;
+    margin-top: 8px;
+    border-radius: 8px;
+    font-family: 'Cause', cursive;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+    box-sizing: border-box; /* Ensures padding doesn't affect width */
+}
+
+#upgrade-button {
+    background: linear-gradient(to right, #8a2be2, #ff00ff);
+    color: white;
+    border: 2px solid #ff00ff;
+}
+
+#upgrade-button:hover:not(:disabled) {
+    transform: scale(1.03);
+    box-shadow: 0 0 15px #ff00ff;
+}
+
+#upgrade-button:disabled {
+    background: #555;
+    border-color: #444;
+    cursor: not-allowed;
+    color: #888;
+}
+
+#sell-button {
+    background: rgba(0,0,0,0.2);
+    color: #ccc;
+    border: 2px solid #555;
+}
+
+#sell-button:hover {
+    background: #555;
+    border-color: #ff00ff;
+    color:white;
+}
+
+.play{
+    background: rgba(0, 0, 0, 0.5);
+    color:rgb(255, 255, 255);
+    font-family: 'Sour Gummy', cursive;
+    font-size:100px;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    position:absolute;
+    bottom:0;
+    right:0;
+    width:400px;
+    height:150px;
+    cursor:pointer;
+}
+.play-button {
+	width: 90;
+	height: 90;
+	border-top: 25px solid transparent;
+	border-left: 50px solid #ffffff;
+	border-bottom: 25px solid transparent;
+    position:relative;
+    margin:20px;
+}
+.not_visible{
+    display:none;
+}

@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="css/style.css"/>
+    <link rel="stylesheet" href="css/resources.css"/>
+    <title>Helltrip TD</title>
+</head>
+<body>
+    <div id="game-container">
+        <canvas></canvas>
+        <div class="resources">
+            <div class="hearts"></div>
+            <div class="gold"></div>
+        </div>
+        
+        <p class="wave-display"></p>
+
+        <div class="game-over">Game Over</div>
+        
+        <div class="play ">
+            Play<div class="play-button"></div>
+        </div>
+        <div class="off on"></div>
+        <div class="win">You Won !</div>
+
+    </div>
+    <div id="tower-menu">
+
+        <button id="archer-tower" class="tower-options">
+            <img src="media/archer.png" height="60px" width="60px">
+            <div class="tower-cost"><p class="cost">90</p></div>
+        </button>
+
+        <button id="mage-tower" class="tower-options">
+            <img src="media/mage.png" height="60px" width="60px">
+            <div class="tower-cost"><p class="cost">140</p></div>
+        </button>
+        
+        <button id="archer-tower" class="tower-options">
+            <img src="media/archer.png" height="60px" width="60px">
+            <div class="tower-cost"><p class="cost">90</p></div>
+        </button>
+
+        <button id="mage-tower" class="tower-options">
+            <img src="media/mage.png" height="60px" width="60px">
+            <div class="tower-cost"><p class="cost">140</p></div>
+        </button>
+
+        <button id="archer-tower" class="tower-options">
+            <img src="media/archer.png" height="60px" width="60px">
+            <div class="tower-cost"><p class="cost">90</p></div>
+        </button>
+
+        <button id="close-tower-menu" class="close-btn">✕</button>
+
+    </div>
+
+    <div id="tower-upgrade-menu" style="display: none; position: absolute;">
+        <div id="upgrade-menu-header">
+            <span id="tower-name-level"></span>
+            <button id="close-upgrade-menu" class="close-btn">✕</button>
+        </div>
+        <div id="tower-stats-display">
+            <p>Damage: <span id="tower-damage" class="tower-stats"></span></p>
+            <p>Range: <span id="tower-range" class="tower-stats"></span></p>
+            <p>Cooldown: <span id="tower-cooldown" class="tower-stats"></span></p>
+        </div>
+        <button id="upgrade-button"></button>
+        <button id="sell-button"></button>
+    </div>
+
+
+    <script src="js/towers.js"></script>
+    <script src="js/stats.js"></script>
+    <script src="js/placement.js"></script>
+    <script src="js/waypoints.js"></script>
+    <script src="js/classes.js"></script>
+    <script src="js/script.js"></script>
+</body>
+</html>
