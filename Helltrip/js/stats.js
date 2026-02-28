@@ -68,9 +68,9 @@ const stats = {
             healthCost:1,
         },
         bat: {
-            health: 85,
+            health: 75,
             armor: 1.1,
-            speed: 130,
+            speed: 120,
             reward: 7,
             healthCost:1,
             isFlying: true,
@@ -190,7 +190,7 @@ const stats = {
         ],
         '18':[
             {type: 'gobGiant', count: 1, track: 1 ,offset:200,},
-            {type:'bat', count:25, track: 1, offset:80, },
+            {type:'bat', count:25, track: 1, offset:110, },
             {type:'giantBat', count:15 , track: 2, offset:100, },
             {type: 'gobGiant', count: 1, track: 2 ,offset:200,},
             {type:'bat', count:15, track: 1, offset:70, },

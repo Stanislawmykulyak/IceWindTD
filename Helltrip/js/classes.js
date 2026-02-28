@@ -177,7 +177,7 @@ class GiantBat extends Enemy {
         waypoints,
         enemyType: 'giantBat'
     });
-    const enemyStats = stats.enemies.bat;
+    const enemyStats = stats.enemies.giantBat;
     this.width = 70;
     this.height = 30;
     this.radius = 25;
@@ -330,7 +330,7 @@ class ArcherProjectile extends Projectile{
   }
 }
 
-class MageProjectile extends Projectile {
+class MageProjectile1 extends Projectile {
   constructor({ position = { x: 0, y: 0 }, enemy, damage }) {
     super({ position, enemy, damage, imageSrc: 'media/tower-models/projectiles/magic_ball.png', power: 50});
   }

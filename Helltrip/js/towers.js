@@ -92,112 +92,218 @@ class Tower {
 }
 
 //Archer Tower lvl 1//
-class ArcherTower extends Tower {
-    constructor({ position, level = 1 }) {
-        const towerStats = stats.towers.archer[`lvl${level}`];
-        super({ 
+
+// Archer Tower Level 1
+class ArcherTowerLvl1 extends Tower {
+    constructor({ position }) {
+        super({
             position,
-            stats: towerStats,
-            baseTowerType: 'archer',
-            level: level,
-            imageSrc: `media/tower-models/towers/archer-tower-lvl${level}.png`,
-            frames: {
-                max: 19
-            },
-            offset: {
-                x: -10,
-                y:-80,
-            }
+            stats: stats.towers.archer["lvl1"],
+            baseTowerType: "archer",
+            level: 1,
+            imageSrc: "media/tower-models/towers/archer-tower-lvl1.png",
+            frames: { max: 19 },
+            offset: { x: -10, y: -80 }
         });
     }
-    
-    draw() {
-       super.draw();
-    }
     update(dt) {
-    if (this.target) {
-        this.elapsedSpawnCooldown += dt;
-        if (this.damage > 0 && this.elapsedSpawnCooldown >= this.cooldown) {
-            this.projectiles.push(
-                new ArcherProjectile({
-                    position: {
-                        x: this.center.x - 30,
-                        y: this.center.y - 115,
-                    },
-                    enemy: this.target,
-                    damage: this.damage / this.target.armor
-                })
-            );
-            this.elapsedSpawnCooldown = 0;
-        }
-    }
-    super.update(dt);
-    }
-    
-    upgrade() {
-        const nextLevel = this.level + 1;
-        const upgradeStats = stats.towers.archer[`lvl${nextLevel}`];
-        if (!upgradeStats || coins < upgradeStats.cost) return;
-
-        coins -= upgradeStats.cost;
-        this.level = nextLevel;
-        this.updateStats(upgradeStats);
-        this.sprite.image.src = `media/tower-models/towers/archer-tower-lvl${this.level}.png`;
-    }
-} 
-
-//Mage Tower lvl 1 //
-class MageTower extends Tower {
-    constructor({ position, level = 1 }) {
-        const towerStats = stats.towers.mage[`lvl${level}`];
-        super({ 
-            position,
-            stats: towerStats,
-            baseTowerType: 'mage',
-            level: level,
-            imageSrc: `media/tower-models/towers/mage-tower-lvl${level}.png`,
-            frames: {
-                max: 19
-            },
-            offset: {
-                x: -12,
-                y:-110,
+        if (this.target) {
+            this.elapsedSpawnCooldown += dt;
+            if (this.damage > 0 && this.elapsedSpawnCooldown >= this.cooldown) {
+                this.projectiles.push(
+                    new ArcherProjectile({
+                        position: { x: this.center.x - 30, y: this.center.y - 115 },
+                        enemy: this.target,
+                        damage: this.damage / this.target.armor
+                    })
+                );
+                this.elapsedSpawnCooldown = 0;
             }
+        }
+        super.update(dt);
+    }
+    upgrade() {
+        if (coins < stats.towers.archer["lvl2"].cost) return;
+        coins -= stats.towers.archer["lvl2"].cost;
+        // Zamiana instancji na wyższy poziom
+        return new ArcherTowerLvl2({ position: this.position });
+    }
+}
+
+// Archer Tower Level 2
+class ArcherTowerLvl2 extends Tower {
+    constructor({ position }) {
+        super({
+            position,
+            stats: stats.towers.archer["lvl2"],
+            baseTowerType: "archer",
+            level: 2,
+            imageSrc: "media/tower-models/towers/archer-tower-lvl2.png",
+            frames: { max: 19 },
+            offset: { x: -15, y: -85 }
         });
     }
-    
-    draw() {
-       super.draw();
+    update(dt) {
+        if (this.target) {
+            this.elapsedSpawnCooldown += dt;
+            if (this.damage > 0 && this.elapsedSpawnCooldown >= this.cooldown) {
+                this.projectiles.push(
+                    new ArcherProjectile({
+                        position: { x: this.center.x - 35, y: this.center.y - 120 },
+                        enemy: this.target,
+                        damage: this.damage / this.target.armor
+                    })
+                );
+                this.elapsedSpawnCooldown = 0;
+            }
+        }
+        super.update(dt);
+    }
+    upgrade() {
+        if (coins < stats.towers.archer["lvl3"].cost) return;
+        coins -= stats.towers.archer["lvl3"].cost;
+        return new ArcherTowerLvl3({ position: this.position });
+    }
+}
+
+// Archer Tower Level 3
+class ArcherTowerLvl3 extends Tower {
+    constructor({ position }) {
+        super({
+            position,
+            stats: stats.towers.archer["lvl3"],
+            baseTowerType: "archer",
+            level: 3,
+            imageSrc: "media/tower-models/towers/archer-tower-lvl3.png",
+            frames: { max: 19 },
+            offset: { x: -20, y: -90 }
+        });
     }
     update(dt) {
-    if (this.target) {
-        this.elapsedSpawnCooldown += dt;
-        if (this.damage > 0 && this.elapsedSpawnCooldown >= this.cooldown) {
-            this.projectiles.push(
-                new MageProjectile({
-                    position: {
-                        x: this.center.x - 30,
-                        y: this.center.y - 135,
-                    },
-                    enemy: this.target,
-                    damage: this.damage / this.target.armor
-                })
-            );
-            this.elapsedSpawnCooldown = 0;
+        if (this.target) {
+            this.elapsedSpawnCooldown += dt;
+            if (this.damage > 0 && this.elapsedSpawnCooldown >= this.cooldown) {
+                this.projectiles.push(
+                    new ArcherProjectile({
+                        position: { x: this.center.x - 40, y: this.center.y - 125 },
+                        enemy: this.target,
+                        damage: this.damage / this.target.armor
+                    })
+                );
+                this.elapsedSpawnCooldown = 0;
+            }
         }
+        super.update(dt);
     }
-    super.update(dt);
-    }
-    
     upgrade() {
-        const nextLevel = this.level + 1;
-        const upgradeStats = stats.towers.mage[`lvl${nextLevel}`];
-        if (!upgradeStats || coins < upgradeStats.cost) return;
+        // Brak wyższego poziomu
+        return null;
+    }
+}
 
-        coins -= upgradeStats.cost;
-        this.level = nextLevel;
-        this.updateStats(upgradeStats);
-        // Assumes you have a mage-tower-lvl2.png, etc.
-        this.sprite.image.src = `media/tower-models/towers/mage-tower-lvl${this.level}.png`;
+// Mage Tower Level 1
+class MageTowerLvl1 extends Tower {
+    constructor({ position }) {
+        super({
+            position,
+            stats: stats.towers.mage["lvl1"],
+            baseTowerType: "mage",
+            level: 1,
+            imageSrc: "media/tower-models/towers/mage-tower-lvl1.png",
+            frames: { max: 19 },
+            offset: { x: -12, y: -110 }
+        });
+    }
+    update(dt) {
+        if (this.target) {
+            this.elapsedSpawnCooldown += dt;
+            if (this.damage > 0 && this.elapsedSpawnCooldown >= this.cooldown) {
+                this.projectiles.push(
+                    new MageProjectile1({
+                        position: { x: this.center.x - 30, y: this.center.y - 135 },
+                        enemy: this.target,
+                        damage: this.damage / this.target.armor
+                    })
+                );
+                this.elapsedSpawnCooldown = 0;
+            }
+        }
+        super.update(dt);
+    }
+    upgrade() {
+        if (coins < stats.towers.mage["lvl2"].cost) return;
+        coins -= stats.towers.mage["lvl2"].cost;
+        return new MageTowerLvl2({ position: this.position });
+    }
+}
+
+// Mage Tower Level 2
+class MageTowerLvl2 extends Tower {
+    constructor({ position }) {
+        super({
+            position,
+            stats: stats.towers.mage["lvl2"],
+            baseTowerType: "mage",
+            level: 2,
+            imageSrc: "media/tower-models/towers/mage-tower-lvl2.png",
+            frames: { max: 19 },
+            offset: { x: -12, y: -100 }
+        });
+    }
+    update(dt) {
+        if (this.target) {
+            this.elapsedSpawnCooldown += dt;
+            if (this.damage > 0 && this.elapsedSpawnCooldown >= this.cooldown) {
+                this.projectiles.push(
+                    new MageProjectile1({
+                        position: { x: this.center.x - 35, y: this.center.y - 140 },
+                        enemy: this.target,
+                        damage: this.damage / this.target.armor
+                    })
+                );
+                this.elapsedSpawnCooldown = 0;
+            }
+        }
+        super.update(dt);
+    }
+    upgrade() {
+        if (coins < stats.towers.mage["lvl3"].cost) return;
+        coins -= stats.towers.mage["lvl3"].cost;
+        return new MageTowerLvl3({ position: this.position });
+    }
+}
+
+// Mage Tower Level 3
+class MageTowerLvl3 extends Tower {
+    constructor({ position }) {
+        super({
+            position,
+            stats: stats.towers.mage["lvl3"],
+            baseTowerType: "mage",
+            level: 3,
+            imageSrc: "media/tower-models/towers/mage-tower-lvl3.png",
+            frames: { max: 19 },
+            offset: { x: -12, y: -100 }
+        });
+    }
+    update(dt) {
+        if (this.target) {
+            this.elapsedSpawnCooldown += dt;
+            if (this.damage > 0 && this.elapsedSpawnCooldown >= this.cooldown) {
+                this.projectiles.push(
+                    new MageProjectile1({
+                        position: { x: this.center.x - 40, y: this.center.y - 145 },
+                        enemy: this.target,
+                        damage: this.damage / this.target.armor
+                    })
+                );
+                this.elapsedSpawnCooldown = 0;
+            }
+        }
+        super.update(dt);
+    }
+    upgrade() {
+        // Brak wyższego poziomu
+        return null;
     }
 }

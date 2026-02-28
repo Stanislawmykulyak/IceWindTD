@@ -347,9 +347,14 @@ closeUpgradeMenuBtn.onclick = () => {
 
 upgradeButton.onclick = () => {
     if (selectedBuilding) {
-        selectedBuilding.upgrade();
-        upgradeMenu.style.display = "none";
-        selectedBuilding = null;
+      const buildingIndex = buildings.findIndex(b => b === selectedBuilding);
+      const upgraded = selectedBuilding.upgrade();
+      if (upgraded) {
+        buildings[buildingIndex] = upgraded;
+        selectedBuilding = upgraded;
+      }
+      upgradeMenu.style.display = "none";
+      selectedBuilding = null;
     }
 };
 
@@ -393,7 +398,7 @@ document.getElementById("archer-tower").onclick = (e) => {
     if (!selectedTile) return;
       if (coins - stats.towers.archer.lvl1.cost < 0) return;
     coins -= stats.towers.archer.lvl1.cost;
-    buildings.push(new ArcherTower({ position: selectedTile.position }));
+    buildings.push(new ArcherTowerLvl1({ position: selectedTile.position }));
     selectedTile.isOccupied = true;
     document.getElementById("tower-menu").style.display = "none";
     selectedTile = null
@@ -405,7 +410,7 @@ document.getElementById("mage-tower").onclick = (e) => {
     if (!selectedTile) return;
     if (coins - stats.towers.mage.lvl1.cost < 0) return;
     coins -=  stats.towers.mage.lvl1.cost;
-    buildings.push(new MageTower({ position: selectedTile.position }));
+  buildings.push(new MageTowerLvl1({ position: selectedTile.position }));
     selectedTile.isOccupied = true;
     document.getElementById("tower-menu").style.display = "none";
     selectedTile = null
