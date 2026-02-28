@@ -1,0 +1,41 @@
+@import url('https://fonts.googleapis.com/css2?family=Cause:wght@100..900&display=swap');
+body{
+    background-color: #1a1a1a;
+}
+.tile{
+    width:300px;
+    height:200px;
+    background-color: #c2c2c2;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(15, 203, 203, 0.478);
+    transition: transform 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: tile-hover 3s infinite;
+    border:#7621d0 solid 2px;
+    color:#fff;
+    -webkit-text-stroke: 1px rgb(35, 35, 35);
+    font-size:50px;
+    font-weight:900;
+    font-family:'Cause', cursive;
+}
+#ice-wind{
+    background-image: url('/media/IceWindTD-WebPage/IceWind.png');
+    background-size: cover;
+    opacity: 0.8;
+}
+@keyframes tile-hover {
+    0% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-2px);
+    }
+    100% {
+        transform: translateY(0);
+    }
+}
+a{
+    text-decoration: none;
+}
