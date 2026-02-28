@@ -103,7 +103,7 @@ class ArcherTowerLvl1 extends Tower {
             level: 1,
             imageSrc: "media/tower-models/towers/archer-tower-lvl1.png",
             frames: { max: 19 },
-            offset: { x: -10, y: -80 }
+            offset: { x: -12, y: -80 }
         });
     }
     update(dt) {
@@ -140,7 +140,7 @@ class ArcherTowerLvl2 extends Tower {
             level: 2,
             imageSrc: "media/tower-models/towers/archer-tower-lvl2.png",
             frames: { max: 19 },
-            offset: { x: -15, y: -85 }
+            offset: { x: -12, y: -80 }
         });
     }
     update(dt) {
@@ -176,7 +176,7 @@ class ArcherTowerLvl3 extends Tower {
             level: 3,
             imageSrc: "media/tower-models/towers/archer-tower-lvl3.png",
             frames: { max: 19 },
-            offset: { x: -20, y: -90 }
+            offset: { x: -12, y: -80 }
         });
     }
     update(dt) {
@@ -211,7 +211,7 @@ class MageTowerLvl1 extends Tower {
             level: 1,
             imageSrc: "media/tower-models/towers/mage-tower-lvl1.png",
             frames: { max: 19 },
-            offset: { x: -12, y: -110 }
+            offset: { x: -12, y: -105 }
         });
     }
     update(dt) {
@@ -247,7 +247,7 @@ class MageTowerLvl2 extends Tower {
             level: 2,
             imageSrc: "media/tower-models/towers/mage-tower-lvl2.png",
             frames: { max: 19 },
-            offset: { x: -12, y: -100 }
+            offset: { x: -12, y: -100}
         });
     }
     update(dt) {
