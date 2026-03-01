@@ -2,6 +2,32 @@
 body{
     background-color: #1a1a1a;
 }
+.projects {
+    color: white;
+    font-family: 'Cause', cursive;
+    font-weight:800;
+    width:500px;
+    display:flex;
+    justify-content:center;
+    position:absolute;
+    top:0%;
+    left:50%;
+    transform: translateX(-50%);
+    padding: 10px;
+    background: rgba(30, 30, 30, 0.882);
+    font-size:50px;
+    border-radius:15px;
+    border: solid #303030 5px;
+    text-align:center;
+}
+.tile-container{
+    display:grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap:5px;
+    width:100%;
+    height:auto;
+    margin-top:200px;
+}
 .tile{
     width:300px;
     height:200px;
@@ -21,7 +47,7 @@ body{
     font-family:'Cause', cursive;
 }
 #ice-wind{
-    background-image: url('/media/IceWindTD-WebPage/IceWind.png');
+    background-image: url('/media/IceWindTD/IceWind.png');
     background-size: cover;
     opacity: 0.8;
 }
