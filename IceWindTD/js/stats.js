@@ -1,6 +1,6 @@
-let coins = 5450;
+let coins = 450;
 let hearts = 20;
-let currentWave = 20;
+let currentWave = 1;
 
 const stats = {
     towers: {
