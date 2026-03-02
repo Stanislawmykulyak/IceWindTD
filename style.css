@@ -12,7 +12,6 @@ body{
     position:absolute;
     top:0%;
     left:50%;
-    transform: translateX(-50%);
     padding: 10px;
     background: rgba(30, 30, 30, 0.882);
     font-size:50px;
@@ -38,7 +37,6 @@ body{
     display: flex;
     align-items: center;
     justify-content: center;
-    animation: tile-hover 3s infinite;
     border:#7621d0 solid 2px;
     color:#fff;
     -webkit-text-stroke: 1px rgb(35, 35, 35);
@@ -50,17 +48,6 @@ body{
     background-image: url('/media/IceWindTD/IceWind.png');
     background-size: cover;
     opacity: 0.8;
-}
-@keyframes tile-hover {
-    0% {
-        transform: translateY(0);
-    }
-    50% {
-        transform: translateY(-2px);
-    }
-    100% {
-        transform: translateY(0);
-    }
 }
 a{
     text-decoration: none;

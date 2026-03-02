@@ -11,7 +11,7 @@ const placementTilesData2D = [];
 
 const waveDisplay = document.querySelector('.wave-display');
 function WaveUpdate() {
-  waveDisplay.textContent = `Wave: ${currentWave} / ${waves}`;
+  waveDisplay.textContent = `Waves: ${currentWave} / ${waves}`;
 }
 
 for (let i = 0; i < placementTilesData.length; i += 20) {
