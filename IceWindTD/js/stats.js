@@ -1,6 +1,6 @@
-let coins = 3450;
+let coins = 450;
 let hearts = 20;
-let currentWave = 17;
+let currentWave = 1;
 
 const stats = {
     towers: {
@@ -57,7 +57,7 @@ const stats = {
             health: 130,
             armor: 2.1,
             speed: 60,
-            reward: 9,
+            reward: 10,
             healthCost:2,
         },
         goblin: {
@@ -68,18 +68,18 @@ const stats = {
             healthCost:1,
         },
         bat: {
-            health: 70,
+            health: 60,
             armor: 0.9,
-            speed: 100,
-            reward: 7,
+            speed: 90,
+            reward: 9,
             healthCost:1,
             isFlying: true,
         },
         giantBat: {
-            health: 135,
+            health: 115,
             armor: 1.1,
-            speed: 90,
-            reward: 11,
+            speed: 80,
+            reward: 13,
             healthCost:2,
             isFlying: true,
         },
@@ -95,7 +95,7 @@ const stats = {
             health:400,
             armor:2.9,
             speed:30,
-            reward:35,
+            reward:100,
             healthCost:10,
         },
         goblinChief:{
@@ -111,17 +111,17 @@ const stats = {
 
     waves:{
         '1': [
-            { type: 'goblin', count: 1, track: 1, offset: 180, hold: 0 },
+            { type: 'goblin', count: 20, track: 1, offset: 180, hold: 0 },
         ],
         
         '2': [
-            { type: 'goblin', count: 13, track: 1, offset:160, hold: 0 },
+            { type: 'goblin', count: 19, track: 1, offset:160, hold: 0 },
         ],
         '3':[
-            { type: 'goblin', count: 17, track: 1,offset:120, hold: 0 },
+            { type: 'goblin', count: 24, track: 1,offset:120, hold: 0 },
         ],
         '4': [
-            { type: 'orc', count: 5, track: 1 ,offset:150 , hold: 0},
+            { type: 'orc', count: 7, track: 1 ,offset:150 , hold: 0},
         ],
         '5': [
             { type: 'orc', count: 5, track: 2 ,offset:120 , hold:0},
@@ -193,7 +193,7 @@ const stats = {
             {type:'bat', count:25, track: 1, offset:125, },
             {type:'giantBat', count:15 , track: 2, offset:100, },
             {type: 'gobGiant', count: 1, track: 2 ,offset:200,},
-            {type:'bat', count:15, track: 1, offset:70, },
+            {type:'bat', count:15, track: 1, offset:110, },
         ],
         '19':[
             {type:'bat', count:20, track: 2, offset:120, },

@@ -145,7 +145,6 @@ function updateHearts () {
 function animate(timestamp = 0) {
     const animationID = requestAnimationFrame(animate);
     
-    try {
     const deltaTime = (timestamp - lastTime) / 1000;
     lastTime = timestamp;
     
@@ -170,26 +169,15 @@ function animate(timestamp = 0) {
     if (!switcher.classList.contains('off')) {
         if (enemies.length === 0) {
               currentWave += 1;
-              console.log(`No more enemies. Moving to wave ${currentWave}`);
+
             
             spawnEnemies(currentWave);
-            console.log(`After spawn attempt: enemies.length = ${enemies.length}`);
-            
-            // If still no enemies and we haven't won, something is wrong
-            if (enemies.length === 0 && currentWave <= waves) {
-              console.warn(`WARNING: Wave ${currentWave - 1} ended with 0 enemies spawned for next wave!`);
-            }
-            
             updateCoins();
         }
     }
     if(currentWave === (waves + 1)){
-      console.log(`Game won! Current wave ${currentWave} exceeds total waves ${waves}`);
       cancelAnimationFrame(animationID);
       document.querySelector('.win').style.display = 'flex';
-    }
-    } catch (error) {
-      console.error('CRITICAL ERROR in animate loop:', error, error.stack);
     }
     
     
