@@ -83,35 +83,50 @@ function spawnEnemies(waveNumber) {
     return;
   }
 
-  console.log(`--- spawnEnemies called for wave ${waveNumber}`);
+  console.log(`--- spawnEnemies called for wave ${waveNumber}, total groups: ${wave.length}`);
   let totalEnemiesSpawned = 0;
-  wave.forEach(enemyGroup => {
-    const { type, count, track , offset, hold } = enemyGroup;
-    const EnemyClass = enemyClasses[type];
-    const waypoints = tracks[track];
+  wave.forEach((enemyGroup, groupIdx) => {
+    try {
+      const { type, count, track , offset, hold } = enemyGroup;
+      const EnemyClass = enemyClasses[type];
+      const waypoints = tracks[track];
 
-    if (!EnemyClass) {
-      console.warn(`Unknown enemy type "${type}" in wave ${waveNumber}`);
-    }
-    if (!waypoints) {
-      console.warn(`Missing waypoints for track ${track} (wave ${waveNumber})`);
-    }
+      console.log(`  Group ${groupIdx}: type="${type}", count=${count}, track=${track}`);
 
-    if (EnemyClass && waypoints) {
-      const spacing = hold ? hold * stats.enemies[type].speed : offset;
-      for (let i = 1; i < count + 1; i++) {
-        const xOffset = (totalEnemiesSpawned + i) * spacing;
-        const enemy = new EnemyClass({
-          position: { x: waypoints[0].x - xOffset, y: waypoints[0].y },
-          waypoints: waypoints,
-          enemyType: type
-        });
-        enemy.healthCost = stats.enemies[type].healthCost;
-        enemies.push(enemy);
+      if (!EnemyClass) {
+        console.warn(`Unknown enemy type "${type}" in wave ${waveNumber}`);
       }
-      totalEnemiesSpawned += count;
+      if (!waypoints) {
+        console.warn(`Missing waypoints for track ${track} (wave ${waveNumber})`);
+      }
+
+      const enemyStats = stats.enemies[type];
+      if (!enemyStats) {
+        console.warn(`Missing enemyStats for type "${type}"`);
+      }
+
+      if (EnemyClass && waypoints && enemyStats) {
+        const spacing = hold ? hold * enemyStats.speed : offset;
+        for (let i = 1; i < count + 1; i++) {
+          const xOffset = (totalEnemiesSpawned + i) * spacing;
+          const enemy = new EnemyClass({
+            position: { x: waypoints[0].x - xOffset, y: waypoints[0].y },
+            waypoints: waypoints,
+            enemyType: type
+          });
+          enemy.healthCost = enemyStats.healthCost;
+          enemies.push(enemy);
+        }
+        console.log(`    Spawned ${count} units`);
+        totalEnemiesSpawned += count;
+      } else {
+        console.log(`    SKIPPED (missing class, waypoints, or stats)`);
+      }
+    } catch (error) {
+      console.error(`ERROR spawning group ${groupIdx}:`, error);
     }
   });
+  console.log(`Wave ${waveNumber} complete: total ${totalEnemiesSpawned} enemies spawned`);
 }
 
 const buildings = [];
@@ -130,7 +145,7 @@ function updateHearts () {
 function animate(timestamp = 0) {
     const animationID = requestAnimationFrame(animate);
     
-    
+    try {
     const deltaTime = (timestamp - lastTime) / 1000;
     lastTime = timestamp;
     
@@ -155,15 +170,26 @@ function animate(timestamp = 0) {
     if (!switcher.classList.contains('off')) {
         if (enemies.length === 0) {
               currentWave += 1;
-
+              console.log(`No more enemies. Moving to wave ${currentWave}`);
             
             spawnEnemies(currentWave);
+            console.log(`After spawn attempt: enemies.length = ${enemies.length}`);
+            
+            // If still no enemies and we haven't won, something is wrong
+            if (enemies.length === 0 && currentWave <= waves) {
+              console.warn(`WARNING: Wave ${currentWave - 1} ended with 0 enemies spawned for next wave!`);
+            }
+            
             updateCoins();
         }
     }
     if(currentWave === (waves + 1)){
+      console.log(`Game won! Current wave ${currentWave} exceeds total waves ${waves}`);
       cancelAnimationFrame(animationID);
       document.querySelector('.win').style.display = 'flex';
+    }
+    } catch (error) {
+      console.error('CRITICAL ERROR in animate loop:', error, error.stack);
     }
     
     

@@ -1,6 +1,6 @@
-let coins = 450;
+let coins = 3450;
 let hearts = 20;
-let currentWave = 1;
+let currentWave = 17;
 
 const stats = {
     towers: {
@@ -190,19 +190,19 @@ const stats = {
         ],
         '18':[
             {type: 'gobGiant', count: 1, track: 1 ,offset:200,},
-            {type:'bat', count:25, track: 1, offset:110, },
+            {type:'bat', count:25, track: 1, offset:125, },
             {type:'giantBat', count:15 , track: 2, offset:100, },
             {type: 'gobGiant', count: 1, track: 2 ,offset:200,},
             {type:'bat', count:15, track: 1, offset:70, },
         ],
         '19':[
-            {type:'bat', count:20, track: 2, offset:100, },
+            {type:'bat', count:20, track: 2, offset:120, },
             {type: 'gobGiant', count: 5, track: 1 ,offset:100,},
-            {type:'goblin', count: 8, track: 1 , offset:95,}, 
+            {type:'goblin', count:18, track: 1 , offset:145,}, 
             {type:'giantBat', count:15 , track: 2, offset:120, },
-            {type:'orc', count:10, track:2, offset:100,},
-            {type:'goblin', count:25, track:1, offset:90, },
-            {type:'bat', count:20, track: 2, offset:90, }
+            {type:'orc', count:10, track:2, offset:120,},
+            {type:'goblin', count:25, track:1, offset:150, },
+            {type:'bat', count:20, track: 2, offset:120, }
         ],
         '20':[
             {type:'goblinChief',count: 1, track: 1 ,offset:10,},
