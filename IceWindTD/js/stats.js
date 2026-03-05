@@ -111,7 +111,7 @@ const stats = {
 
     waves:{
         '1': [
-            { type: 'goblin ', count: 1,track: 1 , offset:180, hold: 0 },
+            { type: 'goblin', count: 1, track: 1, offset: 180, hold: 0 },
         ],
         
         '2': [

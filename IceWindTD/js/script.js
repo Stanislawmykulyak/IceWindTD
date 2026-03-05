@@ -83,11 +83,19 @@ function spawnEnemies(waveNumber) {
     return;
   }
 
+  console.log(`--- spawnEnemies called for wave ${waveNumber}`);
   let totalEnemiesSpawned = 0;
   wave.forEach(enemyGroup => {
     const { type, count, track , offset, hold } = enemyGroup;
     const EnemyClass = enemyClasses[type];
     const waypoints = tracks[track];
+
+    if (!EnemyClass) {
+      console.warn(`Unknown enemy type "${type}" in wave ${waveNumber}`);
+    }
+    if (!waypoints) {
+      console.warn(`Missing waypoints for track ${track} (wave ${waveNumber})`);
+    }
 
     if (EnemyClass && waypoints) {
       const spacing = hold ? hold * stats.enemies[type].speed : offset;
