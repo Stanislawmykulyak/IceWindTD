@@ -265,7 +265,7 @@ a{
         bottom: unset;
     }
     #ice-wind {
-        max-width: 350px;
+        min-width: 90vw;
         min-height: 200px;
         padding: 12px;
         font-size: 4em;
