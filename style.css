@@ -88,8 +88,9 @@ body {
     );
     background-image: url(media/icewind.png);
     background-size: cover;
-    backdrop-filter: blur(15px);
+    backdrop-filter:blur(15px);
     -webkit-backdrop-filter: blur(15px);
+    filter: blur(3px);
     opacity:0.95;
     border: 1px solid rgba(50, 50, 50, 0.1);
     border-bottom: 1px solid rgba(0, 0, 0, 0.3);
@@ -123,4 +124,5 @@ a{
         0 4px 10px rgba(9, 36, 83, 0.4), /* Podstawowy ciemny cień odrywajacy tekst od tła */
         0 0 15px rgba(10, 148, 194, 0.6), /* Jasnoniebieska (lodowa) poświata */
         0 0 30px rgba(135, 206, 235, 0.4);
+    filter: blur(0px);
 }
