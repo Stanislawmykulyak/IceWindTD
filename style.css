@@ -225,3 +225,56 @@ a{
     display: block;
     padding: 0 4px;
 }
+
+@media (max-width: 600px) {
+    body {
+        background-size: cover;
+        background-repeat: no-repeat;
+        min-height: 100vh;
+        overflow-x: hidden;
+    }
+    .menu {
+        top: 12px;
+        right: 12px;
+        width: 44px;
+        height: 44px;
+        padding: 10px;
+    }
+    .hamburger-line {
+        width: 24px;
+        height: 3px;
+        margin: 4px 0;
+    }
+    .menu-list {
+        top: 65px;
+        right: 10px;
+        min-width: 140px;
+        padding: 12px 10px 10px 10px;
+        border-radius: 18px;
+        gap: 8px;
+    }
+    #kursy_walut {
+        position: static;
+        margin: 32px auto 0 auto;
+        max-width: 95vw;
+        padding: 16px;
+        border-radius: 18px;
+        font-size: 0.95em;
+        margin-top:30px;
+        right: unset;
+        bottom: unset;
+    }
+    #ice-wind {
+        min-width: 90vw;
+        min-height: 270px;
+        padding: 12px;
+        font-size: 5em;
+        border-radius: 18px;
+        right: unset;
+        bottom: unset;
+        margin: 20px auto 0 auto;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+}
