@@ -68,3 +68,18 @@ async function getExchangeRate(){
     }
 }
 document.addEventListener('DOMContentLoaded', getExchangeRate);
+
+// Hamburger menu functionality
+const menuButton = document.getElementById('menuButton');
+const menuList = document.getElementById('menuList');
+const menuClose = document.getElementById('menuClose');
+
+menuButton.addEventListener('click', () => {
+    menuList.classList.add('active');
+    menuList.style.display = 'flex';
+});
+
+menuClose.addEventListener('click', () => {
+    menuList.classList.remove('active');
+    menuList.style.display = 'none';
+});
