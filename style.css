@@ -49,19 +49,14 @@ body {
 }
 
 .currency-code {
-    font-size: 0.85em;
+    font-size: 1.2em;
     text-transform: uppercase;
-    letter-spacing: 1.5px;
+    letter-spacing: 2.5px;
     color: rgba(255, 255, 255, 0.6);
     margin-right:5px;
     margin-bottom: 8px;
-}
-.currency-name {
-    font-size: 0.85em;
-    text-transform: uppercase;
-    letter-spacing: 2px;
-    color: rgba(255, 255, 255, 0.6);
-    margin-bottom: 8px;
+    font-weight:700;
+    font-family:'Sour Gummy', cursive;
 }
 
 .currency-rate {
@@ -115,8 +110,17 @@ body {
         0 0 30px rgba(135, 206, 235, 0.4); /* Szerszy, delikatny mroźny blask */
     right:30px;
     bottom:30px;
+    transition: all 0.7s ease;
 }
 a{
     text-decoration:none;
     color:rgba(241, 238, 238, 0.779);
+}
+#ice-wind:hover{
+    color:rgb(160, 160, 160);
+    transition: all 0.7s ease;
+    text-shadow: 
+        0 4px 10px rgba(9, 36, 83, 0.4), /* Podstawowy ciemny cień odrywajacy tekst od tła */
+        0 0 15px rgba(10, 148, 194, 0.6), /* Jasnoniebieska (lodowa) poświata */
+        0 0 30px rgba(135, 206, 235, 0.4);
 }

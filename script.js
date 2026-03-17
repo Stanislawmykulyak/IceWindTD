@@ -52,7 +52,6 @@ async function getExchangeRate(){
                 currency_container.innerHTML = `
                     <div class="currency-top">
                         <div class="currency-code"><span class="symbol">${symbol}</span> ${today.code} </div> 
-                        <div class="currency-name">( ${today.currency} )</div>
                     </div>
                     <div class="currency-rate">
                         ${today.mid.toFixed(2)} PLN <span class="${trendClass}">${arrow}</span>
