@@ -265,10 +265,10 @@ a{
         bottom: unset;
     }
     #ice-wind {
-        min-width: 90vw;
-        min-height: 270px;
+        max-width: 350px;
+        min-height: 200px;
         padding: 12px;
-        font-size: 5em;
+        font-size: 4em;
         border-radius: 18px;
         right: unset;
         bottom: unset;
