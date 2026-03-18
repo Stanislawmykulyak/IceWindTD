@@ -77,7 +77,7 @@ const tracks = {
 
 
 function spawnEnemies(waveNumber) {
-  const wave = stats.waves[waveNumber];
+  const wave = stats.waves[String(waveNumber)];
   if (!wave) {
     console.log(`Wave ${waveNumber} completed or not defined. No more enemies.`);
     return;
