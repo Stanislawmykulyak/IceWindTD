@@ -1,6 +1,6 @@
-let coins = 450;
+let coins = 2450;
 let hearts = 20;
-let currentWave = 1;
+let currentWave = 15;
 
 const stats = {
     towers: {
@@ -15,14 +15,14 @@ const stats = {
             lvl2:{
                 name: 'Sharpshooter',
                 damage: 27,
-                range: 350,
+                range: 320,
                 cooldown: 0.58,
                 cost: 150,
             },
             lvl3:{
                 name: 'Sniper',
                 damage: 40,
-                range: 400,
+                range: 350,
                 cooldown: 0.58,
                 cost: 230,
             },
@@ -171,7 +171,7 @@ const stats = {
         '15':[
             {type: 'gobGiant', count: 1, track: 1 ,offset:200,},
             {type:'goblin', count: 8, track: 1 , offset:80,},
-            {type: 'gobGiant', count: 1, track: 2 ,offset:200, hold: 2},     
+            {type: 'gobGiant', count: 1, track: 2 ,offset:200,},     
             {type:'orc', count:10, track:2, offset:100,},
             {type:'goblin', count:25, track:1, offset:90, },
         ],

@@ -151,6 +151,8 @@ function animate(timestamp = 0) {
 
     const dt = Math.min(deltaTime, 0.1);
 
+    console.log(`Frame: enemies=${enemies.length}, projectiles=${buildings.reduce((acc, b) => acc + b.projectiles.length, 0)}`);
+
     // Update dynamic state passing 'dt'
     for (let i = enemies.length - 1; i >= 0; i--) {
         const enemy = enemies[i];
@@ -197,36 +199,40 @@ function animate(timestamp = 0) {
 
         for (let i = building.projectiles.length - 1; i >= 0; i--) {
             const projectile = building.projectiles[i];
+
+            // If enemy is gone, remove projectile
+            if (!projectile.enemy || enemies.indexOf(projectile.enemy) === -1) {
+                building.projectiles.splice(i, 1);
+                continue;
+            }
+
             projectile.update(dt);
             const xDifference = projectile.enemy.center.x - projectile.position.x;
             const yDifference = projectile.enemy.center.y - projectile.position.y;
             const distance = Math.hypot(xDifference, yDifference);
 
             if (distance < projectile.enemy.radius + projectile.radius) {
-                if(currentWave <= 10){
-                  projectile.enemy.health -= projectile.damage;
-                }
-                if(currentWave > 10){
-                  ;
-                    const r = Math.random()
-                    if(r > 0.85 ){
-                      projectile.damage === 0;
-                      console.log("blocked hit")
-                      
+                let damageDealt = projectile.damage;
+                if (currentWave > 10) {
+                    if (Math.random() > 0.85) {
+                        damageDealt = 0;
+                        console.log("blocked hit");
                     }
-                  else{
-                    projectile.enemy.health -= projectile.damage;
-                  }
                 }
+
+                if (damageDealt > 0) {
+                    projectile.enemy.health -= damageDealt;
+                }
+
                 if (projectile.enemy.health <= 0) {
                     const enemyIndex = enemies.findIndex(enemy => projectile.enemy === enemy);
                     if (enemyIndex > -1) {
-                        enemies.splice(enemyIndex, 1);
                         coins += projectile.enemy.reward;
                         updateCoins();
+                        enemies.splice(enemyIndex, 1);
                     }
-                    
                 }
+                
                 building.projectiles.splice(i, 1);
             }
         }
@@ -251,6 +257,10 @@ function animate(timestamp = 0) {
         return aY - bY;
     });
     drawableObjects.forEach(obj => obj.draw());
+
+    if (enemies.length === 1) {
+        console.log("Ghost enemy?", enemies[0]);
+    }
 
     updateCoins();
     WaveUpdate();
