@@ -77,6 +77,9 @@ class Enemy extends Sprite{
       x:0,
       y:0
     };
+    this.blockedBy = null;
+    this.meleeCooldown = 0;
+    this.meleeDamage = 5;
   }
 
   draw() {
@@ -128,6 +131,15 @@ class Enemy extends Sprite{
 
   update(dt) {
     super.update(dt);
+
+    if (this.blockedBy) {
+        this.meleeCooldown -= dt;
+        if (this.meleeCooldown <= 0) {
+            this.blockedBy.health -= this.meleeDamage;
+            this.meleeCooldown = 1.0; // atakuje co 1 sekundę
+        }
+        return; // PRZERYWAMY RUCH - wróg stoi i walczy
+    }
     const waypoint = this.waypoints[this.waypointIndex];
     const yDistance = waypoint.y - this.center.y;
     const xDistance = waypoint.x - this.center.x;
@@ -335,4 +347,173 @@ class MageProjectile1 extends Projectile {
     super({ position, enemy, damage, imageSrc: 'media/tower-models/projectiles/magic_ball.png', power: 50});
   }
 
+}
+class Soldier extends Sprite {
+    constructor({ position, rallyPoint, stats, parentBarracks }) {
+        super({ position, imageSrc: '' }); // Możesz podpiąć animację
+        this.rallyPoint = rallyPoint;
+        this.parentBarracks = parentBarracks;
+        this.width = 20;
+        this.height = 20;
+        this.center = { x: position.x + 10, y: position.y + 10 };
+        this.speed = 80;
+        this.maxHealth = stats.unitHealth;
+        this.health = this.maxHealth;
+        this.damage = stats.damage;
+        this.cooldown = stats.cooldown;
+        this.attackTimer = 0;
+        this.target = null;
+        this.state = 'moving'; // moving, idle, fighting, dead
+    }
+
+    draw() {
+        if (this.state === 'dead') return;
+        c.fillStyle = 'blue';
+        c.fillRect(this.position.x, this.position.y, this.width, this.height);
+        // Healthbar
+        c.fillStyle = 'red';
+        c.fillRect(this.position.x, this.position.y - 10, this.width, 5);
+        c.fillStyle = 'green';
+        c.fillRect(this.position.x, this.position.y - 10, this.width * (this.health / this.maxHealth), 5);
+    }
+
+    update(dt) {
+        if (this.state === 'dead') return;
+        if (this.health <= 0) {
+            this.state = 'dead';
+            if (this.target) this.target.blockedBy = null;
+            return;
+        }
+
+        this.center = { x: this.position.x + this.width / 2, y: this.position.y + this.height / 2 };
+
+        if (this.state === 'moving' || !this.target) {
+            const dest = this.target ? this.target.center : this.rallyPoint;
+            const angle = Math.atan2(dest.y - this.center.y, dest.x - this.center.x);
+            const dist = Math.hypot(dest.x - this.center.x, dest.y - this.center.y);
+
+            if (dist > 5) {
+                this.position.x += Math.cos(angle) * this.speed * dt;
+                this.position.y += Math.sin(angle) * this.speed * dt;
+            } else {
+                if (this.target) {
+                    this.state = 'fighting';
+                    this.target.blockedBy = this;
+                } else {
+                    this.state = 'idle';
+                }
+            }
+        }
+
+        if (this.state === 'fighting' && this.target) {
+            if (this.target.health <= 0 || this.target.position.x > canvas.width) {
+                this.target = null;
+                this.state = 'moving';
+            } else {
+                this.attackTimer += dt;
+                if (this.attackTimer >= this.cooldown) {
+                    this.target.health -= this.damage;
+                    this.attackTimer = 0;
+                }
+            }
+        }
+    }
+}
+
+class BarracksLvl1 extends Tower {
+    constructor({ position }) {
+        super({
+            position,
+            stats: stats.towers.barracks.lvl1,
+            baseTowerType: "barracks",
+            level: 1,
+            imageSrc: "media/barracks.png", // Podmień jeśli masz lepszy sprite
+            frames: { max: 1 },
+            offset: { x: 0, y: -20 }
+        });
+        this.soldiers = [];
+        this.respawnTimers = [0, 0, 0];
+        this.rallyPoint = this.findNearestPath();
+        this.spawnSoldiers();
+    }
+
+    findNearestPath() {
+        let nearest = { x: this.center.x, y: this.center.y };
+        let minDist = Infinity;
+        for (let i = 0; i < path.length; i++) {
+            if (path[i] === 289) { // 289 to kafelki drogi
+                const px = (i % 20) * 64 + 32;
+                const py = Math.floor(i / 20) * 64 + 32;
+                const dist = Math.hypot(px - this.center.x, py - this.center.y);
+                if (dist < minDist && dist <= this.radius) {
+                    minDist = dist;
+                    nearest = { x: px, y: py };
+                }
+            }
+        }
+        return nearest;
+    }
+
+    setRallyPoint(x, y) {
+        this.rallyPoint = { x, y };
+        const offsets = [{x: 0, y: -20}, {x: -20, y: 15}, {x: 20, y: 15}];
+        this.soldiers.forEach((s, idx) => {
+            if (s) {
+                s.rallyPoint = { x: this.rallyPoint.x + offsets[idx].x, y: this.rallyPoint.y + offsets[idx].y };
+                s.state = 'moving';
+                if (s.target) s.target.blockedBy = null;
+                s.target = null;
+            }
+        });
+    }
+
+    spawnSoldiers() {
+        const offsets = [{x: 0, y: -20}, {x: -20, y: 15}, {x: 20, y: 15}];
+        for (let i = 0; i < 3; i++) {
+            this.soldiers[i] = new Soldier({
+                position: { x: this.center.x, y: this.center.y },
+                rallyPoint: { x: this.rallyPoint.x + offsets[i].x, y: this.rallyPoint.y + offsets[i].y },
+                stats: stats.towers.barracks.lvl1,
+                parentBarracks: this
+            });
+        }
+    }
+
+    draw() {
+        super.draw();
+        this.soldiers.forEach(s => s?.draw());
+    }
+
+    update(dt) {
+        super.update(dt);
+        
+        // Respawn i update żołnierzy
+        for (let i = 0; i < 3; i++) {
+            const s = this.soldiers[i];
+            if (!s || s.state === 'dead') {
+                this.respawnTimers[i] += dt;
+                if (this.respawnTimers[i] >= stats.towers.barracks.lvl1.respawn) {
+                    const offsets = [{x: 0, y: -20}, {x: -20, y: 15}, {x: 20, y: 15}];
+                    this.soldiers[i] = new Soldier({
+                        position: { x: this.center.x, y: this.center.y },
+                        rallyPoint: { x: this.rallyPoint.x + offsets[i].x, y: this.rallyPoint.y + offsets[i].y },
+                        stats: stats.towers.barracks.lvl1,
+                        parentBarracks: this
+                    });
+                    this.respawnTimers[i] = 0;
+                }
+            } else {
+                s.update(dt);
+                // System agro - szukaj nieprzyjaciół w pobliżu rally pointu
+                if (!s.target && s.state !== 'moving') {
+                    const validEnemies = enemies.filter(e => !e.blockedBy && Math.hypot(e.center.x - s.rallyPoint.x, e.center.y - s.rallyPoint.y) < 60);
+                    if (validEnemies.length > 0) {
+                        s.target = validEnemies[0];
+                        s.target.blockedBy = s; // Od razu rezerwuje wroga
+                        s.state = 'moving';
+                    }
+                }
+            }
+        }
+    }
 }

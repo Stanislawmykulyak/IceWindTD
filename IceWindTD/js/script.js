@@ -261,7 +261,26 @@ function animate(timestamp = 0) {
     if (enemies.length === 1) {
         console.log("Ghost enemy?", enemies[0]);
     }
-
+    if (isSettingRally && selectedBuilding) {
+        // Podświetl drogę w zasięgu
+        c.fillStyle = 'rgba(255, 255, 0, 0.3)';
+        path.forEach((tile, i) => {
+            if (tile === 289) {
+                const px = (i % 20) * 64;
+                const py = Math.floor(i / 20) * 64;
+                const dist = Math.hypot(px + 32 - selectedBuilding.center.x, py + 32 - selectedBuilding.center.y);
+                if (dist <= selectedBuilding.radius) {
+                    c.fillRect(px, py, 64, 64);
+                }
+            }
+        });
+        
+        // Okrąg zasięgu z koszar
+        c.beginPath();
+        c.arc(selectedBuilding.center.x, selectedBuilding.center.y, selectedBuilding.radius, 0, Math.PI * 2);
+        c.strokeStyle = 'white';
+        c.stroke();
+    }
     updateCoins();
     WaveUpdate();
     updateHearts();
@@ -273,6 +292,7 @@ const mouse = {
 };
 
 let selectedBuilding = null;
+let isSettingRally = false;
 const upgradeMenu = document.getElementById("tower-upgrade-menu");
 const towerNameLevel = document.getElementById("tower-name-level");
 const towerDamage = document.getElementById("tower-damage");
@@ -315,6 +335,12 @@ function updateUpgradeMenu() {
     upgradeMenu.style.left = `${rect.left + selectedBuilding.position.x + 32}px`;
     upgradeMenu.style.top = `${rect.top + selectedBuilding.position.y - 64}px`;
     upgradeMenu.style.display = "block";
+    const rallyBtn = document.getElementById("rally-button");
+    if (selectedBuilding.baseTowerType === 'barracks') {
+        rallyBtn.style.display = "block";
+    } else {
+        rallyBtn.style.display = "none";
+    }
 }
 
 canvas.addEventListener("click", (event) => {
@@ -322,6 +348,24 @@ canvas.addEventListener("click", (event) => {
     const mouseX = event.offsetX;
     const mouseY = event.offsetY;
 
+    if (isSettingRally && selectedBuilding && selectedBuilding.baseTowerType === 'barracks') {
+        const tileX = Math.floor(mouseX / 64);
+        const tileY = Math.floor(mouseY / 64);
+        const pathIndex = tileY * 20 + tileX;
+        
+        if (path[pathIndex] === 289) {
+            const centerX = tileX * 64 + 32;
+            const centerY = tileY * 64 + 32;
+            const dist = Math.hypot(centerX - selectedBuilding.center.x, centerY - selectedBuilding.center.y);
+            
+            if (dist <= selectedBuilding.radius) {
+                selectedBuilding.setRallyPoint(centerX, centerY);
+                isSettingRally = false;
+                canvas.style.cursor = 'default';
+            }
+        }
+        return; // Blokuje resztę kliknięć
+    }
     // Check if a building was clicked
     let clickedBuilding = null;
     for (const building of buildings) {
@@ -389,7 +433,11 @@ upgradeButton.onclick = () => {
       selectedBuilding = null;
     }
 };
-
+document.getElementById("rally-button").onclick = () => {
+    isSettingRally = true;
+    upgradeMenu.style.display = "none";
+    canvas.style.cursor = 'crosshair'; // Wskaźnik myszy daje znać, że celujemy
+};
 sellButton.onclick = () => {
     if (selectedBuilding) {
         const buildingIndex = buildings.findIndex(b => b === selectedBuilding);
@@ -424,6 +472,17 @@ if (closeTowerMenuBtn) {
     selectedTile = null;
   };
 }
+
+document.getElementById("barracks").onclick = (e) => {
+    e.stopPropagation();
+    if (!selectedTile) return;
+    if (coins - stats.towers.barracks.lvl1.cost < 0) return;
+    coins -= stats.towers.barracks.lvl1.cost;
+    buildings.push(new BarracksLvl1({ position: selectedTile.position }));
+    selectedTile.isOccupied = true;
+    document.getElementById("tower-menu").style.display = "none";
+    selectedTile = null;
+};
 
 document.getElementById("archer-tower").onclick = (e) => {
     e.stopPropagation();

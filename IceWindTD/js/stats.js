@@ -1,6 +1,6 @@
-let coins = 2450;
+let coins = 450;
 let hearts = 20;
-let currentWave = 15;
+let currentWave = 1;
 
 const stats = {
     towers: {
@@ -51,6 +51,18 @@ const stats = {
                 cost: 370,
             },
         },
+        barracks: {
+        lvl1: {
+            name: 'Militia',
+            damage: 10,
+            range: 200,
+            cooldown: 1.5,
+            cost: 90,
+            unitHealth: 50,
+            respawn: 8 // czas odrodzenia w sekundach
+        }
+    },
+    
     },
     enemies: {
         orc: {
