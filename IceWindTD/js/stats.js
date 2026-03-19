@@ -15,14 +15,14 @@ const stats = {
             lvl2:{
                 name: 'Sharpshooter',
                 damage: 27,
-                range: 350,
+                range: 320,
                 cooldown: 0.58,
                 cost: 150,
             },
             lvl3:{
                 name: 'Sniper',
                 damage: 40,
-                range: 400,
+                range: 350,
                 cooldown: 0.58,
                 cost: 230,
             },
