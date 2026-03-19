@@ -55,11 +55,11 @@ const stats = {
         lvl1: {
             name: 'Militia',
             damage: 10,
-            range: 200,
+            range: 250,
             cooldown: 1.5,
             cost: 90,
             unitHealth: 50,
-            respawn: 8 // czas odrodzenia w sekundach
+            respawn: 8,
         }
     },
     
