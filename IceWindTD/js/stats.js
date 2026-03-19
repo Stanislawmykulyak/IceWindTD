@@ -1,6 +1,6 @@
-let coins = 450;
+let coins = 2450;
 let hearts = 20;
-let currentWave = 1;
+let currentWave = 15;
 
 const stats = {
     towers: {
@@ -171,7 +171,7 @@ const stats = {
         '15':[
             {type: 'gobGiant', count: 1, track: 1 ,offset:200,},
             {type:'goblin', count: 8, track: 1 , offset:80,},
-            {type: 'gobGiant', count: 1, track: 2 ,offset:200, hold: 2},     
+            {type: 'gobGiant', count: 1, track: 2 ,offset:200,},     
             {type:'orc', count:10, track:2, offset:100,},
             {type:'goblin', count:25, track:1, offset:90, },
         ],
