@@ -54,7 +54,7 @@ const stats = {
         barracks: {
         lvl1: {
             name: 'Militia',
-            damage: 10,
+            damage: 15,
             range: 250,
             cooldown: 1.5,
             cost: 90,
