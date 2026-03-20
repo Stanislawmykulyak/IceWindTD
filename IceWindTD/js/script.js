@@ -419,11 +419,25 @@ canvas.addEventListener("click", (event) => {
     menu.style.display = "flex";
 
     // Środek kafelka w układzie gry
-    const tileCenterX = activeTile.position.x + (activeTile.size / 2);
-    const tileCenterY = activeTile.position.y + (activeTile.size / 2);
+    let tileCenterX = activeTile.position.x + (activeTile.size / 2);
+    let tileCenterY = activeTile.position.y + (activeTile.size / 2);
+
+    const menuHalfSize = 125; // Połowa wymiaru #tower-menu (250px / 2)
+    const safeMargin = 15; // Bezpieczny odstęp od krawędzi
+
+    // 1. Blokada wyjazdu dołem
+    const bottomEdge = tileCenterY + menuHalfSize;
+    if (bottomEdge > canvas.height) {
+        tileCenterY -= (bottomEdge - canvas.height + safeMargin); 
+    }
+
+    // 2. Blokada wyjazdu lewą stroną
+    const leftEdge = tileCenterX - menuHalfSize;
+    if (leftEdge < 0) {
+        tileCenterX += (Math.abs(leftEdge) + safeMargin);
+    }
 
     // Przeliczamy pozycję na PROCENTY względem wymiarów canvasa
-    // Dodajemy Twój offset (ok. 4% szerokości to Twoje 50px)
     const leftPercent = (tileCenterX / 1280) * 100; 
     const topPercent = (tileCenterY / 768) * 100;
 
