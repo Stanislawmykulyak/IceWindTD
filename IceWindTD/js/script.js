@@ -109,7 +109,6 @@ function spawnEnemies(waveNumber) {
       const spacing = hold ? hold * enemyStats.speed : offset;
       
       for (let i = 0; i < count; i++) {
-        // Zwiększamy dystans TYLKO dla ścieżki, na której spawnuje się wróg
         trackOffsets[track] += spacing; 
         
         const enemy = new EnemyClass({
@@ -118,6 +117,11 @@ function spawnEnemies(waveNumber) {
           enemyType: type
         });
         
+        // Dynamiczne skalowanie HP: +15% co każdą falę
+        const hpMultiplier = Math.pow(1.15, waveNumber - 1);
+        enemy.health = enemyStats.health * hpMultiplier; 
+        enemy.maxHealth = enemy.health; // Przyda się do paska życia
+
         enemy.healthCost = enemyStats.healthCost;
         enemies.push(enemy);
       }
@@ -412,32 +416,23 @@ canvas.addEventListener("click", (event) => {
     if (activeTile && !activeTile.isOccupied) {
     selectedTile = activeTile;
     const menu = document.getElementById("tower-menu");
+    menu.style.display = "flex";
 
-    menu.style.display = "flex"; // Najpierw pokazujemy, żeby pobrać wymiary
+    // Środek kafelka w układzie gry
+    const tileCenterX = activeTile.position.x + (activeTile.size / 2);
+    const tileCenterY = activeTile.position.y + (activeTile.size / 2);
 
-    const menuWidth = menu.offsetWidth;   // Powinno teraz zwrócić 250
-    const menuHeight = menu.offsetHeight; // Powinno teraz zwrócić 250
+    // Przeliczamy pozycję na PROCENTY względem wymiarów canvasa
+    // Dodajemy Twój offset (ok. 4% szerokości to Twoje 50px)
+    const leftPercent = (tileCenterX / 1280) * 100; 
+    const topPercent = (tileCenterY / 768) * 100;
 
-    // 1. Centrujemy menu na środku kafelka (64/2 = 32)
-    let leftPos = activeTile.position.x + (activeTile.size / 2) - (menuWidth / 2);
-    let topPos = activeTile.position.y + (activeTile.size / 2) - (menuHeight / 2);
-
-    // 2. Boundary Check - Lewa i Prawa krawędź
-    if (leftPos < 0) {
-        leftPos = 10; // Za blisko lewej
-    } else if (leftPos + menuWidth > canvas.width) {
-        leftPos = canvas.width - menuWidth - 10; // Za blisko prawej
-    }
-
-    // 3. Boundary Check - Góra i Dół
-    if (topPos < 0) {
-        topPos = 10; // Za blisko góry
-    } else if (topPos + menuHeight > canvas.height) {
-        topPos = canvas.height - menuHeight - 10; // Za blisko dołu
-    }
-
-    menu.style.left = `${leftPos}px`;
-    menu.style.top = `${topPos}px`;
+    // Ustawiamy pozycję w procentach
+    menu.style.left = `${leftPercent}%`;
+    menu.style.top = `${topPercent}%`;
+    
+    // Centrujemy samo menu względem tego punktu
+    menu.style.transform = "translate(-50%, -50%)";
 
     arrangeButtonsInCircle();
 }else {
@@ -544,29 +539,27 @@ document.getElementById("mage-tower").onclick = (e) => {
 
 
 window.addEventListener('mousemove', (event) => {
-  const rect = canvas.getBoundingClientRect();
-  
-  // Obliczamy skalę (stosunek rozdzielczości gry do faktycznego rozmiaru na ekranie)
-  const scaleX = canvas.width / rect.width;
-  const scaleY = canvas.height / rect.height;
+    const rect = canvas.getBoundingClientRect();
+    
+    // Obliczamy skalę - to zadziała zawsze, nawet jak okno przeglądarki jest pomniejszone
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
 
-  // Mnożymy wynik przez skalę, żeby trafić idealnie w kafelki
-  mouse.x = (event.clientX - rect.left) * scaleX;
-  mouse.y = (event.clientY - rect.top) * scaleY;
+    // Zawsze używamy skalowania względem rect, to najbardziej odporna metoda
+    mouse.x = (event.clientX - rect.left) * scaleX;
+    mouse.y = (event.clientY - rect.top) * scaleY;
 
-  activeTile = null;
-
-  activeTile = null;
-  for (let i = 0; i < placementTiles.length; i++) {
-    const tile = placementTiles[i];
-    if (
-      mouse.x > tile.position.x && mouse.x < tile.position.x + tile.size &&
-      mouse.y > tile.position.y && mouse.y < tile.position.y + tile.size
-    ) {
-      activeTile = tile;
-      break;
+    activeTile = null;
+    for (let i = 0; i < placementTiles.length; i++) {
+        const tile = placementTiles[i];
+        if (
+            mouse.x > tile.position.x && mouse.x < tile.position.x + tile.size &&
+            mouse.y > tile.position.y && mouse.y < tile.position.y + tile.size
+        ) {
+            activeTile = tile;
+            break;
+        }
     }
-  }
 });
 
 function arrangeButtonsInCircle() {
