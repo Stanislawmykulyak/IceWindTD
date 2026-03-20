@@ -73,6 +73,7 @@ class Enemy extends Sprite {
     this.armor = enemyStats.armor;
     this.speed = enemyStats.speed;
     this.reward = enemyStats.reward;
+    this.isFlying = enemyStats.isFlying || false;
     this.velocity = {
       x: 0,
       y: 0
