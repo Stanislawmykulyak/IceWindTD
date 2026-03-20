@@ -10,7 +10,7 @@ const stats = {
                 damage: 18,
                 range: 300,
                 cooldown: 0.64,
-                cost: 90,
+                cost: 100,
             },
             lvl2:{
                 name: 'Sharpshooter',
@@ -31,24 +31,24 @@ const stats = {
         mage: {
             lvl1: {
                 name: 'Mage',      
-                damage: 40,
+                damage: 50,
                 range: 220,
                 cooldown: 0.92,
-                cost: 140,
+                cost: 130,
             },
             lvl2:{
                 name: 'Wizard',      
-                damage: 60,
+                damage: 65,
                 range: 270,
                 cooldown: 0.9,
-                cost: 280,
+                cost: 200,
             },
             lvl3:{
                 name: 'Sorcerer',
-                damage: 85,
+                damage: 90,
                 range: 320,
                 cooldown: 0.9,
-                cost: 370,
+                cost: 300,
             },
         },
         barracks: {
@@ -57,7 +57,7 @@ const stats = {
             damage: 15,
             range: 250,
             cooldown: 1.5,
-            cost: 90,
+            cost: 100,
             unitHealth:150,
             respawn:10,
         }
