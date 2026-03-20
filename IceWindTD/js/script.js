@@ -18,6 +18,22 @@ for (let i = 0; i < placementTilesData.length; i += 20) {
   placementTilesData2D.push(placementTilesData.slice(i, i + 20));
 }
 
+const fullscreenBtn = document.getElementById('fullscreen-btn');
+const gameContainer = document.getElementById('game-container');
+
+fullscreenBtn.addEventListener('click', () => {
+    // Sprawdzamy, czy gra NIE jest na pełnym ekranie
+    if (!document.fullscreenElement) {
+        // Wchodzimy we fullscreen
+        gameContainer.requestFullscreen().catch(err => {
+            console.log(`Błąd: Nie można włączyć pełnego ekranu: ${err.message}`);
+        });
+    } else {
+        // Wychodzimy z fullscreena
+        document.exitFullscreen();
+    }
+});
+
 const tileImage = new Image();
 tileImage.src = 'media/Free-Spot.png';
 const placementTiles = [];
@@ -278,7 +294,6 @@ const mouse = {
 
 let selectedBuilding = null;
 let isSettingRally = false;
-const upgradeMenu = document.getElementById("tower-upgrade-menu");
 const towerNameLevel = document.getElementById("tower-name-level");
 const towerDamage = document.getElementById("tower-damage");
 const towerRange = document.getElementById("tower-range");
@@ -368,6 +383,18 @@ canvas.addEventListener("click", (event) => {
     selectedTile = null; // Deselect any placement tile
     menu.style.display = "none";
     updateUpgradeMenu();
+    const upgradeMenu = document.getElementById("tower-upgrade-menu");
+    upgradeMenu.style.display = "block";
+
+    let upTop = clickedTower.position.y;
+    const upHeight = upgradeMenu.offsetHeight;
+
+    if (upTop + upHeight > canvas.height) {
+        upTop = canvas.height - upHeight - 10;
+    }
+
+    upgradeMenu.style.top = `${upTop}px`;
+    upgradeMenu.style.left = `${clickedTower.position.x}px`;
   } else {
     // If no building was clicked, check for an empty placement tile
     let clickedTile = null;
@@ -382,16 +409,38 @@ canvas.addEventListener("click", (event) => {
       }
     }
 
-    if (clickedTile) {
-      selectedTile = clickedTile;
-      selectedBuilding = null; // Deselect any building
-      upgradeMenu.style.display = "none";
-      const rect = canvas.getBoundingClientRect();
-      menu.style.left = `${rect.left + clickedTile.position.x + clickedTile.size / 2}px`;
-      menu.style.top = `${rect.top + clickedTile.position.y + clickedTile.size / 2}px`;
-      menu.style.display = "block";
-      arrangeButtonsInCircle();
-    } else {
+    if (activeTile && !activeTile.isOccupied) {
+    selectedTile = activeTile;
+    const menu = document.getElementById("tower-menu");
+
+    menu.style.display = "flex"; // Najpierw pokazujemy, żeby pobrać wymiary
+
+    const menuWidth = menu.offsetWidth;   // Powinno teraz zwrócić 250
+    const menuHeight = menu.offsetHeight; // Powinno teraz zwrócić 250
+
+    // 1. Centrujemy menu na środku kafelka (64/2 = 32)
+    let leftPos = activeTile.position.x + (activeTile.size / 2) - (menuWidth / 2);
+    let topPos = activeTile.position.y + (activeTile.size / 2) - (menuHeight / 2);
+
+    // 2. Boundary Check - Lewa i Prawa krawędź
+    if (leftPos < 0) {
+        leftPos = 10; // Za blisko lewej
+    } else if (leftPos + menuWidth > canvas.width) {
+        leftPos = canvas.width - menuWidth - 10; // Za blisko prawej
+    }
+
+    // 3. Boundary Check - Góra i Dół
+    if (topPos < 0) {
+        topPos = 10; // Za blisko góry
+    } else if (topPos + menuHeight > canvas.height) {
+        topPos = canvas.height - menuHeight - 10; // Za blisko dołu
+    }
+
+    menu.style.left = `${leftPos}px`;
+    menu.style.top = `${topPos}px`;
+
+    arrangeButtonsInCircle();
+}else {
       // Clicked outside of any building or empty tile
       menu.style.display = "none";
       selectedTile = null;
@@ -496,8 +545,16 @@ document.getElementById("mage-tower").onclick = (e) => {
 
 window.addEventListener('mousemove', (event) => {
   const rect = canvas.getBoundingClientRect();
-  mouse.x = event.clientX - rect.left;
-  mouse.y = event.clientY - rect.top;
+  
+  // Obliczamy skalę (stosunek rozdzielczości gry do faktycznego rozmiaru na ekranie)
+  const scaleX = canvas.width / rect.width;
+  const scaleY = canvas.height / rect.height;
+
+  // Mnożymy wynik przez skalę, żeby trafić idealnie w kafelki
+  mouse.x = (event.clientX - rect.left) * scaleX;
+  mouse.y = (event.clientY - rect.top) * scaleY;
+
+  activeTile = null;
 
   activeTile = null;
   for (let i = 0; i < placementTiles.length; i++) {

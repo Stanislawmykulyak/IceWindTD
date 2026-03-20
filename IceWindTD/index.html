@@ -1,12 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="css/style.css"/>
-    <link rel="stylesheet" href="css/resources.css"/>
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/resources.css" />
     <title>Helltrip TD</title>
 </head>
+
 <body>
     <div id="game-container">
         <canvas></canvas>
@@ -14,54 +16,62 @@
             <div class="hearts"></div>
             <div class="gold"></div>
         </div>
-        
+
         <p class="wave-display"></p>
 
         <div class="game-over">Game Over</div>
-        
+
         <div class="play ">
             Play<div class="play-button"></div>
         </div>
         <div class="off on"></div>
         <div class="win">You Won !</div>
+        <button id="fullscreen-btn" title="Pełny Ekran">⛶</button>
+        <div id="tower-menu">
 
-    </div>
-    <div id="tower-menu">
+            <button id="archer-tower" class="tower-options">
+                <img src="media/archer.png" height="60px" width="60px">
+                <div class="tower-cost">
+                    <p class="cost">100</p>
+                </div>
+            </button>
 
-        <button id="archer-tower" class="tower-options">
-            <img src="media/archer.png" height="60px" width="60px">
-            <div class="tower-cost"><p class="cost">100</p></div>
-        </button>
+            <button id="mage-tower" class="tower-options">
+                <img src="media/mage.png" height="60px" width="60px">
+                <div class="tower-cost">
+                    <p class="cost">140</p>
+                </div>
+            </button>
+            <button id="barracks" class="tower-options">
+                <img src="media/barracks.png" height="60px" width="60px">
+                <div class="tower-cost">
+                    <p class="cost">100</p>
+                </div>
+            </button>
 
-        <button id="mage-tower" class="tower-options">
-            <img src="media/mage.png" height="60px" width="60px">
-            <div class="tower-cost"><p class="cost">140</p></div>
-        </button>
-        <button id="barracks" class="tower-options">
-            <img src="media/barracks.png" height="60px" width="60px">
-            <div class="tower-cost"><p class="cost">100</p></div>
-        </button>
+            <button id="close-tower-menu" class="close-btn">✕</button>
 
-        <button id="close-tower-menu" class="close-btn">✕</button>
-
-    </div>
-
-    <div id="tower-upgrade-menu" style="display: none; position: absolute;">
-        <div id="upgrade-menu-header">
-            <span id="tower-name-level"></span>
-            <button id="close-upgrade-menu" class="close-btn">✕</button>
         </div>
-        <div id="tower-stats-display">
-            <p>Damage: <span id="tower-damage" class="tower-stats"></span></p>
-            <p>Range: <span id="tower-range" class="tower-stats"></span></p>
-            <p>Cooldown: <span id="tower-cooldown" class="tower-stats"></span></p>
+
+        <div id="tower-upgrade-menu" style="display: none; position: absolute;">
+            <div id="upgrade-menu-header">
+                <span id="tower-name-level"></span>
+                <button id="close-upgrade-menu" class="close-btn">✕</button>
+            </div>
+            <div id="tower-stats-display">
+                <p>Damage: <span id="tower-damage" class="tower-stats"></span></p>
+                <p>Range: <span id="tower-range" class="tower-stats"></span></p>
+                <p>Cooldown: <span id="tower-cooldown" class="tower-stats"></span></p>
+            </div>
+            <button id="upgrade-button"></button>
+            <button id="sell-button"></button>
+            <button id="rally-button" title="Set Rally Point"
+                style="border-radius:50%; margin-top:20px; display:flex; justify-content: center; align-items:center;background: rgba(164, 164, 164, 0.415);border: solid #222222;">
+                <img src="media/rally.png" height="30px" width="30px">
+            </button>
         </div>
-        <button id="upgrade-button"></button>
-        <button id="sell-button"></button>
-        <button id="rally-button" title="Set Rally Point" style="border-radius:50%;margin:auto; margin-top:20px; display:flex; justify-content: center; align-items:center;">
-            <img src="media/rally.png" height="30px" width="30px">
-        </button>
     </div>
+
 
 
     <script src="js/towers.js"></script>
@@ -72,4 +82,5 @@
     <script src="js/script.js"></script>
     <script src="js/path.js"></script>
 </body>
+
 </html>
