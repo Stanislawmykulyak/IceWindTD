@@ -31,21 +31,21 @@ const stats = {
         mage: {
             lvl1: {
                 name: 'Mage',      
-                damage: 30,
+                damage: 40,
                 range: 220,
                 cooldown: 0.92,
                 cost: 140,
             },
             lvl2:{
                 name: 'Wizard',      
-                damage: 45,
+                damage: 60,
                 range: 270,
                 cooldown: 0.9,
                 cost: 280,
             },
             lvl3:{
                 name: 'Sorcerer',
-                damage: 65,
+                damage: 85,
                 range: 320,
                 cooldown: 0.9,
                 cost: 370,
@@ -58,8 +58,8 @@ const stats = {
             range: 250,
             cooldown: 1.5,
             cost: 90,
-            unitHealth: 50,
-            respawn: 8,
+            unitHealth:150,
+            respawn:10,
         }
     },
     
@@ -71,6 +71,7 @@ const stats = {
             speed: 60,
             reward: 10,
             healthCost:2,
+            damage:20,
         },
         goblin: {
             health: 90,
@@ -78,6 +79,7 @@ const stats = {
             speed: 80,
             reward: 5,
             healthCost:1,
+            damage:10,
         },
         bat: {
             health: 60,
@@ -86,6 +88,7 @@ const stats = {
             reward: 9,
             healthCost:1,
             isFlying: true,
+            damage:10,
         },
         giantBat: {
             health: 115,
@@ -94,6 +97,7 @@ const stats = {
             reward: 13,
             healthCost:2,
             isFlying: true,
+            damage:25,
         },
         gobChamp:{
             health:850,
@@ -102,6 +106,7 @@ const stats = {
             reward:250,
             healthCost:15,
             isMiniBoss:true,
+            damage:100,
         },
         gobGiant:{
             health:400,
@@ -109,6 +114,7 @@ const stats = {
             speed:30,
             reward:100,
             healthCost:10,
+            damage:75,
         },
         goblinChief:{
             health:2500,
@@ -117,6 +123,7 @@ const stats = {
             reward:500,
             healthCost:25,
             isBoss:true,
+            damage:250,
         }
 
     },

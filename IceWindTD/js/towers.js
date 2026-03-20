@@ -71,7 +71,7 @@ class Tower {
         this.radius = stats.range;
         this.cooldown = stats.cooldown;
     }
-    
+
     upgrade() {
         // will be implemented in subclasses
     }
@@ -84,7 +84,7 @@ class Tower {
     }
     update(dt) {
         if (this.target && this.sprite) {
-            this.sprite.update(dt); 
+            this.sprite.update(dt);
         } else if (this.sprite) {
             this.sprite.frames.current = 0;
         }
@@ -121,6 +121,13 @@ class ArcherTowerLvl1 extends Tower {
             }
         }
         super.update(dt);
+        const validEnemies = enemies.filter(enemy => {
+            const xDiff = enemy.center.x - this.center.x;
+            const yDiff = enemy.center.y - this.center.y;
+            const distance = Math.hypot(xDiff, yDiff);
+            // Dodajemy: enemy.position.x > 0
+            return distance < this.radius && enemy.position.x > 0;
+        });
     }
     upgrade() {
         if (coins < stats.towers.archer["lvl2"].cost) return;
@@ -158,6 +165,13 @@ class ArcherTowerLvl2 extends Tower {
             }
         }
         super.update(dt);
+        const validEnemies = enemies.filter(enemy => {
+            const xDiff = enemy.center.x - this.center.x;
+            const yDiff = enemy.center.y - this.center.y;
+            const distance = Math.hypot(xDiff, yDiff);
+            // Dodajemy: enemy.position.x > 0
+            return distance < this.radius && enemy.position.x > 0;
+        });
     }
     upgrade() {
         if (coins < stats.towers.archer["lvl3"].cost) return;
@@ -194,6 +208,13 @@ class ArcherTowerLvl3 extends Tower {
             }
         }
         super.update(dt);
+        const validEnemies = enemies.filter(enemy => {
+            const xDiff = enemy.center.x - this.center.x;
+            const yDiff = enemy.center.y - this.center.y;
+            const distance = Math.hypot(xDiff, yDiff);
+            // Dodajemy: enemy.position.x > 0
+            return distance < this.radius && enemy.position.x > 0;
+        });
     }
     upgrade() {
         // Brak wyższego poziomu
@@ -229,6 +250,13 @@ class MageTowerLvl1 extends Tower {
             }
         }
         super.update(dt);
+        const validEnemies = enemies.filter(enemy => {
+            const xDiff = enemy.center.x - this.center.x;
+            const yDiff = enemy.center.y - this.center.y;
+            const distance = Math.hypot(xDiff, yDiff);
+            // Dodajemy: enemy.position.x > 0
+            return distance < this.radius && enemy.position.x > 0;
+        });
     }
     upgrade() {
         if (coins < stats.towers.mage["lvl2"].cost) return;
@@ -247,7 +275,7 @@ class MageTowerLvl2 extends Tower {
             level: 2,
             imageSrc: "media/tower-models/towers/mage-tower-lvl2.png",
             frames: { max: 19 },
-            offset: { x: -12, y: -100}
+            offset: { x: -12, y: -100 }
         });
     }
     update(dt) {
@@ -265,6 +293,13 @@ class MageTowerLvl2 extends Tower {
             }
         }
         super.update(dt);
+        const validEnemies = enemies.filter(enemy => {
+            const xDiff = enemy.center.x - this.center.x;
+            const yDiff = enemy.center.y - this.center.y;
+            const distance = Math.hypot(xDiff, yDiff);
+            // Dodajemy: enemy.position.x > 0
+            return distance < this.radius && enemy.position.x > 0;
+        });
     }
     upgrade() {
         if (coins < stats.towers.mage["lvl3"].cost) return;
@@ -301,6 +336,13 @@ class MageTowerLvl3 extends Tower {
             }
         }
         super.update(dt);
+        const validEnemies = enemies.filter(enemy => {
+            const xDiff = enemy.center.x - this.center.x;
+            const yDiff = enemy.center.y - this.center.y;
+            const distance = Math.hypot(xDiff, yDiff);
+            // Dodajemy: enemy.position.x > 0
+            return distance < this.radius && enemy.position.x > 0;
+        });
     }
     upgrade() {
         // Brak wyższego poziomu
