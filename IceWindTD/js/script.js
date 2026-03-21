@@ -298,6 +298,7 @@ const mouse = {
 
 let selectedBuilding = null;
 let isSettingRally = false;
+const upgradeMenu = document.getElementById("tower-upgrade-menu");
 const towerNameLevel = document.getElementById("tower-name-level");
 const towerDamage = document.getElementById("tower-damage");
 const towerRange = document.getElementById("tower-range");
@@ -387,7 +388,6 @@ canvas.addEventListener("click", (event) => {
     selectedTile = null; // Deselect any placement tile
     menu.style.display = "none";
     updateUpgradeMenu();
-    const upgradeMenu = document.getElementById("tower-upgrade-menu");
     upgradeMenu.style.display = "block";
 
     let upTop = clickedTower.position.y;
