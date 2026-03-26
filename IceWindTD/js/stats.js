@@ -100,8 +100,8 @@ const stats = {
             damage:25,
         },
         gobChamp:{
-            health:850,
-            armor:3.7,
+            health:750,
+            armor:3.4,
             speed:35,
             reward:250,
             healthCost:15,
