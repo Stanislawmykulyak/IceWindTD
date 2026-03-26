@@ -117,8 +117,7 @@ function spawnEnemies(waveNumber) {
           enemyType: type
         });
         
-        // Dynamiczne skalowanie HP: +15% co każdą falę
-        const hpMultiplier = Math.pow(1.10, waveNumber - 1);
+        const hpMultiplier = Math.pow(1.09, waveNumber - 1);
         enemy.health = enemyStats.health * hpMultiplier;  
         enemy.maxHealth = enemy.health; // Przyda się do paska życia
 
