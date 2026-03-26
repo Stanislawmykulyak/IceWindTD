@@ -1,7 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Sour+Gummy:ital,wght@0,100..900;1,100..900&display=swap');
 body {
     margin: 0;
-    background-image:url(media/background.jpeg);
+    background-image:url(../media/background.jpeg);
     background-size:cover;
 }
 #kursy_walut {
@@ -86,7 +86,7 @@ body {
         rgba(55, 55, 55, 0.267) 0%, 
         rgba(0, 0, 0, 0.2) 100%
     );
-    background-image: url(media/icewind.png);
+    background-image: url(../media/icewind.png);
     background-size: cover;
     backdrop-filter:blur(15px);
     -webkit-backdrop-filter: blur(15px);

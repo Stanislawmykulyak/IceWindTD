@@ -7,21 +7,21 @@ const stats = {
         archer: {
             lvl1: {
                 name: 'Marksman',
-                damage: 25,
+                damage: 28,
                 range: 300,
                 cooldown: 0.60,
                 cost: 90,
             },
             lvl2:{
                 name: 'Sharpshooter',
-                damage: 40,
+                damage: 48,
                 range: 320,
                 cooldown: 0.58,
                 cost: 150,
             },
             lvl3:{
                 name: 'Sniper',
-                damage: 60,
+                damage: 68,
                 range: 350,
                 cooldown: 0.56,
                 cost: 230,
@@ -31,23 +31,23 @@ const stats = {
         mage: {
             lvl1: {
                 name: 'Mage',      
-                damage: 40,
+                damage: 48,
                 range: 240,
                 cooldown: 0.92,
                 cost: 120,
             },
             lvl2:{
                 name: 'Wizard',      
-                damage: 65,
+                damage: 70,
                 range: 300,
-                cooldown: 0.9,
+                cooldown: 0.85,
                 cost: 190,
             },
             lvl3:{
                 name: 'Sorcerer',
-                damage: 90,
+                damage: 100,
                 range: 340,
-                cooldown: 0.86,
+                cooldown: 0.80,
                 cost: 270,
             },
         },
