@@ -101,7 +101,7 @@ const stats = {
         },
         gobChamp:{
             health:750,
-            armor:3.4,
+            armor:2.3,
             speed:35,
             reward:250,
             healthCost:15,
@@ -118,7 +118,7 @@ const stats = {
         },
         goblinChief:{
             health:2000,
-            armor:3.2,
+            armor:3,
             speed:25,
             reward:500,
             healthCost:25,
