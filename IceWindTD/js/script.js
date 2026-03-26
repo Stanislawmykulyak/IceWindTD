@@ -117,9 +117,8 @@ function spawnEnemies(waveNumber) {
           enemyType: type
         });
         
-        // Dynamiczne skalowanie HP: +15% co każdą falę
-        const hpMultiplier = Math.pow(1.15, waveNumber - 1);
-        enemy.health = enemyStats.health * hpMultiplier; 
+        const hpMultiplier = Math.pow(1.09, waveNumber - 1);
+        enemy.health = enemyStats.health * hpMultiplier;  
         enemy.maxHealth = enemy.health; // Przyda się do paska życia
 
         enemy.healthCost = enemyStats.healthCost;
@@ -219,7 +218,7 @@ function animate(timestamp = 0) {
       if (distance < projectile.enemy.radius + projectile.radius) {
         let damageDealt = projectile.damage;
         if (currentWave > 10) {
-          if (Math.random() > 0.85) {
+          if (Math.random() > 0.95) {
             damageDealt = 0;
             console.log("blocked hit");
           }
@@ -490,7 +489,7 @@ sellButton.onclick = () => {
       for (let i = 1; i <= selectedBuilding.level; i++) {
         totalCost += baseTowerStats[`lvl${i}`].cost;
       }
-      coins += Math.round(totalCost * 0.7);
+      coins += Math.round(totalCost * 0.8);
       updateCoins();
 
       // Find the placement tile and mark it as not occupied
