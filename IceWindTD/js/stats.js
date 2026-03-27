@@ -102,7 +102,7 @@ const stats = {
         gobChamp:{
             health:500,
             armor:3.1,
-            speed:25,
+            speed:30,
             reward:250,
             healthCost:15,
             isMiniBoss:true,
@@ -111,7 +111,7 @@ const stats = {
         gobGiant:{
             health:300,
             armor:2.5,
-            speed:20,
+            speed:25,
             reward:100,
             healthCost:10,
             damage:75,
@@ -119,7 +119,7 @@ const stats = {
         goblinChief:{
             health:2000,
             armor:2.9,
-            speed:15,
+            speed:20,
             reward:500,
             healthCost:25,
             isBoss:true,
