@@ -32,8 +32,8 @@ void pokazAtak(int hpG, int hpP, char wynik, char ruchG, char ruchP) {
         cout << "TRAFIONY! Twoj " << rText << " pokonal " << pText << " potwora." << endl;
     } else if (wynik == 'P') { // Potwor wygrywa
         cout << "       ( X )  ^              /--\\ "<< endl;
-        cout << "       /||\\  |           ( > < )" << endl;
-        cout << "       / \\   |         >--<" << endl;
+        cout << "       /||\\  |             ( > < )" << endl;
+        cout << "       / \\   |              >--<" << endl;
         cout << "------------------------------------------" << endl
         ;
         cout << "AUU! Jego " << pText << " pokonal Twoje " << rText << "." << endl;
