@@ -27,7 +27,7 @@ int main() {
 
         ruchP = opcje[rand() % 3];
         cout << "\nATAK... ";
-        Sleep(500); 
+        Sleep(1500); 
 
         if (ruchG == ruchP) {
             cout << "REMIS! Obaj wybrali: " << ruchG << endl;
@@ -39,7 +39,7 @@ int main() {
             hpGracza--;
         }
         
-        Sleep(1500);
+        Sleep(2500);
     }
 
     system("cls");
