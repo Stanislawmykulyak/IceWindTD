@@ -31,21 +31,21 @@ const stats = {
         mage: {
             lvl1: {
                 name: 'Mage',      
-                damage: 48,
+                damage: 60,
                 range: 240,
                 cooldown: 0.92,
                 cost: 120,
             },
             lvl2:{
                 name: 'Wizard',      
-                damage: 70,
+                damage: 90,
                 range: 300,
                 cooldown: 0.85,
                 cost: 190,
             },
             lvl3:{
                 name: 'Sorcerer',
-                damage: 100,
+                damage: 120,
                 range: 340,
                 cooldown: 0.80,
                 cost: 270,
