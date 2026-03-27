@@ -34,7 +34,8 @@ void pokazAtak(int hpG, int hpP, char wynik, char ruchG, char ruchP) {
         cout << "       ( X )  ^              /--\\ "<< endl;
         cout << "       /||\\  |           ( > < )" << endl;
         cout << "       / \\   |         >--<" << endl;
-        cout << "------------------------------------------" << endl;
+        cout << "------------------------------------------" << endl
+        ;
         cout << "AUU! Jego " << pText << " pokonal Twoje " << rText << "." << endl;
     } else { // Remis
         cout << "          O   ^      REMIS !  /  \\" << endl;
