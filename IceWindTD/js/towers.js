@@ -117,7 +117,7 @@ class ArcherTowerLvl1 extends Tower {
                         damage: this.damage / this.target.armor
                     })
                 );
-                this.elapsedSpawnCooldown = 0;
+              this.elapsedSpawnCooldown = 0;
             }
         }
         super.update(dt);
