@@ -18,22 +18,6 @@ for (let i = 0; i < placementTilesData.length; i += 20) {
   placementTilesData2D.push(placementTilesData.slice(i, i + 20));
 }
 
-const fullscreenBtn = document.getElementById('fullscreen-btn');
-const gameContainer = document.getElementById('game-container');
-
-fullscreenBtn.addEventListener('click', () => {
-    // Sprawdzamy, czy gra NIE jest na pełnym ekranie
-    if (!document.fullscreenElement) {
-        // Wchodzimy we fullscreen
-        gameContainer.requestFullscreen().catch(err => {
-            console.log(`Błąd: Nie można włączyć pełnego ekranu: ${err.message}`);
-        });
-    } else {
-        // Wychodzimy z fullscreena
-        document.exitFullscreen();
-    }
-});
-
 const tileImage = new Image();
 tileImage.src = 'media/Free-Spot.png';
 const placementTiles = [];
@@ -109,6 +93,7 @@ function spawnEnemies(waveNumber) {
       const spacing = hold ? hold * enemyStats.speed : offset;
       
       for (let i = 0; i < count; i++) {
+        // Zwiększamy dystans TYLKO dla ścieżki, na której spawnuje się wróg
         trackOffsets[track] += spacing; 
         
         const enemy = new EnemyClass({
@@ -117,10 +102,6 @@ function spawnEnemies(waveNumber) {
           enemyType: type
         });
         
-        const hpMultiplier = Math.pow(1.09, waveNumber - 1);
-        enemy.health = enemyStats.health * hpMultiplier;  
-        enemy.maxHealth = enemy.health; // Przyda się do paska życia
-
         enemy.healthCost = enemyStats.healthCost;
         enemies.push(enemy);
       }
@@ -218,7 +199,7 @@ function animate(timestamp = 0) {
       if (distance < projectile.enemy.radius + projectile.radius) {
         let damageDealt = projectile.damage;
         if (currentWave > 10) {
-          if (Math.random() > 0.95) {
+          if (Math.random() > 0.85) {
             damageDealt = 0;
             console.log("blocked hit");
           }
@@ -387,17 +368,6 @@ canvas.addEventListener("click", (event) => {
     selectedTile = null; // Deselect any placement tile
     menu.style.display = "none";
     updateUpgradeMenu();
-    upgradeMenu.style.display = "block";
-
-    let upTop = clickedTower.position.y;
-    const upHeight = upgradeMenu.offsetHeight;
-
-    if (upTop + upHeight > canvas.height) {
-        upTop = canvas.height - upHeight - 10;
-    }
-
-    upgradeMenu.style.top = `${upTop}px`;
-    upgradeMenu.style.left = `${clickedTower.position.x}px`;
   } else {
     // If no building was clicked, check for an empty placement tile
     let clickedTile = null;
@@ -412,43 +382,16 @@ canvas.addEventListener("click", (event) => {
       }
     }
 
-    if (activeTile && !activeTile.isOccupied) {
-    selectedTile = activeTile;
-    const menu = document.getElementById("tower-menu");
-    menu.style.display = "flex";
-
-    // Środek kafelka w układzie gry
-    let tileCenterX = activeTile.position.x + (activeTile.size / 2);
-    let tileCenterY = activeTile.position.y + (activeTile.size / 2);
-
-    const menuHalfSize = 125; // Połowa wymiaru #tower-menu (250px / 2)
-    const safeMargin = 15; // Bezpieczny odstęp od krawędzi
-
-    // 1. Blokada wyjazdu dołem
-    const bottomEdge = tileCenterY + menuHalfSize;
-    if (bottomEdge > canvas.height) {
-        tileCenterY -= (bottomEdge - canvas.height + safeMargin); 
-    }
-
-    // 2. Blokada wyjazdu lewą stroną
-    const leftEdge = tileCenterX - menuHalfSize;
-    if (leftEdge < 0) {
-        tileCenterX += (Math.abs(leftEdge) + safeMargin);
-    }
-
-    // Przeliczamy pozycję na PROCENTY względem wymiarów canvasa
-    const leftPercent = (tileCenterX / 1280) * 100; 
-    const topPercent = (tileCenterY / 768) * 100;
-
-    // Ustawiamy pozycję w procentach
-    menu.style.left = `${leftPercent}%`;
-    menu.style.top = `${topPercent}%`;
-    
-    // Centrujemy samo menu względem tego punktu
-    menu.style.transform = "translate(-50%, -50%)";
-
-    arrangeButtonsInCircle();
-}else {
+    if (clickedTile) {
+      selectedTile = clickedTile;
+      selectedBuilding = null; // Deselect any building
+      upgradeMenu.style.display = "none";
+      const rect = canvas.getBoundingClientRect();
+      menu.style.left = `${rect.left + clickedTile.position.x + clickedTile.size / 2}px`;
+      menu.style.top = `${rect.top + clickedTile.position.y + clickedTile.size / 2}px`;
+      menu.style.display = "block";
+      arrangeButtonsInCircle();
+    } else {
       // Clicked outside of any building or empty tile
       menu.style.display = "none";
       selectedTile = null;
@@ -489,7 +432,7 @@ sellButton.onclick = () => {
       for (let i = 1; i <= selectedBuilding.level; i++) {
         totalCost += baseTowerStats[`lvl${i}`].cost;
       }
-      coins += Math.round(totalCost * 0.8);
+      coins += Math.round(totalCost * 0.7);
       updateCoins();
 
       // Find the placement tile and mark it as not occupied
@@ -552,27 +495,21 @@ document.getElementById("mage-tower").onclick = (e) => {
 
 
 window.addEventListener('mousemove', (event) => {
-    const rect = canvas.getBoundingClientRect();
-    
-    // Obliczamy skalę - to zadziała zawsze, nawet jak okno przeglądarki jest pomniejszone
-    const scaleX = canvas.width / rect.width;
-    const scaleY = canvas.height / rect.height;
+  const rect = canvas.getBoundingClientRect();
+  mouse.x = event.clientX - rect.left;
+  mouse.y = event.clientY - rect.top;
 
-    // Zawsze używamy skalowania względem rect, to najbardziej odporna metoda
-    mouse.x = (event.clientX - rect.left) * scaleX;
-    mouse.y = (event.clientY - rect.top) * scaleY;
-
-    activeTile = null;
-    for (let i = 0; i < placementTiles.length; i++) {
-        const tile = placementTiles[i];
-        if (
-            mouse.x > tile.position.x && mouse.x < tile.position.x + tile.size &&
-            mouse.y > tile.position.y && mouse.y < tile.position.y + tile.size
-        ) {
-            activeTile = tile;
-            break;
-        }
+  activeTile = null;
+  for (let i = 0; i < placementTiles.length; i++) {
+    const tile = placementTiles[i];
+    if (
+      mouse.x > tile.position.x && mouse.x < tile.position.x + tile.size &&
+      mouse.y > tile.position.y && mouse.y < tile.position.y + tile.size
+    ) {
+      activeTile = tile;
+      break;
     }
+  }
 });
 
 function arrangeButtonsInCircle() {

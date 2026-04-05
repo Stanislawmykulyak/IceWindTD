@@ -117,19 +117,18 @@ canvas{
 }
 
 #tower-menu {
-    position: absolute;
-    width: 250px;  /* KLUCZ: Sztywna szerokość */
-    height: 250px; /* KLUCZ: Sztywna wysokość */
-    display: none;
+    position: fixed;
+    width: 250px;
+    height: 250px;
     border: 6px solid rgba(53, 53, 53, 0.9);
     border-radius: 50%;
-    justify-content: center;
-    align-items: center;
+    display: none;
+    background: none;
+    box-shadow: none;
     z-index: 1000;
-    /* Usuń wszelkie marginesy, jeśli są */
-    margin: 0;
-
+    transform: translate(-50%, -50%);
 }
+
 .close-btn {
     position: absolute;
     width: 40px;
