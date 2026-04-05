@@ -7,22 +7,22 @@ const stats = {
         archer: {
             lvl1: {
                 name: 'Marksman',
-                damage: 28,
+                damage: 25,
                 range: 300,
                 cooldown: 0.60,
                 cost: 90,
             },
             lvl2:{
                 name: 'Sharpshooter',
-                damage: 48,
-                range: 320,
+                damage: 50,
+                range: 340,
                 cooldown: 0.58,
-                cost: 150,
+                cost: 160,
             },
             lvl3:{
                 name: 'Sniper',
-                damage: 68,
-                range: 350,
+                damage: 75,
+                range: 360,
                 cooldown: 0.56,
                 cost: 230,
             },
@@ -45,7 +45,7 @@ const stats = {
             },
             lvl3:{
                 name: 'Sorcerer',
-                damage: 120,
+                damage: 125,
                 range: 340,
                 cooldown: 0.80,
                 cost: 270,
@@ -58,8 +58,8 @@ const stats = {
             range: 250,
             cooldown: 1.5,
             cost: 90,
-            unitHealth:150,
-            respawn:10,
+            unitHealth:175,
+            respawn:8,
         }
     },
     
@@ -102,7 +102,7 @@ const stats = {
         gobChamp:{
             health:500,
             armor:3.1,
-            speed:30,
+            speed:25,
             reward:250,
             healthCost:15,
             isMiniBoss:true,
@@ -111,19 +111,19 @@ const stats = {
         gobGiant:{
             health:300,
             armor:2.5,
-            speed:25,
+            speed:20,
             reward:100,
             healthCost:10,
             damage:75,
         },
         goblinChief:{
             health:2000,
-            armor:2.9,
-            speed:20,
+            armor:2.5,
+            speed:17,
             reward:500,
             healthCost:25,
             isBoss:true,
-            damage:250,
+            damage:150,
         }
 
     },
