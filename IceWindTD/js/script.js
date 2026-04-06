@@ -37,6 +37,42 @@ placementTilesData2D.forEach((row, y) => {
   });
 });
 
+// Funkcja do zapisu wyniku
+function saveScore(finalScore) {
+    // Pobierz obecne wyniki lub stwórz nową tablicę
+    let leaderboard = JSON.parse(localStorage.getItem('td_leaderboard')) || [];
+    
+    // Dodaj nowy wynik z datą
+    const newEntry = {
+        score: finalScore,
+        date: new Date().toLocaleDateString()
+    };
+    
+    leaderboard.push(newEntry);
+    
+    // Sortuj od największego i zostaw tylko TOP 10
+    leaderboard.sort((a, b) => b.score - a.score);
+    leaderboard = leaderboard.slice(0, 10);
+    
+    localStorage.setItem('td_leaderboard', JSON.stringify(leaderboard));
+}
+
+// Funkcja do pokazywania tabeli
+document.getElementById('leaderboard-icon').addEventListener('click', () => {
+    const list = document.getElementById('leaderboard-list');
+    const modal = document.getElementById('leaderboard-modal');
+    // Używamy jednego klucza: td_highscores
+    const leaderboard = JSON.parse(localStorage.getItem('td_highscores')) || [];
+    
+    list.innerHTML = leaderboard.length > 0 
+        ? leaderboard.map((item, index) => 
+            `<li>${index + 1}. <b>${item.name}</b>: ${item.points} pkt <small>(${item.date})</small></li>`
+          ).join('')
+        : "Brak wyników. Graj dalej!";
+        
+    modal.style.display = 'block';
+});
+
 const image = new Image();
 const play = document.querySelector('.play');
 const switcher = document.querySelector('.off')
@@ -145,7 +181,18 @@ function animate(timestamp = 0) {
         hearts -= (enemy.healthCost || 1);
         updateHearts();
         enemies.splice(i, 1);
-        continue; // Przejdź do następnego, nie rób update!
+
+        // Mechanika Game Over
+        if (hearts <= 0) {
+          cancelAnimationFrame(animationID);
+          const gameOverScreen = document.querySelector('.game-over');
+          if (gameOverScreen) gameOverScreen.style.display = 'flex';
+          
+          // ZAMIEŃ saveScore(score) NA TO:
+          finishAndSave(); 
+          return;
+      }
+        continue; 
     }
 
     // 2. Dopiero teraz ruch i rysowanie

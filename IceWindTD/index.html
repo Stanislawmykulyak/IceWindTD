@@ -1,12 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="css/style.css"/>
-    <link rel="stylesheet" href="css/resources.css"/>
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/resources.css" />
     <title>Helltrip TD</title>
 </head>
+
 <body>
     <div id="game-container">
         <canvas></canvas>
@@ -14,14 +16,24 @@
             <div class="hearts"></div>
             <div class="gold"></div>
         </div>
-        
-        <p class="wave-display"></p>
 
+        <p class="wave-display"></p>
+        <div id="leaderboard-icon" style="position: absolute; top: 20px; right: 20px; cursor: pointer; z-index: 100;">
+            <img src="https://cdn-icons-png.flaticon.com/512/3112/3112946.png" width="50" alt="Leaderboard">
+        </div>
+
+        <div id="leaderboard-modal"
+            style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.9); color: white; padding: 20px; border: 3px solid #ffd700; border-radius: 15px; z-index: 1000; min-width: 300px; text-align: center; font-family: 'Arial', sans-serif;">
+            <h2 style="color: #ffd700;">TOP 10 REKORDÓW</h2>
+            <ul id="leaderboard-list" style="list-style: none; padding: 0; margin: 20px 0; font-size: 20px;"></ul>
+            <button onclick="document.getElementById('leaderboard-modal').style.display='none'"
+                style="background: #ffd700; border: none; padding: 10px 20px; cursor: pointer; font-weight: bold; border-radius: 5px;">ZAMKNIJ</button>
+        </div>
         <div class="game-over">
             Game Over
             <button onclick="finishAndSave()" class="save-btn">Zapisz Wynik</button>
         </div>
-        
+
         <div class="play ">
             Play<div class="play-button"></div>
         </div>
@@ -36,16 +48,22 @@
 
         <button id="archer-tower" class="tower-options">
             <img src="media/archer.png" height="60px" width="60px">
-            <div class="tower-cost"><p class="cost">100</p></div>
+            <div class="tower-cost">
+                <p class="cost">100</p>
+            </div>
         </button>
 
         <button id="mage-tower" class="tower-options">
             <img src="media/mage.png" height="60px" width="60px">
-            <div class="tower-cost"><p class="cost">140</p></div>
+            <div class="tower-cost">
+                <p class="cost">140</p>
+            </div>
         </button>
         <button id="barracks" class="tower-options">
             <img src="media/barracks.png" height="60px" width="60px">
-            <div class="tower-cost"><p class="cost">100</p></div>
+            <div class="tower-cost">
+                <p class="cost">100</p>
+            </div>
         </button>
 
         <button id="close-tower-menu" class="close-btn">✕</button>
@@ -64,7 +82,8 @@
         </div>
         <button id="upgrade-button"></button>
         <button id="sell-button"></button>
-        <button id="rally-button" title="Set Rally Point" style="border-radius:50%;margin:auto; margin-top:20px; display:flex; justify-content: center; align-items:center;">
+        <button id="rally-button" title="Set Rally Point"
+            style="border-radius:50%;margin:auto; margin-top:20px; display:flex; justify-content: center; align-items:center;">
             <img src="media/rally.png" height="30px" width="30px">
         </button>
     </div>
@@ -78,4 +97,5 @@
     <script src="js/script.js"></script>
     <script src="js/path.js"></script>
 </body>
+
 </html>

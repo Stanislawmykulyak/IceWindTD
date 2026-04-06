@@ -22,7 +22,7 @@
     display:flex;
     position:absolute;
     top:-5px;
-    right:0px;
+    right:80px;
     padding: 10px;
     background: rgba(30, 30, 30, 0.882);
     gap:30px;
@@ -41,6 +41,8 @@
 .save-btn {
   /* Pozycjonowanie i bazowe wymiary */
   padding: 12px 28px;
+  position:absolute;
+  bottom:50px;
   font-family: 'Trebuchet MS', sans-serif;
   font-size: 1.2rem;
   font-weight: bold;
