@@ -615,3 +615,16 @@ function finishAndSave() {
   alert(`Wynik zapisany! Final Score: ${finalScore}`);
   location.reload(); // Reset gry
 }
+
+document.getElementById('clear-leaderboard').addEventListener('click', () => {
+    // Proste potwierdzenie, żeby nie usunąć przez przypadek
+    if (confirm("Mordo, na pewno chcesz wywalić wszystkie rekordy? Nie da się tego cofnąć!")) {
+        // Czyścimy konkretny klucz w pamięci
+        localStorage.removeItem('td_highscores');
+        
+        // Odświeżamy widok listy w modalu, żeby od razu było widać, że jest pusto
+        document.getElementById('leaderboard-list').innerHTML = "Brak wyników. Graj dalej!";
+        
+        alert("Tablica wyników została wyzerowana.");
+    }
+});
