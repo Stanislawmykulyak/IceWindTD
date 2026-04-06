@@ -52,16 +52,34 @@ const stats = {
             },
         },
         barracks: {
-        lvl1: {
-            name: 'Militia',
-            damage: 15,
-            range: 250,
-            cooldown: 1.5,
-            cost: 90,
-            unitHealth:175,
-            respawn:8,
-        }
-    },
+            lvl1: {
+                name: 'Barracks',
+                damage: 15,
+                range: 250,
+                cooldown: 1.5,
+                cost: 90,
+                unitHealth: 175,
+                respawn: 8,
+            },
+            lvl2: {
+                name: 'Armory',
+                damage: 25,
+                range: 270,
+                cooldown: 1.4,
+                cost: 160,
+                unitHealth: 250,
+                respawn: 7,
+            },
+            lvl3: {
+                name: 'Castle',
+                damage: 40,
+                range: 300,
+                cooldown: 1.2,
+                cost: 250,
+                unitHealth: 380,
+                respawn: 6,
+            }
+        },
     
     },
     enemies: {

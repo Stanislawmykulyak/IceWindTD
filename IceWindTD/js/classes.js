@@ -532,4 +532,218 @@ class BarracksLvl1 extends Tower {
       }
     }
   }
+  upgrade() {
+    if (coins < stats.towers.barracks.lvl2.cost) return null;
+    coins -= stats.towers.barracks.lvl2.cost;
+    const upgraded = new BarracksLvl2({ position: this.position });
+    // Dziedziczymy punkt zbiórki, żeby gracza nie irytował reset pozycji wojska
+    upgraded.setRallyPoint(this.rallyPoint.x, this.rallyPoint.y);
+    return upgraded;
+  }
+}
+class BarracksLvl2 extends Tower {
+  constructor({ position }) {
+    super({
+      position,
+      stats: stats.towers.barracks.lvl2,
+      baseTowerType: "barracks",
+      level: 2,
+      imageSrc: "media/barracks.png", // TODO: Podmień na asset Lvl2
+      frames: { max: 1 },
+      offset: { x: 0, y: -20 }
+    });
+    this.soldiers = [];
+    this.respawnTimers = [0, 0, 0, 0];
+    // Zmieniona formacja dla 4 jednostek (kwadrat)
+    this.offsets = [{ x: -15, y: -15 }, { x: 15, y: -15 }, { x: -15, y: 15 }, { x: 15, y: 15 }];
+    this.rallyPoint = this.findNearestPath();
+    this.spawnSoldiers();
+  }
+
+  findNearestPath() {
+    let nearest = { x: this.center.x, y: this.center.y };
+    let minDist = Infinity;
+    for (let i = 0; i < path.length; i++) {
+      if (path[i] === 289) {
+        const px = (i % 20) * 64 + 32;
+        const py = Math.floor(i / 20) * 64 + 32;
+        const dist = Math.hypot(px - this.center.x, py - this.center.y);
+        if (dist < minDist && dist <= this.radius) {
+          minDist = dist;
+          nearest = { x: px, y: py };
+        }
+      }
+    }
+    return nearest;
+  }
+
+  setRallyPoint(x, y) {
+    this.rallyPoint = { x, y };
+    this.soldiers.forEach((s, idx) => {
+      if (s) {
+        s.rallyPoint = { x: this.rallyPoint.x + this.offsets[idx].x, y: this.rallyPoint.y + this.offsets[idx].y };
+        s.state = 'moving';
+        if (s.target) s.target.blockedBy = null;
+        s.target = null;
+      }
+    });
+  }
+
+  spawnSoldiers() {
+    for (let i = 0; i < 4; i++) {
+      this.soldiers[i] = new Soldier({
+        position: { x: this.center.x, y: this.center.y },
+        rallyPoint: { x: this.rallyPoint.x + this.offsets[i].x, y: this.rallyPoint.y + this.offsets[i].y },
+        stats: stats.towers.barracks.lvl2,
+        parentBarracks: this
+      });
+    }
+  }
+
+  draw() {
+    super.draw();
+    this.soldiers.forEach(s => s?.draw());
+  }
+
+  update(dt) {
+    super.update(dt);
+    for (let i = 0; i < 4; i++) {
+      const s = this.soldiers[i];
+      if (!s || s.state === 'dead') {
+        this.respawnTimers[i] += dt;
+        if (this.respawnTimers[i] >= stats.towers.barracks.lvl2.respawn) {
+          this.soldiers[i] = new Soldier({
+            position: { x: this.center.x, y: this.center.y },
+            rallyPoint: { x: this.rallyPoint.x + this.offsets[i].x, y: this.rallyPoint.y + this.offsets[i].y },
+            stats: stats.towers.barracks.lvl2,
+            parentBarracks: this
+          });
+          this.respawnTimers[i] = 0;
+        }
+      } else {
+        s.update(dt);
+        if (!s.target && s.state !== 'moving') {
+          const validEnemies = enemies.filter(e =>
+            !e.blockedBy && e.position.x > 0 && !e.isFlying && 
+            Math.hypot(e.center.x - s.rallyPoint.x, e.center.y - s.rallyPoint.y) < 60
+          );
+          if (validEnemies.length > 0) {
+            s.target = validEnemies[0];
+            s.target.blockedBy = s;
+            s.state = 'moving';
+          }
+        }
+      }
+    }
+  }
+
+  upgrade() {
+    if (coins < stats.towers.barracks.lvl3.cost) return null;
+    coins -= stats.towers.barracks.lvl3.cost;
+    const upgraded = new BarracksLvl3({ position: this.position });
+    upgraded.setRallyPoint(this.rallyPoint.x, this.rallyPoint.y);
+    return upgraded;
+  }
+}
+
+class BarracksLvl3 extends Tower {
+  constructor({ position }) {
+    super({
+      position,
+      stats: stats.towers.barracks.lvl3,
+      baseTowerType: "barracks",
+      level: 3,
+      imageSrc: "media/barracks.png", // TODO: Podmień na asset Lvl3
+      frames: { max: 1 },
+      offset: { x: 0, y: -20 }
+    });
+    this.soldiers = [];
+    this.respawnTimers = [0, 0, 0, 0, 0];
+    // Zmieniona formacja dla 5 jednostek (krzyż/pięciokąt)
+    this.offsets = [{ x: 0, y: -20 }, { x: -20, y: 0 }, { x: 20, y: 0 }, { x: -15, y: 20 }, { x: 15, y: 20 }];
+    this.rallyPoint = this.findNearestPath();
+    this.spawnSoldiers();
+  }
+
+  findNearestPath() {
+    let nearest = { x: this.center.x, y: this.center.y };
+    let minDist = Infinity;
+    for (let i = 0; i < path.length; i++) {
+      if (path[i] === 289) {
+        const px = (i % 20) * 64 + 32;
+        const py = Math.floor(i / 20) * 64 + 32;
+        const dist = Math.hypot(px - this.center.x, py - this.center.y);
+        if (dist < minDist && dist <= this.radius) {
+          minDist = dist;
+          nearest = { x: px, y: py };
+        }
+      }
+    }
+    return nearest;
+  }
+
+  setRallyPoint(x, y) {
+    this.rallyPoint = { x, y };
+    this.soldiers.forEach((s, idx) => {
+      if (s) {
+        s.rallyPoint = { x: this.rallyPoint.x + this.offsets[idx].x, y: this.rallyPoint.y + this.offsets[idx].y };
+        s.state = 'moving';
+        if (s.target) s.target.blockedBy = null;
+        s.target = null;
+      }
+    });
+  }
+
+  spawnSoldiers() {
+    for (let i = 0; i < 5; i++) {
+      this.soldiers[i] = new Soldier({
+        position: { x: this.center.x, y: this.center.y },
+        rallyPoint: { x: this.rallyPoint.x + this.offsets[i].x, y: this.rallyPoint.y + this.offsets[i].y },
+        stats: stats.towers.barracks.lvl3,
+        parentBarracks: this
+      });
+    }
+  }
+
+  draw() {
+    super.draw();
+    this.soldiers.forEach(s => s?.draw());
+  }
+
+  update(dt) {
+    super.update(dt);
+    for (let i = 0; i < 5; i++) {
+      const s = this.soldiers[i];
+      if (!s || s.state === 'dead') {
+        this.respawnTimers[i] += dt;
+        if (this.respawnTimers[i] >= stats.towers.barracks.lvl3.respawn) {
+          this.soldiers[i] = new Soldier({
+            position: { x: this.center.x, y: this.center.y },
+            rallyPoint: { x: this.rallyPoint.x + this.offsets[i].x, y: this.rallyPoint.y + this.offsets[i].y },
+            stats: stats.towers.barracks.lvl3,
+            parentBarracks: this
+          });
+          this.respawnTimers[i] = 0;
+        }
+      } else {
+        s.update(dt);
+        if (!s.target && s.state !== 'moving') {
+          const validEnemies = enemies.filter(e =>
+            !e.blockedBy && e.position.x > 0 && !e.isFlying &&
+            Math.hypot(e.center.x - s.rallyPoint.x, e.center.y - s.rallyPoint.y) < 60
+          );
+          if (validEnemies.length > 0) {
+            s.target = validEnemies[0];
+            s.target.blockedBy = s;
+            s.state = 'moving';
+          }
+        }
+      }
+    }
+  }
+
+  upgrade() {
+    // Max level, nie robimy nic
+    return null;
+  }
 }
