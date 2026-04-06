@@ -168,8 +168,7 @@ class Enemy extends Sprite {
 
     if (
       Math.abs(this.center.x - waypoint.x) < Math.abs(this.velocity.x * dt) + 1 &&
-      Math.abs(this.center.y - waypoint.y) < Math.abs(this.velocity.y * dt) + 1 &&
-      this.waypointIndex < this.waypoints.length - 1
+      Math.abs(this.center.y - waypoint.y) < Math.abs(this.velocity.y * dt) + 1
     ) {
       this.waypointIndex++;
     }

@@ -1,7 +1,7 @@
 let coins = 450;
 let hearts = 20;
 let currentWave = 1;
-
+let score = 0; // Twój nowy licznik punktów
 const stats = {
     towers: {
         archer: {

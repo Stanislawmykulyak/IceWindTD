@@ -121,7 +121,10 @@ function updateCoins() {
 function updateHearts() {
   document.querySelector('.hearts').innerHTML = hearts + '<img src="media/resources/hearts.png" class="rss-img" style="margin-top:3px;">';
 } let lastTime = 0;
-
+function updateScore() {
+  const scoreDisplay = document.querySelector('.score-display'); // Upewnij się, że masz taki element w HTML
+  if (scoreDisplay) scoreDisplay.textContent = `Score: ${score}`;
+}
 function animate(timestamp = 0) {
   const animationID = requestAnimationFrame(animate);
 
@@ -136,23 +139,29 @@ function animate(timestamp = 0) {
   // Update dynamic state passing 'dt'
   for (let i = enemies.length - 1; i >= 0; i--) {
     const enemy = enemies[i];
-    enemy.update(dt);
-    if (enemy.health <= 0) {
-      coins += enemy.reward;
-      updateCoins();
-      enemies.splice(i, 1);
-      continue; // Zabity, więc pomijamy resztę logiki dla niego
-    }
-    if (enemy.position.x > canvas.width) {
-      hearts -= enemy.healthCost;
-      enemies.splice(i, 1);
-      if (hearts <= 0) {
-        cancelAnimationFrame(animationID);
-        document.querySelector('.game-over').style.display = 'flex';
-      }
-    }
-  }
 
+    // 1. Sprawdź czy wróg wyszedł poza mapę
+    if (enemy.waypointIndex >= enemy.waypoints.length) {
+        hearts -= (enemy.healthCost || 1);
+        updateHearts();
+        enemies.splice(i, 1);
+        continue; // Przejdź do następnego, nie rób update!
+    }
+
+    // 2. Dopiero teraz ruch i rysowanie
+    enemy.update(dt);
+
+    // 3. Sprawdź czy zginął
+    if (enemy.health <= 0) {
+        coins += enemy.reward;
+        score += Math.floor(enemy.reward + (enemy.maxHealth / 10));
+        updateCoins();
+        updateScore();
+        enemies.splice(i, 1);
+        continue;
+    }
+}
+  
   if (!switcher.classList.contains('off')) {
     if (enemies.length === 0) {
       currentWave += 1;
@@ -532,4 +541,30 @@ function arrangeButtonsInCircle() {
     btn.style.left = `${x}px`;
     btn.style.top = `${y}px`;
   });
+}
+// Funkcja wywoływana przy kliknięciu przycisku zapisu
+function finishAndSave() {
+  const nickname = prompt("Podaj swój nick, bratku:");
+  if (!nickname) return;
+
+  // Bonus: 5 punktów za każdą monetę na koniec gry
+  const finalScore = score + (coins * 5);
+
+  const scoreEntry = {
+    name: nickname,
+    points: finalScore,
+    wave: currentWave,
+    date: new Date().toLocaleDateString()
+  };
+
+  // Pobieramy stare wyniki, dodajemy nowy i sortujemy
+  let leaderboard = JSON.parse(localStorage.getItem('td_highscores')) || [];
+  leaderboard.push(scoreEntry);
+  leaderboard.sort((a, b) => b.points - a.points);
+  
+  // Zapisujemy TOP 10
+  localStorage.setItem('td_highscores', JSON.stringify(leaderboard.slice(0, 10)));
+  
+  alert(`Wynik zapisany! Final Score: ${finalScore}`);
+  location.reload(); // Reset gry
 }
