@@ -114,7 +114,7 @@ const tracks = {
 function spawnEnemies(waveNumber) {
   const wave = stats.waves[String(waveNumber)];
   if (!wave) return;
-  const waveMultiplier = Math.pow(1.10, waveNumber - 1);
+  const waveMultiplier = Math.pow(1.09, waveNumber - 1);
 
   // Śledzimy dystans (offset) niezależnie dla każdej ścieżki
   let trackOffsets = { 1: 0, 2: 0 };
