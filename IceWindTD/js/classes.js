@@ -361,10 +361,11 @@ class Soldier extends Sprite {
     // Podpinamy sprite'a z animacją (domyślnie dałem goblina jako placeholeder, zmień ścieżkę na swojego rycerza)
     super({ 
       position, 
-      imageSrc: 'media/tower-models/enemies/goblin.png', 
+      imageSrc: 'media/tower-models/unit/goblin_warrior.png', 
       frames: { max: 20 }, // Upewnij się, że max zgadza się z ilością klatek na Twoim spritesheecie
       offset: { x: 0, y: -10 } 
     }); 
+    this.outOfCombatTimer = 0;
     this.rallyPoint = rallyPoint;
     this.parentBarracks = parentBarracks;
     this.width = 40; // Powiększyłem hitboxa, żeby lepiej pasował do sprite'a
@@ -440,7 +441,17 @@ class Soldier extends Sprite {
       if (this.target) this.target.blockedBy = null;
       return;
     }
+    if (this.state === 'fighting') {
+      this.outOfCombatTimer = 0; // Reset licznika, bo walczymy
+    } else {
+      this.outOfCombatTimer += dt; // Nabijanie czasu poza walką
+    }
 
+    // Jeśli minęło 5s i HP jest mniejsze niż max
+    if (this.outOfCombatTimer >= 5 && this.health < this.maxHealth) {
+      this.health += 10 * dt; // Regeneracja 10 HP na sekundę
+      if (this.health > this.maxHealth) this.health = this.maxHealth; // Cap na max HP
+    }
     this.center = { x: this.position.x + this.width / 2, y: this.position.y + this.height / 2 };
 
     if (this.state === 'moving' || !this.target) {
