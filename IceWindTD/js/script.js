@@ -142,7 +142,6 @@ function spawnEnemies(waveNumber) {
         // Bierzemy czyste statystyki z stats.js i mnożymy
         enemy.maxHealth = Math.floor(enemyStats.health * waveMultiplier);
         enemy.health = enemy.maxHealth;
-        enemy.reward = Math.floor(enemyStats.reward * lootMultiplier);
         
         enemy.healthCost = enemyStats.healthCost;
         enemies.push(enemy);
