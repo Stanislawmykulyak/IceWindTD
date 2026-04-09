@@ -596,7 +596,7 @@ function arrangeButtonsInCircle() {
 }
 // Funkcja wywoływana przy kliknięciu przycisku zapisu
 function finishAndSave() {
-  const nickname = prompt("Podaj swój nick, bratku:");
+  const nickname = prompt("Podaj swój nick:");
   if (!nickname) return;
 
   // Bonus: 5 punktów za każdą monetę na koniec gry
@@ -623,7 +623,7 @@ function finishAndSave() {
 
 document.getElementById('clear-leaderboard').addEventListener('click', () => {
     // Proste potwierdzenie, żeby nie usunąć przez przypadek
-    if (confirm("Mordo, na pewno chcesz wywalić wszystkie rekordy? Nie da się tego cofnąć!")) {
+    if (confirm("Na pewno chcesz wywalić wszystkie rekordy? Nie da się tego cofnąć!")) {
         // Czyścimy konkretny klucz w pamięci
         localStorage.removeItem('td_highscores');
         
