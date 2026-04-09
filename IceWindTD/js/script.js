@@ -8,7 +8,6 @@ c.fillStyle = 'white';
 c.fillRect(0, 0, canvas.width, canvas.height);
 
 const placementTilesData2D = [];
-
 const waveDisplay = document.querySelector('.wave-display');
 function WaveUpdate() {
   waveDisplay.textContent = `Waves: ${currentWave} / ${waves}`;
@@ -115,9 +114,10 @@ const tracks = {
 function spawnEnemies(waveNumber) {
   const wave = stats.waves[String(waveNumber)];
   if (!wave) return;
+  const waveMultiplier = Math.pow(1.10, waveNumber - 1);
 
   // Śledzimy dystans (offset) niezależnie dla każdej ścieżki
-  let trackOffsets = { 1: 0, 2: 0 }; 
+  let trackOffsets = { 1: 0, 2: 0 };
 
   wave.forEach((enemyGroup) => {
     const { type, count, track, offset, hold } = enemyGroup;
@@ -135,8 +135,14 @@ function spawnEnemies(waveNumber) {
         const enemy = new EnemyClass({
           position: { x: waypoints[0].x - trackOffsets[track], y: waypoints[0].y },
           waypoints: waypoints,
-          enemyType: type
+          enemyType: type,
         });
+        
+        // --- NADPISANIE HP I NAGRODY WZOREM ---
+        // Bierzemy czyste statystyki z stats.js i mnożymy
+        enemy.maxHealth = Math.floor(enemyStats.health * waveMultiplier);
+        enemy.health = enemy.maxHealth;
+        enemy.reward = Math.floor(enemyStats.reward * lootMultiplier);
         
         enemy.healthCost = enemyStats.healthCost;
         enemies.push(enemy);
@@ -260,7 +266,7 @@ function animate(timestamp = 0) {
             console.log("blocked hit");
           }
         }
-
+        
         if (damageDealt > 0) {
           projectile.enemy.health -= damageDealt;
         }

@@ -318,7 +318,7 @@ class MageTowerLvl3 extends Tower {
             level: 3,
             imageSrc: "media/tower-models/towers/mage-tower-lvl3.png",
             frames: { max: 19 },
-            offset: { x: -12, y: -100 }
+            offset: { x: -12, y: -90 }
         });
     }
     update(dt) {
