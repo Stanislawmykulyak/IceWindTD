@@ -29,7 +29,6 @@ class PlacementTile {
     }
   }
 }
-
 class Enemy extends Sprite {
   constructor({ position = { x: 0, y: 0 }, imageSrc, frames = { max: 20 }, waypoints = [], enemyType }) {
     super({ position, imageSrc, frames });
@@ -359,12 +358,18 @@ class MageProjectile1 extends Projectile {
 }
 class Soldier extends Sprite {
   constructor({ position, rallyPoint, stats, parentBarracks }) {
-    super({ position, imageSrc: '' }); // Możesz podpiąć animację
+    // Podpinamy sprite'a z animacją (domyślnie dałem goblina jako placeholeder, zmień ścieżkę na swojego rycerza)
+    super({ 
+      position, 
+      imageSrc: 'media/tower-models/enemies/goblin.png', 
+      frames: { max: 20 }, // Upewnij się, że max zgadza się z ilością klatek na Twoim spritesheecie
+      offset: { x: 0, y: -10 } 
+    }); 
     this.rallyPoint = rallyPoint;
     this.parentBarracks = parentBarracks;
-    this.width = 20;
-    this.height = 20;
-    this.center = { x: position.x + 10, y: position.y + 10 };
+    this.width = 40; // Powiększyłem hitboxa, żeby lepiej pasował do sprite'a
+    this.height = 50;
+    this.center = { x: position.x + this.width / 2, y: position.y + this.height / 2 };
     this.speed = 80;
     this.maxHealth = stats.unitHealth;
     this.health = this.maxHealth;
@@ -373,21 +378,63 @@ class Soldier extends Sprite {
     this.attackTimer = 0;
     this.target = null;
     this.state = 'moving'; // moving, idle, fighting, dead
+    
+    // Zmienna potrzebna do określania kierunku obrotu grafiki
+    this.velocity = { x: 0, y: 0 };
   }
 
   draw() {
     if (this.state === 'dead') return;
-    c.fillStyle = 'blue';
-    c.fillRect(this.position.x, this.position.y, this.width, this.height);
-    // Healthbar
+
+    // --- LOGIKA RYSOWANIA SPRITE'A Z OBRACANIEM ---
+    const angle = Math.atan2(this.velocity.y, this.velocity.x);
+    c.save();
+    c.translate(this.center.x, this.center.y);
+
+    // Odbicie lustrzane - patrzy tam, gdzie idzie, albo tam, gdzie uderza
+    let flipAngle = angle;
+    if (this.state === 'fighting' && this.target) {
+         flipAngle = Math.atan2(this.target.center.y - this.center.y, this.target.center.x - this.center.x);
+    }
+
+    // Jeśli cel jest po lewej, obróć kontekst
+    if (Math.abs(flipAngle) > Math.PI / 2) {
+      c.scale(-1, 1); 
+    }
+
+    // Rysowanie i wycinanie odpowiedniej klatki
+    if (this.image.src && this.frames.max) {
+        const cropWidth = this.image.width / this.frames.max;
+        const crop = {
+          position: { x: cropWidth * this.frames.current, y: 0 },
+          width: cropWidth,
+          height: this.image.height
+        };
+        
+        c.drawImage(
+            this.image,
+            crop.position.x, crop.position.y, crop.width, crop.height,
+            -this.width / 2 + this.offset.x, -this.height / 2 + this.offset.y,
+            crop.width, crop.height
+        );
+    }
+    c.restore();
+
+    // --- PASKI ZDROWIA (zachowane i przeskalowane) ---
     c.fillStyle = 'red';
-    c.fillRect(this.position.x, this.position.y - 10, this.width, 5);
-    c.fillStyle = 'green';
-    c.fillRect(this.position.x, this.position.y - 10, this.width * (this.health / this.maxHealth), 5);
+    c.fillRect(this.position.x, this.position.y - 15, this.width, 6);
+    c.fillStyle = 'rgba(39, 199, 216, 1)'; // Użyłem tego samego koloru co u wrogów dla spójności UI
+    c.fillRect(this.position.x, this.position.y - 15, this.width * (this.health / this.maxHealth), 6);
   }
 
   update(dt) {
     if (this.state === 'dead') return;
+
+    // Odpala aktualizację klatek animacji TYLKO jak nie stoi w miejscu
+    if (this.state !== 'idle') {
+        super.update(dt); 
+    }
+
     if (this.health <= 0) {
       this.state = 'dead';
       if (this.target) this.target.blockedBy = null;
@@ -402,9 +449,15 @@ class Soldier extends Sprite {
       const dist = Math.hypot(dest.x - this.center.x, dest.y - this.center.y);
 
       if (dist > 5) {
-        this.position.x += Math.cos(angle) * this.speed * dt;
-        this.position.y += Math.sin(angle) * this.speed * dt;
+        // Zapisujemy velocity, żeby draw() wiedziało w którą stronę się obrócić
+        this.velocity.x = Math.cos(angle) * this.speed;
+        this.velocity.y = Math.sin(angle) * this.speed;
+
+        this.position.x += this.velocity.x * dt;
+        this.position.y += this.velocity.y * dt;
       } else {
+        this.velocity.x = 0;
+        this.velocity.y = 0;
         if (this.target) {
           this.state = 'fighting';
           this.target.blockedBy = this;
@@ -415,6 +468,8 @@ class Soldier extends Sprite {
     }
 
     if (this.state === 'fighting' && this.target) {
+      this.velocity.x = 0;
+      this.velocity.y = 0;
       if (this.target.health <= 0 || this.target.position.x > canvas.width) {
         this.target = null;
         this.state = 'moving';
