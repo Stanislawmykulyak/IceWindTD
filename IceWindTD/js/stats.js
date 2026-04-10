@@ -214,10 +214,10 @@ const stats = {
         ],
         '16':[
             {type: 'gobGiant', count: 1, track: 1 ,offset:200,},
-            {type:'goblin', count: 8, track: 1 , offset:140,}, 
-            {type:'orc', count:15, track:2, offset:140,},
-            {type:'goblin', count:25, track:1, offset:180, },
-            {type:'bat', count:20, track: 2, offset:180, },
+            {type:'goblin', count: 8, track: 1 , offset:130,}, 
+            {type:'orc', count:15, track:2, offset:130,},
+            {type:'goblin', count:25, track:1, offset:160, },
+            {type:'bat', count:20, track: 2, offset:200, },
         ],
         '17':[
             {type:'gobGiant', count: 3, track: 1 ,offset:200,}, 
