@@ -502,9 +502,9 @@ class BarracksLvl1 extends Tower {
       stats: stats.towers.barracks.lvl1,
       baseTowerType: "barracks",
       level: 1,
-      imageSrc: "media/barracks.png", // Podmień jeśli masz lepszy sprite
+      imageSrc: "media/tower-models/towers/barracks-tower-lvl1.png", // Podmień jeśli masz lepszy sprite
       frames: { max: 1 },
-      offset: { x: 0, y: -20 }
+      offset: { x: -12, y: -50 }
     });
     this.soldiers = [];
     this.respawnTimers = [0, 0, 0];
@@ -613,9 +613,9 @@ class BarracksLvl2 extends Tower {
       stats: stats.towers.barracks.lvl2,
       baseTowerType: "barracks",
       level: 2,
-      imageSrc: "media/barracks.png", // TODO: Podmień na asset Lvl2
+      imageSrc: "media/tower-models/towers/barracks-tower-lvl2.png", 
       frames: { max: 1 },
-      offset: { x: 0, y: -20 }
+      offset: { x: -12, y: -50 }
     });
     this.soldiers = [];
     this.respawnTimers = [0, 0, 0, 0];
@@ -718,9 +718,8 @@ class BarracksLvl3 extends Tower {
       stats: stats.towers.barracks.lvl3,
       baseTowerType: "barracks",
       level: 3,
-      imageSrc: "media/barracks.png", // TODO: Podmień na asset Lvl3
-      frames: { max: 1 },
-      offset: { x: 0, y: -20 }
+      imageSrc: "media/tower-models/towers/barracks-tower-lvl3.png", 
+      offset: { x: -12, y: -50 }
     });
     this.soldiers = [];
     this.respawnTimers = [0, 0, 0, 0, 0];
