@@ -224,39 +224,6 @@ a{
     display: block;
     padding: 0 4px;
 }
-#container{
-    position: absolute;
-    top: 30px;
-    right:30px;
-}
-.yt{
-    position: absolute;
-    top: 30px;
-    left: 30px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    width: 50px;
-    height: 50px;
-    padding: 16px;
-    background: linear-gradient(
-        135deg,
-        rgba(255, 255, 255, 0.1) 0%,
-        rgba(0, 0, 0, 0.2) 100%
-    );
-    backdrop-filter: blur(15px);
-    -webkit-backdrop-filter: blur(15px);
-    border: 1px solid rgba(50, 50, 50, 0.1);
-    border-bottom: 1px solid rgba(0, 0, 0, 0.3);
-    border-radius: 24px;
-    box-shadow:
-        0 8px 24px rgba(0, 0, 0, 0.3),
-        inset 0 1px 2px rgba(255, 255, 255, 0.2),
-        inset 0 -1px 2px rgba(0, 0, 0, 0.4);
-    cursor: pointer;
-    z-index: 100;
-}
 
 @media (max-width: 600px) {
     body {
@@ -269,14 +236,6 @@ a{
         position:fixed;
         top: 12px;
         right: 12px;
-        width: 44px;
-        height: 44px;
-        padding: 10px;
-    }
-    .yt {
-        position:fixed;
-        top: 12px;
-        left: 12px;
         width: 44px;
         height: 44px;
         padding: 10px;
@@ -319,13 +278,81 @@ a{
         align-items: center;
     }
 }
-.yt-triangle {
-    width: 0;
-    height: 0;
-    border-top: 12px solid transparent;
-    border-bottom: 12px solid transparent;
-    border-left: 20px solid white;
-    border-radius: 3px;
-    margin-right: -6px;
-    filter: drop-shadow(0 1px 2px rgba(0,0,0,0.15));
+
+/* CV tile style */
+.cv-tile {
+    margin: 40px auto;
+    padding: 16px 20px;
+    max-width: 300px;
+    background: linear-gradient(
+        135deg,
+        rgba(255, 255, 255, 0.13) 0%,
+        rgba(0, 0, 0, 0.18) 100%
+    );
+    position:absolute;
+    left:20px;
+    bottom:0;
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border: 1px solid rgba(50, 50, 50, 0.13);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.22);
+    border-radius: 24px;
+    box-shadow:
+        0 12px 32px rgba(0, 0, 0, 0.28),
+        inset 0 1px 2px rgba(255, 255, 255, 0.18),
+        inset 0 -1px 2px rgba(0, 0, 0, 0.28);
+    color: rgba(241, 238, 238, 0.93);
+    font-family: 'Sour Gummy', cursive, sans-serif;
+    font-size: 1.15em;
+    transition: box-shadow 0.5s, border 0.5s;
+}
+.cv-tile:hover {
+    box-shadow:
+        0 16px 40px rgba(0, 0, 0, 0.38),
+        0 0 20px rgba(135, 206, 235, 0.18);
+    border: 1.5px solid rgba(50, 50, 50, 0.18);
+    border-bottom: 1.5px solid rgba(0, 0, 0, 0.28);
+}
+
+/* CV tile inner content styling */
+.cv-tile h1, .cv-tile h2, .cv-tile h3 {
+    color: #eaf6fb;
+    font-family: 'Sour Gummy', cursive, sans-serif;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.18), 0 0 12px rgba(135,206,235,0.18);
+    margin-top: 0.5em;
+    margin-bottom: 0.5em;
+    letter-spacing: 1.5px;
+}
+.cv-tile p {
+    color: rgba(241, 238, 238, 0.93);
+    font-size: 1.08em;
+    line-height: 1.7;
+    margin: 0.7em 0;
+}
+.cv-tile ul {
+    padding-left: 1.5em;
+    margin: 1em 0;
+    list-style: none;
+}
+.cv-tile ul li {
+    position: relative;
+    margin-bottom: 0.7em;
+    padding-left: 1.2em;
+    color: #eaf6fb;
+    font-size: 1.05em;
+    background: linear-gradient(90deg, rgba(135,206,235,0.08) 0%, rgba(255,255,255,0.03) 100%);
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+    transition: background 0.3s;
+}
+.cv-tile ul li::before {
+    content: "\2022";
+    position: absolute;
+    left: 0;
+    color: #4ade80;
+    font-size: 1.2em;
+    top: 0.1em;
+}
+.cv-tile ul li:hover {
+    background: linear-gradient(90deg, rgba(76, 201, 240, 0.18) 0%, rgba(255,255,255,0.08) 100%);
 }
