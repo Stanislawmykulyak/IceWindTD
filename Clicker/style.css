@@ -1,10 +1,5 @@
-/* Import średniowiecznych czcionek z Google Fonts */
+
 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@600;900&family=MedievalSharp&display=swap');
-
-
-
-
-
 
 
 body {
@@ -13,7 +8,7 @@ body {
     font-family: 'MedievalSharp', cursive;
     min-height: 100vh;
     margin: 0;
-    overflow: hidden; /* Blokuje zbędne paski przewijania */
+    overflow: hidden;
     user-select: none;
 }
 
@@ -23,11 +18,11 @@ body {
     right: 30px;
     display: flex;
     flex-direction: column;
-    gap: 15px; /* Eleganckie odstępy między ulepszeniami */
-    z-index: 10; /* Nad kamieniem, żeby kliknięcia zawsze wpadały w przyciski */
+    gap: 15px;
+    z-index: 10;
 }
 
-/* Licznik w lewym górnym rogu */
+
 .gem-counter {
     position: fixed;
     top: 30px;
@@ -42,14 +37,14 @@ body {
     z-index: 10;
 }
 
-/* Kamień idealnie wycentrowany */
+
 .GemRock {
     position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
     cursor: pointer;
-    z-index: 1; /* Pod spodem interfejsu */
+    z-index: 1;
 }
 
 .GemRock img {
@@ -59,13 +54,12 @@ body {
     transition: transform 0.1s ease, filter 0.2s ease;
 }
 
-/* Soczysty efekt kliknięcia w kamień */
+
 .GemRock img:active {
     transform: scale(0.96);
     filter: drop-shadow(0 0 25px rgba(255, 215, 0, 0.5)) brightness(1.1);
 }
 
-/* Kontener pojedynczego ulepszenia */
 [class*="-upgrades"] {
     cursor: pointer;
     background: linear-gradient(135deg, #2d221c 0%, #1f1713 100%);
@@ -88,7 +82,7 @@ body {
     border-color: #8b654e;
 }
 
-/* Przycisk stylizowany na starą tabliczkę / kutą stal */
+
 [class*="-upgrade"] {
     font-family: 'MedievalSharp', cursive;
     font-size: 1rem;
@@ -114,17 +108,17 @@ body {
     box-shadow: 0 1px 0 #1c1410;
 }
 
-/* Cena i Poziomy ulepszeń */
-.miner-price, .wizard-price, [class$="-price"] {
+
+.miner-price, .archer-price, [class$="-price"] {
     font-family: 'Cinzel', serif;
-    color: #a9c2a1; /* Blada, klimatyczna zieleń dla ekonomii */
+    color: #a9c2a1;
     font-weight: bold;
     text-shadow: 1px 1px 2px #000;
     font-size: 1.05rem;
 }
 
-.miner-lvl, .wizard-lvl, [class$="-lvl"] {
-    color: #dfb284; /* Ciepły brąz/pomarańcz */
+.miner-lvl, .archer-lvl, [class$="-lvl"] {
+    color: #dfb284;
     font-size: 0.95rem;
     text-shadow: 1px 1px 1px #000;
     border-left: 1px solid #5c4436;
@@ -142,7 +136,7 @@ body {
     z-index: 10;
 }
 
-/* Specjalny, chłodniejszy stalowy styl dla przycisków systemowych */
+
 #audio-toggle, #save-btn, #load-btn {
     font-family: 'MedievalSharp', cursive;
     font-size: 0.9rem;
