@@ -110,7 +110,7 @@ const upgrades = {
                 efficiency: 0.1,
                 level: 0,
                 maxLevel: 100,
-                milestones: { 10: 2, 20: 2, 50: 2, 100: 10 }
+                milestones: { 10: 5, 20: 2, 50: 2, 100: 10 }
         },
         archer: {
                 baseCost: 150,
@@ -118,7 +118,7 @@ const upgrades = {
                 efficiency: 3,
                 level: 0,
                 maxLevel: 100,
-                milestones: { 10: 2, 20: 1.5, 50: 2, 100: 5 }
+                milestones: { 10: 3, 20: 2, 50: 2, 100: 5 }
         },
         knight: {
                 baseCost: 1100,
