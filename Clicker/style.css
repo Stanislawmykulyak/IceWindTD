@@ -14,14 +14,39 @@ body {
 
 .upgrades-panel {
     position: fixed;
-    top: 30px;
+    bottom: 0px; /* ZMIANA: Przeniesione na dół ekranu */
     right: 30px;
     display: flex;
     flex-direction: column;
     gap: 15px;
     z-index: 10;
+    
+    /* NOWOŚĆ: Blokada widoczności do max 5 ulepszeń i włączenie przewijania */
+    max-height: 422px; /* Wysokość wyliczona idealnie pod rozmiar 5 kafelków z przerwami */
+    overflow-y: auto;  /* Włącza pionowy suwak, gdy ulepszeń jest więcej niż 5 */
+    overflow-x: hidden; /* Blokuje przesuwanie na boki */
+    padding-right: 8px; /* Dodatkowa przestrzeń, aby suwak nie zasłaniał kafelków */
+}
+.upgrades-panel::-webkit-scrollbar {
+    width: 8px; /* Szerokość paska przewijania */
 }
 
+.upgrades-panel::-webkit-scrollbar-track {
+    background: rgba(20, 17, 16, 0.6); /* Ciemne, wtopione tło ścieżki */
+    border-radius: 4px;
+    box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.5);
+}
+
+.upgrades-panel::-webkit-scrollbar-thumb {
+    background: linear-gradient(#5c4436, #3d3028); /* Drewniano-brązowy suwak */
+    border: 1px solid #2b1f18;
+    border-radius: 4px;
+}
+
+.upgrades-panel::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(#8b654e, #5c4436); /* Rozjaśnienie po najechaniu myszką */
+    cursor: pointer;
+}
 
 .gem-counter {
     position: fixed;
@@ -30,7 +55,7 @@ body {
     font-family: 'Cinzel', serif;
     font-size: 2.2rem;
     font-weight: 900;
-    color: #ffd700;
+    color: #1088c9;
     text-shadow: 0 0 10px rgba(255, 215, 0, 0.4), 3px 3px 0px #000;
     letter-spacing: 2px;
     user-select: none;
@@ -41,7 +66,7 @@ body {
 .GemRock {
     position: absolute;
     top: 50%;
-    left: 50%;
+    left: 45%;
     transform: translate(-50%, -50%);
     cursor: pointer;
     z-index: 1;
@@ -233,7 +258,7 @@ body {
         opacity: 1;
     }
     100% {
-        transform: translate(-50%, -120px) scale(1.1);
+        transform: translate(-50%, -120px) scale(1.3);
         opacity: 0;
     }
 }
@@ -249,6 +274,238 @@ body {
     }
     100% {
         transform: translate(-50%, -160px) scale(1);
-        opacity: 0;
+        opacity: 0.2;
     }
+}
+/* --- RPG DIALOGUE SYSTEM --- */
+.tutorial-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.8); /* Mocne przyciemnienie reszty gry */
+    display: flex;
+    justify-content: center;
+    align-items: flex-end; /* Okienko wyskakuje estetycznie od dołu ekranu */
+    padding-bottom: 60px;
+    z-index: 99999; /* Absolutny top, nad wszystkim innym */
+    opacity: 1;
+    transition: opacity 0.3s ease;
+}
+
+.dialogue-box {
+    display: flex;
+    background: linear-gradient(135deg, #2c2017, #1c130e);
+    border: 3px solid #6b4e3d;
+    border-radius: 8px;
+    padding: 20px;
+    width: 650px;
+    max-width: 90%; /* Zabezpieczenie przed rozwaleniem widoku na mniejszych ekranach */
+    box-shadow: 0 10px 30px rgba(0,0,0,0.9), inset 0 0 15px rgba(0,0,0,0.6);
+    cursor: pointer;
+    user-select: none;
+}
+
+.npc-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-right: 20px;
+    min-width: 120px;
+}
+
+.npc-avatar {
+    font-size: 3.5rem; /* Szybki generator twarzy za pomocą emoji */
+    background: #140e0c;
+    border: 2px solid #8b654e;
+    border-radius: 4px;
+    width: 80px;
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.5);
+}
+
+.npc-name {
+    font-family: 'MedievalSharp', cursive;
+    color: #ffd700;
+    font-size: 0.85rem;
+    margin-top: 8px;
+    text-align: center;
+    text-shadow: 1px 1px 2px #000;
+}
+
+.speech-bubble {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    flex-grow: 1;
+}
+
+#tutorial-text {
+    font-family: 'MedievalSharp', cursive;
+    font-size: 1.15rem;
+    color: #f2e6d0;
+    margin: 5px 0 0 0;
+    line-height: 1.4;
+    text-shadow: 1px 1px 1px #000;
+}
+
+.click-prompt {
+    font-family: 'Cinzel', serif;
+    font-size: 0.75rem;
+    color: #94a3b8;
+    text-align: right;
+    margin-top: 10px;
+    animation: dialogPulse 1.5s infinite;
+}
+
+@keyframes dialogPulse {
+    0%, 100% { opacity: 0.4; }
+    50% { opacity: 1; }
+}
+/* --- RETRO GRID STORE PANEL (Cookie Clicker Style) --- */
+.store-panel {
+    position: fixed;
+    top: 30px; /* ZMIANA: Przeniesione na górę ekranu */
+    right: 60px;
+    background: radial-gradient(circle, #101926 0%, #080d14 100%);
+    border: 3px solid #5c4033;
+    border-radius: 4px;
+    width: 350px;
+    padding: 10px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.9), inset 0 0 15px rgba(0,0,0,0.8);
+    z-index: 10;
+    font-family: 'MedievalSharp', cursive;
+}
+
+.store-title {
+    font-family: 'Cinzel', serif;
+    font-size: 1.8rem;
+    color: #ffffff;
+    text-align: center;
+    font-weight: 900;
+    text-shadow: 2px 2px 3px #000;
+    margin-bottom: 2px;
+    border-bottom: 2px solid #3a2618;
+    padding-bottom: 4px;
+}
+
+.store-subheader {
+    font-size: 0.75rem;
+    color: #dfb284; /* Klimatyczne, przygaszone złoto */
+    letter-spacing: 2px;
+    margin: 5px 0;
+    font-weight: bold;
+    padding-left: 2px;
+}
+
+.store-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr); /* Fits 5 items per row perfectly */
+    gap: 6px;
+    background: rgba(0, 0, 0, 0.4);
+    padding: 6px;
+    border: 2px solid #2b1f18;
+}
+
+.store-item {
+    position: relative;
+    width: 46px;
+    height: 46px;
+    background: radial-gradient(circle, #1c2d42 0%, #0f1924 100%); /* Niebieskie tło kafelka */
+    border: 2px solid #8b654e; /* Brązowo-złote obramowanie pojedynczej komórki */
+    box-shadow: inset 0 0 6px #000;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.1s ease;
+    user-select: none;
+}
+
+/* Złoty rozbłysk krawędzi (Glow Effect z image_89d7df.png) */
+.store-item:hover {
+    border-color: #ffd700;
+    box-shadow: 0 0 10px rgba(255, 215, 0, 0.9), inset 0 0 4px #000;
+    transform: scale(1.04);
+    z-index: 5;
+}
+
+.store-item:active {
+    transform: scale(0.95);
+}
+
+.store-icon {
+    font-size: 1.6rem;
+    line-height: 1;
+}
+
+/* Licznik poziomu schowany dyskretnie w prawym dolnym rogu ikony */
+.store-lvl {
+    position: absolute;
+    bottom: 1px;
+    right: 4px;
+    font-family: 'Cinzel', serif;
+    font-size: 0.65rem;
+    color: #cbd5e1;
+    text-shadow: 1px 1px 1px #000, -1px -1px 1px #000;
+    font-weight: bold;
+    pointer-events: none;
+}
+
+/* Styl dla nieodblokowanych slotów */
+.store-item.empty-slot {
+    background: #090e14;
+    border-color: #382921;
+    color: #475569;
+    cursor: not-allowed;
+    opacity: 0.4;
+}
+
+/* Przyciemnienie przedmiotu, gdy gracza nie stać na zakup */
+.store-item.cant-afford {
+    filter: brightness(0.35) grayscale(60%);
+}
+
+/* --- DYNAMICZNY RPG TOOLTIP (Okno informacyjne) --- */
+.store-tooltip {
+    position: fixed;
+    background: rgba(11, 17, 26, 0.98);
+    border: 2px solid #8b654e;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.9);
+    padding: 10px;
+    border-radius: 4px;
+    color: #f2e6d0;
+    font-family: 'MedievalSharp', cursive;
+    font-size: 0.85rem;
+    z-index: 99999;
+    pointer-events: none; /* Zapobiega miganiu okna pod kursorem */
+    display: none;
+    max-width: 240px;
+}
+
+.tooltip-title {
+    font-family: 'Cinzel', serif;
+    font-weight: bold;
+    color: #ffd700;
+    font-size: 1rem;
+    margin-bottom: 4px;
+    text-shadow: 1px 1px 2px #000;
+}
+
+.tooltip-desc {
+    color: #94a3b8;
+    font-size: 0.8rem;
+    margin-bottom: 8px;
+    line-height: 1.3;
+}
+
+.tooltip-cost {
+    font-family: 'Cinzel', serif;
+    color: #a7f3d0; /* Przyjemna ekonomiczna zieleń */
+    font-weight: bold;
+    font-size: 0.85rem;
 }
