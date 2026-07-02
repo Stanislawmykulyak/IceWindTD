@@ -18,15 +18,15 @@ const audioBtn = document.getElementById('audio-toggle');
 
 function playNextTrack() {
         currentTrackIndex++;
-        
+
         // Jeśli dojdziemy do końca tablicy (indeks wyjdzie poza zakres), resetujemy do 0
         if (currentTrackIndex >= playlist.length) {
                 currentTrackIndex = 0;
         }
-        
+
         // Ładujemy nowy plik do odtwarzacza
         bgMusic.src = playlist[currentTrackIndex];
-        
+
         // Jeśli gracz nie wyciszył muzyki, odpalamy kolejny utwór
         if (!isMuted) {
                 bgMusic.play().catch(err => console.log("Autoplay block na kolejnym utworze:", err));
@@ -48,9 +48,9 @@ function tryAutoplay() {
 // Próba odpalenia od razu + zabezpieczenie na pierwszy klik w dowolne miejsce na stronie
 window.addEventListener('click', tryAutoplay);
 
-audioBtn.onclick = function(e) {
+audioBtn.onclick = function (e) {
         e.stopPropagation();
-        
+
         if (bgMusic.paused) {
                 bgMusic.play();
                 audioBtn.innerHTML = "🔊 Muzyka: ON";
@@ -81,29 +81,61 @@ function updateGems() {
 let gem_per_click = 1;
 let lucky_gem_percentage = 3
 
+function createFloatingText(x, y, amount, isLucky) {
+        const textNode = document.createElement('div');
+        
+        // Przypisujemy odpowiednie klasy
+        textNode.className = 'floating-text';
+        if (isLucky) {
+                textNode.classList.add('lucky-text');
+        }
 
+        // Ustalamy pozycję startową w miejscu kliknięcia myszy
+        textNode.style.left = `${x}px`;
+        textNode.style.top = `${y}px`;
+        
+        // Generujemy tekst (np. +1 lub +7)
+        textNode.innerHTML = `+${formatNumber(amount)}`;
+
+        // Wrzucamy do drzewa DOM gry
+        document.body.appendChild(textNode);
+
+        // Sanity Check: Usuwamy element po zakończeniu animacji, żeby nie zapchać RAMu
+        setTimeout(() => {
+                textNode.remove();
+        }, 700);
+}
 
 const rockImg = document.querySelector('.GemRock img');
 
 accRock.addEventListener('click', function (e) {
-        // Trik z wymuszeniem reflow – resetuje animację natychmiast przy ultra szybkim klikaniu
+        // Trik z wymuszeniem reflow dla animacji rocka
         rockImg.classList.remove('rock-pop');
         void rockImg.offsetWidth;
         rockImg.classList.add('rock-pop');
 
-        // Reszta Twojego starego kodu kliknięcia bez zmian...
+        let gainedGems = 0;
+        let isLucky = false;
+
+        // Wyliczamy nagrodę i sprawdzamy kryta
         if ((Math.random() * 100) < lucky_gem_percentage) {
-                gems += gem_per_click * 7;
+                gainedGems = gem_per_click * 7;
+                isLucky = true;
                 console.log("Lucky gem");
         } else {
-                gems += gem_per_click;
+                gainedGems = gem_per_click;
                 console.log("Kliknięcie w kamyczek");
         }
-})
+
+        gems += gainedGems;
+
+        // ODPALENIE EFEKTU FX (Przekazujemy pozycję myszy X i Y)
+        createFloatingText(e.clientX, e.clientY, gainedGems, isLucky);
+});
 
 
 // Miner Upgrade
-const upgrades = {
+let upgrades = {
         miner: {
                 baseCost: 10,
                 cost: 10,
@@ -132,22 +164,64 @@ const upgrades = {
 
 // Generyczna funkcja aktualizująca UI dowolnego ulepszenia
 function updateUpgradesUI() {
+        // Słownik z oryginalnymi nazwami, które przywrócimy po odblokowaniu kafelka
+        const upgradeNames = {
+                miner: "Miner Upgrade",
+                archer: "Archer Upgrade",
+                knight: "Knight Upgrade"
+        };
+
         Object.keys(upgrades).forEach(key => {
                 const up = upgrades[key];
+                const upgradeContainer = document.querySelector(`.${key}-upgrades`);
+                
+                if (!upgradeContainer) return;
 
-                // Dynamiczne łapanie elementów z HTML na podstawie klucza (np. .miner-lvl)
-                const lvlEl = document.querySelector(`.${key}-lvl`);
-                const priceEl = document.querySelector(`.${key}-price`);
+                const priceEl = upgradeContainer.querySelector(`.${key}-price`);
+                const lvlEl = upgradeContainer.querySelector(`.${key}-lvl`);
+                const btnEl = upgradeContainer.querySelector(`.${key}-upgrade`);
 
-                if (lvlEl && priceEl) {
-                        if (up.level === up.maxLevel) {
-                                lvlEl.innerHTML = `MAX LVL`;
-                        } else {
-                                lvlEl.innerHTML = `Lvl: ${up.level + 1}`;
+                // 1. Definiujemy twarde progi odblokowania
+                let isUnlocked = true;
+                if (key === 'archer' && upgrades.miner.level < 4) isUnlocked = false;
+                if (key === 'knight' && upgrades.archer.level <= 9) isUnlocked = false;
+
+                // 2. Egzekwujemy blokadę lub renderujemy pełne statystyki
+                if (!isUnlocked) {
+                        upgradeContainer.classList.add('locked-upgrade');
+                        if (btnEl) {
+                                btnEl.innerHTML = "???"; // Ukrywamy nazwę ulepszenia
+                                btnEl.disabled = true;
                         }
+                        if (lvlEl) lvlEl.innerHTML = "🔒"; // Sama czysta kłódka
+                        if (priceEl) priceEl.innerHTML = `Price: ${formatNumber(up.cost)}$`; // Zostawiamy samą cenę
+                } else {
+                        upgradeContainer.classList.remove('locked-upgrade');
+                        if (btnEl) btnEl.innerHTML = upgradeNames[key]; // Przywracamy oryginalną nazwę
+                        
+                        if (priceEl) priceEl.innerHTML = `Price: ${formatNumber(up.cost)}$`;
+                        
+                        if (lvlEl) {
+                                if (up.level === up.maxLevel) {
+                                        lvlEl.innerHTML = `MAX LVL`;
+                                } else {
+                                        lvlEl.innerHTML = `Lvl: ${up.level + 1}`;
+                                }
+                        }
+                }
 
-                        // ZAMIEŃ TO: priceEl.innerHTML = `Price: ${up.cost.toFixed(0)}$`;
-                        priceEl.innerHTML = `Price: ${formatNumber(up.cost)}$`;
+                // 3. Sprawdzanie czy gracza stać (tylko dla już odblokowanych ulepszeń)
+                if (isUnlocked) {
+                        if (gems >= up.cost) {
+                                upgradeContainer.classList.remove('cant-afford');
+                                if (btnEl) btnEl.disabled = false;
+                        } else {
+                                upgradeContainer.classList.add('cant-afford');
+                                if (btnEl) btnEl.disabled = true;
+                        }
+                } else {
+                        // Dla zablokowanych usuwamy klasę cant-afford, żeby nie nakładać dwóch filtrów na raz
+                        upgradeContainer.classList.remove('cant-afford');
                 }
         });
 }
@@ -269,23 +343,23 @@ function gameLoop(timestamp) {
         // --- TUTAJ WCHODZI TWOJA LOGIKA ---
         // Na przykład: przesunięcie postaci o (prędkość * deltaTime)
         while (accumulatedTime >= 1000) {
-                if(upgrades.archer.level < 10){
-                      Miner_Income_multiplier_chance = 0  
+                if (upgrades.archer.level < 10) {
+                        Miner_Income_multiplier_chance = 0
                 }
-                if(upgrades.archer.level > 10){
-                      Miner_Income_multiplier_chance = 5  
+                if (upgrades.archer.level > 10) {
+                        Miner_Income_multiplier_chance = 5
                 }
-                if(upgrades.archer.level > 20){
-                      Miner_Income_multiplier_chance = 10  
+                if (upgrades.archer.level > 20) {
+                        Miner_Income_multiplier_chance = 10
                 }
-                if(upgrades.archer.level > 50){
-                      Miner_Income_multiplier_chance = 20  
+                if (upgrades.archer.level > 50) {
+                        Miner_Income_multiplier_chance = 20
                 }
-                if(upgrades.archer.level == 100){
-                      Miner_Income_multiplier_chance = 50
+                if (upgrades.archer.level == 100) {
+                        Miner_Income_multiplier_chance = 50
                 }
                 let globalMinerMultiplier = 1;
-                if (upgrades.archer.level >= 10 && Math.random()*100 < Miner_Income_multiplier_chance) {
+                if (upgrades.archer.level >= 10 && Math.random() * 100 < Miner_Income_multiplier_chance) {
                         globalMinerMultiplier = 2;
                         console.log("Lucky Mine , All miner income x2");
                 }
