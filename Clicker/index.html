@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css"/>
+    <title>Clicker</title>
+</head>
+<body>
+    <div class="gem-counter">Gems : 0</div>
+    <div class="GemRock"> 
+    <img src="media/Gem-Rock.png" width="400" height="300" usemap="#rock-map" alt="Gem Rock" />
+    
+        <map name="rock-map">
+            <area shape="poly" coords="120,30, 220,30, 290,45, 325,100, 365,150, 370,210, 350,250, 270,265, 215,285, 120,255, 40,210, 30,150, 70,80" id="entire-rock">
+        </map>
+    </div>
+    <div class="upgrades-panel">
+        <div class="miner-upgrades">
+            <button class="miner-upgrade">Miner Upgrade</button>
+            <div class="miner-price"></div>
+            <div class="miner-lvl"></div>
+        </div>
+        
+        <div class="upgrades">
+            <div class="wizard-upgrades">
+                <button class="wizard-upgrade"> Wizard Upgrade</button>
+                <div class="wizard-price"></div>
+                <div class="wizard-lvl"></div>
+            </div>
+        </div>
+    </div>
+    
+    
+    <script src="script.js"></script>
+</body>
+</html>
