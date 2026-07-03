@@ -11,11 +11,28 @@
 <body>
     <div class="main-sidebar">
         <button class="sidebar-btn active" data-tab="mine-tab"><span>Mine</span></button>
-        <button class="sidebar-btn" data-tab="tavern-tab"><span>Tavern</span></button>
+        <button class="sidebar-btn" data-tab="tavern-tab" style="position: relative;">
+            <span>Tavern</span>
+            <div id="tavern-alert" class="sidebar-badge hidden">!</div>
+        </button>
         <button class="sidebar-btn" data-tab="altar-tab"><span>Altar</span></button>
+        <button class="sidebar-btn" data-tab="crystal-shop-tab"><span>Crystal Shop</span></button>
         <button class="sidebar-btn" data-tab="settings-tab"><span>Ustawienia</span></button>
     </div>
-
+    <div id="crisis-overlay" class="tutorial-overlay hidden" style="z-index: 100000; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(5, 7, 12, 0.85); backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center;">
+        <div class="crisis-card animate-pop" style="background: linear-gradient(135deg, #111827 0%, #030712 100%); border: 2px solid #ef4444; box-shadow: 0 0 30px rgba(239, 68, 68, 0.25), inset 0 0 15px rgba(239, 68, 68, 0.1); border-radius: 16px; width: 450px; padding: 25px; text-align: center; font-family: 'Cinzel', serif; color: #f3f4f6;">
+            <div class="crisis-header" style="margin-bottom: 20px;">
+                <span class="crisis-badge-alert" style="background: rgba(239, 68, 68, 0.15); border: 1px solid #ef4444; color: #ef4444; padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: bold; tracking-letter: 1px;">⚠️ REKONESANS WOJSKOWY</span>
+                <h2 id="crisis-popup-title" style="font-size: 1.6rem; color: #f87171; margin: 15px 0 5px 0; text-shadow: 0 0 10px rgba(239, 68, 68, 0.3);">Wybuchł Konflikt!</h2>
+            </div>
+            <div class="crisis-body" style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 12px; padding: 15px; margin-bottom: 20px;">
+                <p id="crisis-popup-text" style="font-size: 0.9rem; line-height: 1.5; color: #cbd5e1; margin: 0; text-align: left;"></p>
+            </div>
+            <div class="crisis-footer">
+                <span class="click-prompt" style="font-size: 0.75rem; color: #94a3b8; display: block; background: rgba(255, 255, 255, 0.04); padding: 8px; border-radius: 6px; border: 1px dashed rgba(255, 255, 255, 0.1); cursor: pointer;">⚔️ Kliknij gdziekolwiek na tym oknie, aby zamknąć i ruszyć do Tawerny...</span>
+            </div>
+        </div>
+    </div>
     <!-- ZAKŁADKA KOPALNI -->
     <div id="mine-tab" class="tab-content">
         <div id="tutorial-overlay" class="tutorial-overlay">
@@ -25,7 +42,8 @@
                     <div class="npc-name">Gromir (Old Miner)</div>
                 </div>
                 <div class="speech-bubble">
-                    <p id="tutorial-text">Sigh... Well, someone finally showed up. Listen closely, young man, because I won't repeat myself</p>
+                    <p id="tutorial-text">Sigh... Well, someone finally showed up. Listen closely, young man, because I
+                        won't repeat myself</p>
                     <span class="click-prompt">Click to countinue...</span>
                 </div>
             </div>
@@ -34,7 +52,9 @@
         <div class="GemRock">
             <img src="media/Gem-Rock.png" width="400" height="300" usemap="#rock-map" alt="Gem Rock" />
             <map name="rock-map">
-                <area shape="poly" coords="120,30, 220,30, 290,45, 325,100, 365,150, 370,210, 350,250, 270,265, 215,285, 120,255, 40,210, 30,150, 70,80" id="entire-rock">
+                <area shape="poly"
+                    coords="120,30, 220,30, 290,45, 325,100, 365,150, 370,210, 350,250, 270,265, 215,285, 120,255, 40,210, 30,150, 70,80"
+                    id="entire-rock">
             </map>
         </div>
         <div class="upgrades-panel">
@@ -119,27 +139,48 @@
             <div class="store-title">Store</div>
             <div class="store-subheader">UPGRADES</div>
             <div class="store-grid">
-                <div class="store-item" data-upgrade="sharper_pickaxe"><span class="store-icon">⛏️</span><span class="store-lvl">0</span></div>
-                <div class="store-item" data-upgrade="miner_gear"><span class="store-icon">⚡</span><span class="store-lvl">0</span></div>
-                <div class="store-item" data-upgrade="quarry_gear"><span class="store-icon">⚙️</span><span class="store-lvl">0</span></div>
-                <div class="store-item" data-upgrade="catapult_gear"><span class="store-icon">🏹</span><span class="store-lvl">0</span></div>
-                <div class="store-item" data-upgrade="iron_hammers_gear"><span class="store-icon">⚔️</span><span class="store-lvl">0</span></div>
-                <div class="store-item" data-upgrade="inspector_gear"><span class="store-icon">📘</span><span class="store-lvl">0</span></div>
-                <div class="store-item" data-upgrade="golem_gear"><span class="store-icon">💎</span><span class="store-lvl">0</span></div>
-                <div class="store-item" data-upgrade="alchemic_gear"><span class="store-icon">👑</span><span class="store-lvl">0</span></div>
-                <div class="store-item" data-upgrade="earth_mage_gear"><span class="store-icon">🪄</span><span class="store-lvl">0</span></div>
-                <div class="store-item" data-upgrade="deep_shaft_gear"><span class="store-icon">🧨</span><span class="store-lvl">0</span></div>
-                <div class="store-item" data-upgrade="gem_tower_gear"><span class="store-icon">🏛️</span><span class="store-lvl">0</span></div>
-                <div class="store-item" data-upgrade="lucky_gauntlet"><span class="store-icon">🍀</span><span class="store-lvl">0</span></div>
+                <div class="store-item" data-upgrade="sharper_pickaxe"><span class="store-icon">⛏️</span><span
+                        class="store-lvl">0</span></div>
+                <div class="store-item" data-upgrade="miner_gear"><span class="store-icon">⚡</span><span
+                        class="store-lvl">0</span></div>
+                <div class="store-item" data-upgrade="quarry_gear"><span class="store-icon">⚙️</span><span
+                        class="store-lvl">0</span></div>
+                <div class="store-item" data-upgrade="catapult_gear"><span class="store-icon">🏹</span><span
+                        class="store-lvl">0</span></div>
+                <div class="store-item" data-upgrade="iron_hammers_gear"><span class="store-icon">⚔️</span><span
+                        class="store-lvl">0</span></div>
+                <div class="store-item" data-upgrade="inspector_gear"><span class="store-icon">📘</span><span
+                        class="store-lvl">0</span></div>
+                <div class="store-item" data-upgrade="golem_gear"><span class="store-icon">💎</span><span
+                        class="store-lvl">0</span></div>
+                <div class="store-item" data-upgrade="alchemic_gear"><span class="store-icon">👑</span><span
+                        class="store-lvl">0</span></div>
+                <div class="store-item" data-upgrade="earth_mage_gear"><span class="store-icon">🪄</span><span
+                        class="store-lvl">0</span></div>
+                <div class="store-item" data-upgrade="deep_shaft_gear"><span class="store-icon">🧨</span><span
+                        class="store-lvl">0</span></div>
+                <div class="store-item" data-upgrade="gem_tower_gear"><span class="store-icon">🏛️</span><span
+                        class="store-lvl">0</span></div>
+                <div class="store-item" data-upgrade="lucky_gauntlet"><span class="store-icon">🍀</span><span
+                        class="store-lvl">0</span></div>
             </div>
             <div id="store-tooltip" class="store-tooltip"></div>
         </div>
     </div>
 
-    <!-- ZAKŁADKA KARCZMY (MISJE) -->
+    <!-- ZAKŁADKA KARCZMY -->
     <div id="tavern-tab" class="tab-content hidden">
         <div class="tavern-wrapper">
-            <h2 class="tavern-title">📜 Mining Mission Board</h2>
+            <h2 class="tavern-title">🏰 Centrum Dowodzenia Wojskowego</h2>
+
+            <!-- PANEL SEKTORA RELACJI I KRYZYSÓW -->
+            <div id="faction-crisis-container" class="rpg-window" style="display: none;">
+                <div id="crisis-timer" class="rpg-timer">⏳ Czas: --s</div>
+                <h3 id="crisis-title" class="rpg-title"></h3>
+                <p id="crisis-desc" class="rpg-dialog-text"></p>
+                <div id="crisis-choices" class="rpg-choices-container"></div>
+            </div>
+
             <div id="missions-container" class="missions-grid"></div>
         </div>
     </div>
@@ -154,7 +195,8 @@
                 <div class="altar-orb">🔮</div>
             </div>
             <div class="altar-exchange-box">
-                <p class="exchange-rate">Current Cost: <span id="crystal-cost-display" style="color: #ffd700; font-weight: bold;">1.00M</span> Gems 💎 per Crystal 🔮</p>
+                <p class="exchange-rate">Current Cost: <span id="crystal-cost-display"
+                        style="color: #ffd700; font-weight: bold;">1.00M</span> Gems 💎 per Crystal 🔮</p>
                 <div class="altar-actions">
                     <button id="btn-transmute-1" class="btn-altar">Transmute 1 Crystal</button>
                     <button id="btn-transmute-all" class="btn-altar">Transmute ALL Possible</button>
@@ -163,11 +205,78 @@
         </div>
     </div>
 
-    <!-- NOWA UKRYWANA ZAKŁADKA USTAWIEŃ -->
+    <!-- ZAKŁADKA SKLEPU Z KRYSZTAŁAMI -->
+    <div id="crystal-shop-tab" class="tab-content hidden">
+        <div id="upgrade-tooltip" style="display: none; position: fixed; z-index: 99999; pointer-events: none;">
+            <div class="tooltip-title" id="tooltip-title"></div>
+            <div class="tooltip-description" id="tooltip-description"></div>
+            <div class="tooltip-cost" id="tooltip-cost">Koszt: <span id="tooltip-cost-value"></span> 💎</div>
+        </div>
+        <div id="crystal-shop-count"
+            style="font-family: 'Cinzel', serif; font-size: 1.8rem; color: #a855f7; text-align: center; margin-bottom: 20px; text-shadow: 0 0 10px rgba(168, 85, 247, 0.5);">
+            Crystals: 0 🔮
+        </div>
+        <div class="crystal-shop-wrapper">
+            <div class="crystal-shop-section">
+                <h3 class="shop-title">🔮 Crystal Empowerments 🔮</h3>
+                <div class="crystal-shop-grid">
+                    <div class="crystal-shop-item">
+                        <div class="shop-item-front">
+                            <img src="media/miner-upgrade.png" width="50" height="50" class="upgrade-icon"
+                                alt="Miner Perks">
+                            <span class="item-info">Miner Upgrades</span>
+                        </div>
+                        <div id="perks-miner" class="perks-container"></div>
+                    </div>
+                    <div class="crystal-shop-item">
+                        <div class="shop-item-front">
+                            <img src="media/quarry-upgrade.png" width="50" height="50" class="upgrade-icon"
+                                alt="Quarry Perks">
+                            <span class="item-info">Quarry Upgrades</span>
+                        </div>
+                        <div id="perks-quarry" class="perks-container"></div>
+                    </div>
+                    <div class="crystal-shop-item">
+                        <div class="shop-item-front">
+                            <img src="media/catapult-upgrade.jpg" width="50" height="50" class="upgrade-icon"
+                                alt="Catapult Perks">
+                            <span class="item-info">Catapult Upgrades</span>
+                        </div>
+                        <div id="perks-catapult" class="perks-container"></div>
+                    </div>
+                    <div class="crystal-shop-item">
+                        <div class="shop-item-front">
+                            <img src="media/iron-hammers.png" width="50" height="50" class="upgrade-icon"
+                                alt="Iron Hammer Perks">
+                            <span class="item-info">Iron Hammer Order</span>
+                        </div>
+                        <div id="perks-iron_hammer" class="perks-container"></div>
+                    </div>
+                    <div class="crystal-shop-item">
+                        <div class="shop-item-front">
+                            <img src="media/mine-inspector.png" width="50" height="50" class="upgrade-icon"
+                                alt="Inspector Perks">
+                            <span class="item-info">Mine Inspector</span>
+                        </div>
+                        <div id="perks-mine_inspector" class="perks-container"></div>
+                    </div>
+                    <!-- Poniższe kontenery są gotowe na przyszłość -->
+                    <div style="display:none;" id="perks-runic_golem"></div>
+                    <div style="display:none;" id="perks-alchemic"></div>
+                    <div style="display:none;" id="perks-earth_mage"></div>
+                    <div style="display:none;" id="perks-deep_shaft"></div>
+                    <div style="display:none;" id="perks-gem_tower"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ZAKŁADKA USTAWIEŃ -->
     <div id="settings-tab" class="tab-content hidden">
         <div style="padding: 30px 30px 30px 170px;">
             <h2>Królewskie Ustawienia</h2>
-            <p style="color: #94a3b8; margin-bottom: 20px;">Zarządzaj swoimi zwojami zapisu, opcjami audio oraz postępem królestwa.</p>
+            <p style="color: #94a3b8; margin-bottom: 20px;">Zarządzaj swoimi zwojami zapisu, opcjami audio oraz postępem
+                królestwa.</p>
 
             <div class="settings-group">
                 <h3>💾 Zarządzanie Zapisem</h3>
@@ -181,14 +290,16 @@
             <div class="settings-group">
                 <h3>🎵 Nadworna Muzyka</h3>
                 <div class="settings-actions">
-                    <button onclick="toggleMuteSettings()" id="settings-mute-btn" class="btn-settings">Wycisz Muzykę</button>
+                    <button onclick="toggleMuteSettings()" id="settings-mute-btn" class="btn-settings">Wycisz
+                        Muzykę</button>
                     <button onclick="nextTrackSettings()" class="btn-settings">Następny Utwór ⏭️</button>
                 </div>
             </div>
 
             <div class="settings-group danger-zone">
                 <h3>⚠️ Strefa Zagrożenia</h3>
-                <p style="color: #f87171; font-size: 0.85rem; margin-bottom: 12px;">Spowoduje to bezpowrotne wyczyszczenie całego imperium, poziomów, złota i diamentów.</p>
+                <p style="color: #f87171; font-size: 0.85rem; margin-bottom: 12px;">Spowoduje to bezpowrotne
+                    wyczyszczenie całego imperium, poziomów, złota i diamentów.</p>
                 <button onclick="resetProgress()" class="btn-reset">Zresetuj Cały Postęp</button>
             </div>
         </div>
@@ -196,4 +307,5 @@
 
     <script src="script.js"></script>
 </body>
+
 </html>
