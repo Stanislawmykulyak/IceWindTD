@@ -1280,7 +1280,7 @@ const crisisPool = [
                 icons: ["📋", "🛡️"],
                 choices: [
                         { text: "Wdroż procedury urzędnika (Inspektor +20%, Młoty -15%)", action: () => { factionMultipliers.mine_inspector += 0.20; factionMultipliers.iron_hammers -= 0.15; } },
-                        { text: "Przekup inspektora (Młoty +15%, Inspektor -15%)", action: () => { factionMultipliers.iron_hammers += 0.15; factionMultipliers.mine_inspector -= 0.15; } }
+                        { text: "Przekup inpektora (Młoty +15%, Inspektor -15%)", action: () => { factionMultipliers.iron_hammers += 0.15; factionMultipliers.mine_inspector -= 0.15; } }
                 ]
         },
         {
