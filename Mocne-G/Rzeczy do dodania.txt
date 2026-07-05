@@ -1,0 +1,181 @@
+Genre : RPG / RTS
+
+
+Rzeczy które będą w grze - Cele :
+
+
+PODZIAL NA AKTY :
+
+AKT I: Cień w Elenvair (Zdrada i Infiltracja)
+Obszar Działania: Królestwa centralne: Arvelath (Elfy), Valenor (Ludzie) oraz Aldoria (Przymierze).
+
+Cel Aktu: Zbieranie pierwszych oddziałów i zasobów. Nastroje w królestwach są niepewne – w radzie krążą plotki o szpiegach Zardasa.
+
+🕵️‍♂️ WYDARZENIE KOŃCZĄCE AKT I: „Noc Długich Cieni” w Elenvair
+
+Zamiast wielkiej bitwy: Cicha dywersja wewnątrz stolicy elfów. Okazuje się, że część elfickich dostojników (dawni zdrajcy z Wielkiej Wojny) próbuje otworzyć bramy miasta dla kultystów Zardasa.
+
+Mechanika: Ekran bitwy zamienia się w misję taktyczno-skradankową (Stealth/Tactical Strike). Kontrolujesz tylko Arkelasa i Skraga (goblińskiego sapera/łotra). Musicie przekradać się pod kątem z boku między patrolami, eliminować po cichu strażników za pomocą mikstur Skraga, rozbrajać pułapki i spalić wrogie machiny oblężnicze, zanim te wystrzelą.
+
+Skutek: Udaremnienie spisku. Rada elfów zostaje oczyszczona ze zdrajców, a Eleniel oficjalnie obejmuje dowództwo nad Wieżą Magiczną w Obozie.
+
+
+AKT II: Bitwa w Głębinach Thorgardu (Ewakuacja pod Ostrzałem)
+Obszar Działania: Regiony górskie: Khaz-Borath (Krasnoludowie) oraz Gargorath (Giganci).
+
+ WIELKA BITWA KOŃCZĄCA AKT II: „Ostatnia Kwatera w Thorgardzie”
+
+Opis: Gigantyczne starcie w podziemiach krasnoludzkiej stolicy. Wojska Zardasa przebiły się przez dolne linie obrony, wywołując lawiny i podpalając niższe poziomy miasta. Arkelas musi rozstawić swoje wojska na linii obronnej, by dać czas na ucieczkę krasnoludzkim cywilom i inżynierom.
+
+Mechanika Bitwy: Krwawa obrona pozycyjna z elementem ratunkowym. Na polu bitwy pod kątem z boku stawiasz czoło kolejnym, potężnym falom potworów Zardasa. Kluczem jest utrzymanie wąskich gardeł w jaskini. Używasz Brammera i Korra, by blokować przejścia (np. zawalając filary za pomocą mechaniki kowalstwa/siły). Z tyłu, pod osłoną Twoich wojsk, przez mapę co chwilę przebiegają grupy uciekających cywilów. Twoim celem jest utrzymać pozycję, dopóki wskaźnik ewakuacji nie osiągnie 100%.
+
+Skutek: Im więcej oddziałów wroga wybijesz i im więcej cywilów przeżyje, tym więcej ulepszonych pancerzy zyskasz w swojej kuźni po bitwie.
+
+
+AKT III: Bitwa w Ruchu na Stepach Kragorathu (Bitwa Pancerna i Pościg)
+Obszar Działania: Vael-Drakor (Smoki) oraz Kragorath (Orki), aż do granic Odległych Lądów.
+
+🔥 WIELKA BITWA KOŃCZĄCA AKT III: „Żelazny Wyścig ku Granicy”
+
+Opis: Jeden z głównych generałów Zardasa ucieka ogromną kolumną wojskową w stronę Odległych Lądów, niszcząc wszystko na swojej drodze. Arkelas nie może stać w miejscu – musi wydać rozkaz do totalnej, ruchomej szarży, by rozbić kolumnę wroga, zanim ta dotrze do punktu docelowego.
+
+Mechanika Bitwy: Wielka bitwa w ciągłym ruchu (Assault on the Move). Kamera i pole bitwy nieustannie przesuwają się w prawą stronę (scrolling map). Gracz zarządza całą swoją armią, która biegnie/jedzie do przodu, ścierając się w pełnym pędzie z ruchomymi oddziałami wroga. Zamiast statycznych linii obrony, musisz dynamicznie przemieszczać uderzeniową jazdę Vaelry, by wbijała się w boki wrogiego konwoju. Z bocznego panelu UI wywołujesz zwiadowców Kaelena do omijania pułapek oraz wzywasz wsparcie powietrzne smoków, które wypalają ziemię przed maszerującą armią.
+
+Skutek: Epickie zniszczenie armii uciekającego generała, zabezpieczenie granicy Aldenoru i widowiskowy finał gry.
+
+1. Ekran Obozu (The Camp Hub) – Serce Narracji
+ 
+
+Zamiast ciągłego chodzenia drużyną po mapie, głównym centrum dowodzenia i odpoczynku jest Widok Obozu.
+Jak to działa: Gracz widzi ładnie narysowaną, dwuwymiarową grafikę obozowiska, w którym przy ognisku lub namiotach siedzą członkowie wyprawy (Arkelas i jego 6 towarzyszy).  
+System Dialogowy: Kliknięcie myszką na dowolnego towarzysza (np. na elfią maginię Eleniel czy krasnoluda Brammera) uruchamia interakcję. Rozmowa odbywa się przez klasyczne RPG-owe dymki dialogowe, a obok tekstu wyświetla się szczegółowy awatar (portret) postaci wyrażający emocje.  
+Cel: To tutaj Arkelas buduje relacje, rozwiązuje konflikty między królestwami i popycha fabułę do przodu przed kolejnymi bitwami.
+
+
+2. Eksploracja Aktywna – Miasta i Zbieranie Armii i Wazniejsze momenty fabularne
+
+
+Poruszanie się postacią Arkelasa w świecie 2D jest ograniczone do konkretnych, ważnych fabularnie lokacji.
+Jak to działa: Kiedy drużyna dociera do kluczowego miejsca (np. stolicy elfów Elenvair lub ludzkiego Valengardu), gra przełącza się w tryb poruszania. Gracz kontroluje bezpośrednio tylko Arkelasa (widok z góry lub izometria).  
+Cel: Arkelas biega po lokacji, aby rozmawiać z władcami Rady, odwiedzać rzemieślników (jak Iorwell) oraz fizycznie rekrutować oddziały żołnierzy, które dołączą do jego armii na wyprawę.
+
+
+3.Gdy dochodzi do starcia z siłami Zardasa, gra ładuje dedykowany ekran bitewny. 
+
+Perspektywa: Kamera patrzy na pole bitwy pod kątem, z boku (widok izometryczny lub 2.5D), dając pełen podgląd na ukształtowanie terenu (wąwozy, klify, lasy).  Zarządzanie Wojskiem: Gracz klika myszką na całe oddziały regularnych żołnierzy oraz towarzyszy-oficerów i przemieszcza ich po mapie za pomocą kliknięć, wydając rozkazy ataku lub obrony.  Panel Umiejętności (Sidebar UI): Obok ekranu bitwy znajduje się stały, czytelny panel boczny z portretami bohaterów.Kliknięcie na portret lub użycie skrótu klawiszowego pozwala odpalić specjalną ablitkę danej postaci (np. Róg Odwagi Arkelasa, runę obronną Brammera czy ogień Vaelry) bezpośrednio na polu bitwy
+
+4. Ekran Zarządzania Armią (Koszary w Obozie)
+
+Skoro gracz rekrutuje wojsko w miastach i przydziela towarzyszy jako oficerów, potrzebny jest do tego przejrzysty interfejs w Obozie.  Jak to działa: Osobna zakładka w menu Obozu (np. „Army Setup”). Gracz widzi listę swoich 6 towarzyszy oraz pulę zwerbowanych oddziałów (np. 2 oddziały ludzkiej piechoty z Valenoru, 1 oddział łuczników z Arvelath).  Funkcja taktyczna: Metodą przeciągnij i upuść (drag-and-drop) gracz przypisuje danego bohatera do konkretnego oddziału. Programista musi wiedzieć, że przed bitwą gra sprawdza to menu, aby na polu walki nadać oddziałom odpowiednie bonusy pasywne i podpiąć właściwe „ablitki” pod boczny panel interfejsu
+
+5.Kuźnia i Warsztat (The Smithy)
+
+Powiązanie z Lore: Sektor prowadzony przez Arkelasa (nauki u Iorwella) oraz krasnoluda Brammera Stoneshielda.  Mechanika Ekwipunku (Equipment Crafting): Żołnierze nie biorą się znikąd – potrzebują broni i pancerzy, by walczyć.  W kuźni gracz przetwarza zebrane Rzadkie Kruszce i Złoto na Pakiety Uzbrojenia (np. Zestaw Żelaznego Piechura, Łuk z Arvelath).  Zasada działania: Aby zwerbować w mieście np. Ciężką Piechotę z Valenoru, nie wystarczy samo złoto. Musisz posiadać w magazynie obozu odpowiednią liczbę wyprodukowanych wcześniej pakietów pancerzy żelaznych. Bez ekwipunku możesz rekrutować jedynie najprostszych, słabo uzbrojonych rekrutów.
+
+6.Szpital Polowy (The Infirmary / Hospital)
+
+Powiązanie z Lore: Nadzorowany przez goblina Skraga (mikstury leczące i alchemia) oraz Kaelena (magia natury i ziołolecznictwo).  Mechanika Leczenia (Unit Recovery): Zamiast natychmiastowej śmierci wszystkich jednostek na polu bitwy, wprowadzamy system "Rannych".Po zakończeniu bitwy na ekranie podsumowania część poległych żołnierzy zostaje oznaczona jako Ciężko Ranni. Trafiają oni automatycznie do Szpitala w obozie.  Zasada działania: Ranny oddział jest zablokowany i nie może wziąć udziału w kolejnej walce. Gracz musi wejść do Szpitala i przydzielić Zaopatrzenie (Supplies) lub Złoto na ich leczenie. Medycyna wymaga czasu – oddział odzyskuje pełną sprawność np. po upływie jednej tury (lub po wykonaniu innej misji). 
+
+7.Wieża Magiczna (The Mage Tower)
+
+Powiązanie z Lore: Sektor rządzony przez elfią maginię Eleniel Voidweaver, absolwentkę Uniwersytetu Elen-Varskiego.  Mechanika Szkolenia Magów (Mage Training): Magowie to elitarna i rzadka jednostka w Aldenorze, której nie da się po prostu "kupić" w karczmie.  Zasada działania: Gracz może wysłać podstawowych, ludzkich lub elfickich rekrutów do Wieży Magicznej na szkolenie.  Proces ten kosztuje Złoto oraz specjalny surowiec (np. Esencję Gwiazd). Po określonym czasie (np. po rozegraniu 1-2 bitew) zwykli rekruci awansują i wracają do Twoich koszar jako potężni Nowicjusze lub Magowie Bitewni, gotowi do niszczenia przywołańców Zardasa obszarowymi czarami.  
+
+8.Interaktywna Mapa Świata (Wybór Misji)
+
+Ekran pośredni między Obozem a miastami lub polami bitew.  Jak to działa: Prosta dwuwymiarowa mapa Aldenoru z zaznaczonymi 7 królestwami i granicą Odległych Lądów. Gracz widzi na niej punkty (ikony) reprezentujące główne misje fabularne i potyczki obronne. Kliknięcie w punkt na mapie zużywa Zaopatrzenie i przenosi gracza do ekranu bitwy lub do aktywnej eksploracji miasta
+
+
+9.System Eksploracji Mapy i Mgła Wojny (Fog of War)
+
+Mapa Aldenoru nie jest od razu w pełni odkryta. Gracz zaczyna z widocznymi jedynie kluczowymi punktami startowymi, a reszta kontynentu jest zasłonięta stylową chmurą/mgłą.
+
+Odkrywanie Świata: Przesuwając kursor lub klikając w stronę nieznanych obszarów na zachodzie, Arkelas i jego armia fizycznie „przesuwają się” po mapie, rozpraszając mgłę wojny.
+
+Wielkie Odkrycia: Eksploracja nagradza gracza. Przemierzając mapę, można natknąć się na ukryte lokacje (np. zapomniane kopalnie krasnoludów w Khaz-Borath czy prastare kaplice w Aldorii), które odblokowują unikalne misje poboczne, surowce lub legendarne plany pancerzy dla kuźni.
+
+
+10. Rodzaje Lokacji na Mapie Świata
+Miejsca na mapie dzielą się na kilka stałych, unikalnych kategorii, z których każda ma osobną ikonę:
+
+🏛️ Twierdza 7 Stron: Serce dyplomacji Aldenoru. Centralny punkt na mapie, do którego gracz wraca, by rozmawiać z Radą Siedmiorga, zdawać raporty z postępów inwazji i odbierać nagrody od władców.
+
+🏙️ Główne Miasta: Stolice 7 Królestw (np. Elenvair, Valengard, Marandor). Bezpieczne strefy, w których włącza się widok chodzenia Arkelasem, pozwalający na rekrutację podstawowych żołnierzy i handel.
+
+⚔️ Miejsca Bitew (Battlegrounds): Punkty zapalne na mapie (np. granica z Odległymi Lądami). Kliknięcie w nie przenosi gracza do taktycznego ekranu bitwy RTS, gdzie trzeba odeprzeć hordy Zardasa.
+
+✨ Lokacje Fabularne: Unikalne, jednorazowe miejsca powiązane z historią bohaterów (np. Uniwersytet Elen-Varski czy ukryte legowiska Smoków w Vael-Drakor).
+
+11. Ekran Podróży w Czasie Rzeczywistym (Immersive Travel)
+Koniec z natychmiastowym teleportowaniem się z Elenvair do Valengardu. Podróż przez Aldenor wymaga czasu i przygotowania.
+
+Jak to działa: Po kliknięciu na odkryte miejsce docelowe (lub punkt na mapie), gra przechodzi w kilku/kilkunasto sekundowe okienko podróży (Loading/Travel Screen).
+
+Oprawa Wizualna (Styl Wiedźmina 3): Gracz widzi piękną, klimatyczną ilustrację (np. sylwetkę Arkelasa na czele maszerującej armii na tle zachodzącego słońca), a w tle leci klimatyczna, podróżna muzyka. Na dole ekranu pojawiają się napisy z ciekawostkami o świecie (Lore) lub strategicznymi poradami.
+
+Mechaniczne zużycie: W trakcie trwania tej kilkusekundowej animacji z paska zasobów obozu automatycznie odliczane jest Zaopatrzenie (Supplies), symulując karmienie armii w drodze.
+
+Zdarzenia Losowe (Random Encounters): Istnieje mała szansa (np. 5% i max może się to zdarzyć kilka razy na akt), że podczas podróży ekran nagle się zatrzyma, a gra zakomunikuje: „Zasadzka goblinów Zardasa w wąwozie!”. Gracz zostaje wtedy wrzucony w niespodziewaną bitwę obronną
+
+12. Generator Osobowości i Wyglądu (Personality & Appearance Generator)
+
+W momencie rekrutacji żołnierza w mieście (np. w Valengardzie czy Elenvair), gra losuje dla niego unikalny zestaw cech:Tożsamość: Imię i nazwisko/przydomek dopasowane do jego rasy (np. ludzkie, elfickie, krasnoludzkie).Cechy Wyglądu (Randomized Visuals): Kod gry losuje z przygotowanej palety:Kolor skóry,Kolor oczu,Fryzurę i kolor włosów/brody.Wpływ na rozgrywkę: W trybie Obozu oraz na ekranie Bitwy (w zbliżeniach lub na portretach w UI) sprit (grafika) żołnierza odzwierciedla wylosowane kolory i cechy!
+
+13. Indywidualne Uzbrajanie (Individual Equipment Slots)
+
+Żołnierz dołączający do armii zaczyna "nago" lub z najprostszym, zardzewiałym mieczem. Gracz musi go fizycznie wyposażyć, korzystając z przedmiotów wytworzonych w Kuźni Obozowej.Każdy żołnierz posiada własne sloty na ekwipunek:Broń Główna (Weapon Slot): Definiuje typ ataku i obrażenia (np. Elfi Stalowy Miecz, Krasnoludzki Młot Obywatelski, Długi Łuk z Arvelath).Pancerz (Armor Slot): Definiuje punkty zdrowia ($HP$) i obronę (np. Żelazny Napięstnik Valenoru, Przeszywanica z Aldorii).Akcesorium/Talizman (Trinket Slot): Miejsce na specjalny przedmiot, np. runę ochronną od Brammera lub alchemiczną miksturę od Skraga, którą żołnierz może sam wypić w kryzyzowej sytuacji na polu bitwy.💡 Przykład z rozgrywki: Masz w legionie elfa o imieniu Galon. Jeśli w Kuźni wyaktywujesz dla niego krasnoludzki ciężki pancerz od Brammera, Galon na polu bitwy zmieni swój wygląd – jego elficki sprit dostanie nałożoną grafikę ciężkiej, krasnoludzkiej zbroi runicznej
+
+14. Statystyki i Więź z Graczem (Permadeath & Veterans)
+
+Skoro każdy żołnierz ma imię i unikalny wygląd, jego strata boli podwójnie.Weterani: Żołnierze, którzy przeżyją bitwy w Aktach I i II, zdobywają doświadczenie ($XP$). Zwiększają się ich bazowe statystyki (np. celność, szansa na unik).  System Rannych: Łącząc to ze Szpitalem Polowym – jeśli żołnierz padnie w bitwie, nie znika od razu. Trafia do Szpitala z podpisem: „Status: Ciężko Ranny – Kapitan Edric (Valenor)”. Gracz musi wydać surowce, by uratować swojego ulubionego wojownik
+
+15. Śmierć pobocznych bohaterów tylko przez Wybory Fabularne i Finały Aktów
+
+Kompan nie może umrzeć w "zwykłej" bitwie na mapie świata. Prawdziwy permadeath odpala się tylko podczas kluczowych momentów fabularnych lub jeśli totalnie zawalisz wielką bitwę kończącą dany akt.  Przykład z Aktu II (Thorgard): Jeśli podczas podziemnej bitwy nie zdążysz ewakuować krasnoludów i linia obrony pęknie, odpala się przerywnik filmowy, w którym Korr lub Brammer zostają z tyłu, by własnym ciałem zablokować jaskinię i giną na zawsze, ratując Arkelasa.  Wpływ na grę: Gracz czuje ogromny ciężar porażki, ale fabuła idzie dalej, uwzględniając ich heroiczną śmierć.
+
+16. System Sukcesji w Obozie (The Backup Plan)
+
+Co zrobić z budynkami w obozie, jeśli dany towarzysz zginie w finale aktu? Gra nie może odciąć Cię od ulepszeń, bo nie ukończysz rozgrywki.  Jak to działa: Jeśli Eleniel umiera w Akcie I, jej miejsce w Wieży Magicznej zajmuje bezosobowy NPC – np. "Nowicjusz z Elenvair".  Konsekwencje mechaniczne: Budynek nadal działa, ale jakość usług spada. Ceny szkolenia magów rosną o 50%, tracisz dostęp do najsilniejszej "ablitki" Eleniel na boczny panel w trakcie bitwy, a z drzewka ulepszeń znikają najbardziej zaawansowane technologie magii gwiazd. Strata towarzysza autentycznie boli i osłabia Twoje imperium.  
+
+17. Skalowany System Traumy i Kontuzji Kompanów (Failure Severity Scale)
+
+Konsekwencje dla Twoich 6 towarzyszy (Eleniel, Kaelena, Brammera, Vaelry, Korra, Skraga) zależą bezpośrednio od tego, jak bardzo zawalisz misję lub jak złego wyboru dokonasz w fabule:
+
+Poziom 1: Mała Porażka (Lekki błąd taktyczny / Słaba decyzja)Kiedy się odpala: Towarzysz padnie w zwykłej bitwie, ale ostatecznie ją wygrywasz, albo podejmiesz średnio optymalną decyzję dyplomatyczną w mieście.  Efekt (Lekkie Utykanie / Kontuzja): Kompan trafia do Szpitala na 1 turę. Po wyjściu otrzymuje trwały, ale lekki debuff do statystyk (np. Kaelen dostaje -5% do prędkości ruchu, bo lekko utyka). Wizualnie jego awatar w dymkach dialogowych i sprite na mapie dostaje drobny bandaż.  
+
+Poziom 2: Średnia Porażka (Poważny kryzys / Fatalna obrona)Kiedy się odpala: Zawalisz kluczowy cel poboczny w bitwie (np. w Akcie II potwory wyrżną połowę ewakuowanych krasnoludów z Thorgardu, zanim utrzymasz linię).  Efekt (Ciężka Rana / Okaleczenie): Kompan zostaje potężnie poturbowany. Trafia do Szpitala Polowego na całą resztę obecnego Aktu, całkowicie odcinając Cię od jego bonusów i „ablitki”. Po wyleczeniu ma trwałą bliznę na awatarze i poważny uszczerbek (np. Brammer traci oko -> +15% do cooldownu jego tarczy runicznej).  
+
+Poziom 3: Totalna Porażka (Kataklizm / Katastrofalny wybór)Kiedy się odpala: Totalnie przegrasz wielką bitwę kończącą akt lub podejmiesz drastyczną, niemoralną decyzję fabularną.  Efekt (Permanentna Śmierć): Towarzysz ginie na zawsze. Jego miejsce w strukturach obozowych (Kuźnia, Wieża Magiczna) zajmuje bezosobowy, droższy w utrzymaniu NPC, a unikalna zdolność bojowa bohatera przepada do końca gry
+
+
+18. Wiedźmiński System Wyborów i Konsekwencji (Moral Alignment & Betrayal)
+
+Wprowadzamy ukryty system lojalności i punktów relacji dla każdego towarzysza oraz frakcji w Radzie Siedmiorga. Każda decyzja w dymkach dialogowych i to, komu udzielisz pomocy na mapie świata, buduje Twoje przeznaczenie.  Mechanika Zdrady i Dezercji:Dezercja (Słaba lojalność): Jeśli podczas Aktu I i II będziesz ignorować prośby orka Skraga, traktować go jak "szkodnika" (wzorując się na krasnoludach) i nie pomożesz jego klanom w Kragorathu, jego lojalność spadnie do zera. Skrag przed finałową bitwą w Akcie III po prostu zdezerteruje, okradając Twój obóz z części Zaopatrzenia (Supplies).  Zdrada i Przejście na Stronę Zardasa (Fatalna lojalność): Najbardziej mroczna konsekwencja. Jeśli Twoje wybory będą egoistyczne, brutalne i sprzeczne z honorowym kodeksem Drakonidów, Vaelra the Embersoul uzna, że Arkelas stał się potworem gorszym od najeźdźców. W krytycznym momencie Aktu III Vaelra przechodzi na stronę maga Zardasa. Na finałowym polu bitwy staniesz twarzą w twarz ze swoją dawną towarzyszką i jej ciężkozbrojną jazdą, musząc ją zabić.  Wielki Sojusz (Maksymalna lojalność): Jeśli zbalansujesz konflikty, wysłuchasz towarzyszy i pomożesz ich królestwom, w Akcie III odblokujesz ich elitarne jednostki (np. potężne, starożytne Smoki z Vael-Drakor), a kompani będą walczyć za Arkelasa na śmierć i życie.
+
+19. Głęboka Ekonomia Obozowa (Camp Economy)
+
+Zasoby Złoto i Zaopatrzenie (Supplies) tworzą podstawowy filar przetrwania armii w Aldenorze. Złoto służy do rekrutacji regularnego wojska, handlu oraz podstawowych ulepszeń struktur obozowych. Zaopatrzenie jest automatycznie i bezwzględnie zużywane podczas każdej podróży między lokacjami na mapie świata (Immersive Travel). Brak zaopatrzenia drastycznie obniża morale i zdrowie jednostek przed bitwą, co zmusza gracza do ciągłego balansowania budżetu między rozbudową armii a logistyką wyprawy
+
+20. Elitarna Waluta: Commander Coins i System Zaklinania
+
+Wprowadzamy unikalną, rzadką walutę – Commander Coins, przyznawaną wyłącznie za kluczowe kamienie milowe fabuły, pokonanie potężnych bossów armii Zardasa oraz pomyślne ukończenie finałów poszczególnych aktów. Nie da się jej sfarmić w zwykłych potyczkach ani kupić u pospolitych handlarzy.  Zaklinanie pancerzy: Gracz może wydać Commander Coins w Kuźni, aby permanentnie nasycić magią zbroję Arkelasa lub jednego z 6 towarzyszy, co odblokowuje potężne cechy pasywne (np. odporność na ogień piekielny lub automatyczną regenerację zdrowia).  Tworzenie legendarnych przedmiotów: Waluta ta pozwala na kucie unikalnych relikwii o potężnym wpływie na pole walki. Przykładem jest Róg Odwagi (Horn of Courage) dla Arkelasa – jego aktywacja z bocznego panelu UI podczas bitwy RTS natychmiast zdejmuje negatywne statusy (strach, ogłuszenie) z Twoich wojsk i drastycznie zwiększa ich siłę ataku w krytycznym momencie starcia
+
+21. Pełny System Uzbrojenia Bohaterów i Kompanów (Hero Gear UI)
+
+Arkelas oraz wszyscy jego legendarni oficerowie (Eleniel, Kaelen, Brammer, Vaelra, Korr, Skrag) otrzymują w menu Koszar dedykowane sloty na ekwipunek, całkowicie zmieniające ich styl walki i statystyki w trybie RTS.  Dedykowane sloty: Każdy bohater posiada niezależne miejsca na Broń Główną, Pancerz oraz Akcesorium/Artefakt (np. pierścienie wzmacniające manę lub Róg Odwagi).  Wpływ na rozgrywkę: Przedmioty dla herosów są tworzone w Kuźni przez Brammera lub zdobywane jako rzadki loot z misji fabularnych. Przykładowo, wyposażenie Eleniel w potężniejszy Kostur Gwiazd drastycznie zwiększa promień i obrażenia jej obszarowych czarów, a ulepszenie pancerza Vaelry drastycznie podnosi jej współczynnik obrony (punkty HP) w trakcie taktycznych starć
+
+22. System Zasług i Awansów Żołnierskich (Promotion & Tactical Leadership)
+
+Rozbudowujemy mechanikę weteranów o system dynamicznego awansu społecznego w strukturach armii. Zwykli żołnierze nie są skazani na wieczną służbę w cieniu legendarnych herosów – ich lojalność, waleczność i przeżywalność na polu bitwy otwierają przed nimi drogę na sam szczyt hierarchii wojskowej.  Automatyczne awanse zasłużonych: Jeśli zwykły żołnierz wykaże się w walce i przetrwa odpowiednio długo kolejne starcia, system automatycznie przyznaje mu status zasłużonego weterana, trwale podnosząc jego bazowe statystyki.  Mianowanie na Oficerów i Dowódców: Po osiągnięciu odpowiedniego poziomu doświadczenia i zasług, gracz otrzymuje możliwość oficjalnego promowania takiego wojownika na Oficera lub Dowódcę. Pozwala to na stworzenie własnej, unikalnej kadry dowódczej wspierającej 6 głównych towarzyszy Arkelasa na szeroką skalę frontu.  Artefakty Dowódcze i Aury Oddziału: Wraz z objęciem wysokiej roli dowódczej, awansowany żołnierz odblokowuje ekskluzywny slot na Artefakty Taktyczne. Włożenie tam unikalnego przedmiotu (np. runicznego sztandaru lub skradzionego talizmanu Zardasa) nie tylko drastycznie wzmacnia samego dowódcę, ale generuje potężną aurę pasywną podnoszącą morale, pancerz lub siłę ataku całej przypisanej do niego jednostki w trybie RTS
+
+
+System zapisow w przeglądarce :
+
+1. System Eksportu i Importu Zapisów (Plik .json)To najprostsza, darmowa i niezawodna mechanika, która nie wymaga od Ciebie stawiania i opłacania serwerów bazodanowych.Jak to działa: W menu ręcznego zapisu gracz ma przycisk „Eksportuj Zapis”. Gra bierze cały obiekt tekstowy ze statystykami armii, surowców i postępu aktu, a następnie pobiera go na komputer gracza jako mały plik tekstowy (np. aldenor_save_1.json).  Zaleta: Gracz może wrzucić ten plik na pendrive'a, wysłać sobie na maila, otworzyć grę na telefonie lub innej przeglądarce, kliknąć „Importuj Zapis”, wskazać pobrany plik i natychmiast kontynuować rozgrywkę ze swoimi weteranami.  
+
+☁️ 2. Zapis w Chmurze (Lekki Backend przez Supabase/Firebase)Jeśli chcesz, żeby gra wyglądała w pełni profesjonalnie i nowocześnie, LocalStorage zostawiamy tylko na szybkie Autozapisy, a zapisy ręczne przerzucamy na serwer.  Jak to działa: Integrujemy grę z prostą, darmową bazą danych dla JavaScriptu (np. Supabase lub Firebase). Gracz tworzy proste konto (tylko login i hasło) bezpośrednio w menu gry.Zaleta: Każdy kliknięty zapis ręczny wysyła strukturę danych Twojego obozu i legionu prosto do bezpiecznej chmury. Gracz loguje się na dowolnym urządzeniu i przeglądarce, a gra automatycznie pobiera jego unikalny stan rozgrywki
+
++ Autozapis (Autosave): Gra posiada jeden dedykowany slot na automatyczny zapis. Nadpisuje się on samoczynnie w przykladowych bezpiecznych momentach zwrotnych :
+Natychmiast po wejściu do Ekranu Obozu po wygranej lub przegranej bitwie. 
+W momencie odkrycia nowej, ważnej lokacji na Interaktywnej Mapie Świata.  
+Tuż przed rozpoczęciem wielkich bitew kończących poszczególne akty. 
+
