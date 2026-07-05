@@ -87,6 +87,7 @@ function formatNumber(num) {
 let gems = 0;
 let isTavernUnlocked = false;
 let isAltarUnlocked = false;
+let isWorldMapUnlocked = false;
 
 let crystals_bought = 0;
 
@@ -2143,3 +2144,104 @@ renderMissions();
 renderAllPerks();
 initPerkTooltips();
 startCrisisEngine();
+
+let worldMap = [
+  {
+    id: "sector_1",
+    name: "Zgniłe Mokradła",
+    status: "captured",
+    x: 25, // 25% od lewej krawędzi
+    y: 40, // 40% od górnej krawędzi
+    scoutCost: 50,
+    difficulty: 15,
+    enemies: { count: 5, type: "Mały Goblin" },
+    production: { gold: 2 },
+    description: "Bagna wolne od potworów."
+  },
+  {
+    id: "sector_2",
+    name: "Kopalnia Złota",
+    status: "discovered",
+    x: 60, // 60% od lewej
+    y: 20, // 20% od góry
+    scoutCost: 150,
+    difficulty: 45,
+    enemies: { count: 3, type: "Szkielet Górnik" },
+    production: { gold: 10 },
+    description: "Stara kopalnia."
+  }
+];
+
+function createSectorHTML(sector) {
+  let actionButton = '';
+  let statsInfo = `<p>${sector.description}</p>`;
+
+  if (sector.status === 'locked') {
+    actionButton = `<button class="sector-btn" onclick="event.stopPropagation(); scoutSector('${sector.id}')">Zwiady (${sector.scoutCost}g)</button>`;
+    statsInfo = `<p style="color:#aaa;">??? Teren zablokowany ???</p>`;
+  } else if (sector.status === 'discovered') {
+    actionButton = `<button class="sector-btn" style="background:#e74c3c;" onclick="event.stopPropagation(); startBattle('${sector.id}')">Atakuj (Siła: ${sector.difficulty})</button>`;
+    statsInfo += `<p>⚔ <b>Wrogowie:</b> ${sector.enemies.count}x ${sector.enemies.type}</p>`;
+  } else if (sector.status === 'captured') {
+    actionButton = `<span style="color:#2ecc71; font-weight:bold; display:block; text-align:center;">✔ Przejęto</span>`;
+    statsInfo += `<p style="color:#2ecc71;">💰 <b>Generuje:</b> złoto</p>`; // Tutaj możesz ładnie sformatować production
+  }
+
+  // Zwracamy mały punkt pozycjonowany procentowo z tooltipem w środku
+  return `
+    <div class="sector-node ${sector.status}" id="${sector.id}" style="left: ${sector.x}%; top: ${sector.y}%;">
+      <div class="sector-tooltip">
+        <h4 style="margin:0 0 5px 0; color:#f1c40f;">${sector.name}</h4>
+        <div class="sector-info" style="font-size:12px; margin-bottom:8px;">${statsInfo}</div>
+        ${actionButton}
+      </div>
+    </div>
+  `;
+}
+
+// Główna funkcja renderująca całą mapę
+function renderMap() {
+  const container = document.getElementById('world-map-container');
+  if (!container) return; // Sanity check
+  
+  // Mapujemy tablicę obiektów na string z HTML i wrzucamy do kontenera
+  container.innerHTML = worldMap.map(sector => createSectorHTML(sector)).join('');
+}
+
+// Akcja zwiadu (odblokowanie sektora)
+function scoutSector(id) {
+  const sector = worldMap.find(s => s.id === id);
+  
+  // Załóżmy, że globalna zmienna Twojego złota to resources.gold
+  if (resources.gold >= sector.scoutCost) {
+    resources.gold -= sector.scoutCost;
+    sector.status = 'discovered';
+    
+    // Sanity check: aktualizujemy UI gry
+    renderMap();
+    updateUI(); // Twoja funkcja odświeżająca stan złota na ekranie
+  } else {
+    alert("Bratku, masz za mało złota na zwiad!");
+  }
+}
+
+// Odpalenie na starcie gry
+renderMap();
+function openRegionPopup(title, description) {
+  document.getElementById('modal-title').innerText = title;
+  document.getElementById('modal-desc').innerText = description;
+  document.getElementById('region-modal').style.display = 'block';
+}
+
+// Funkcja zamykająca popup
+function closeRegionPopup() {
+  document.getElementById('region-modal').style.display = 'none';
+}
+
+// Sanity check: Zamknięcie popupa po kliknięciu poza okienkiem
+window.onclick = function(event) {
+  const modal = document.getElementById('region-modal');
+  if (event.target === modal) {
+    modal.style.display = 'none';
+  }
+}

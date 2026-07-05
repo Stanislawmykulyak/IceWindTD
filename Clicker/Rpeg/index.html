@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aldenor - RPG/RTS</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <!-- GŁÓWNY KONTENER GRY -->
+    <div id="game-wrapper">
+
+        <!-- 1. EKRAN: MENU GŁÓWNE -->
+        <div id="screen-main-menu" class="game-screen">
+            <h1 class="game-title">ALDENOR</h1>
+            <p class="game-subtitle">Stara Kraina w ogniu</p>
+            <div class="menu-buttons">
+                <button onclick="switchScreen('camp')">Start New Game (Protokół Arkelas)</button>
+                <button disabled>Load Game (JSON)</button>
+            </div>
+        </div>
+
+        <!-- 2. EKRAN: OBÓZ MOBILNY (The Camp Hub) -->
+        <div id="screen-camp" class="game-screen hidden">
+            <div class="screen-header">
+                <h2>⛺ Obozowisko Armii Arkelasa</h2>
+                <div class="resources-bar">
+                    <span>Złoto: <b id="res-gold">0</b></span> |
+                    <span>Zaopatrzenie: <b id="res-supplies">0</b></span>
+                </div>
+            </div>
+
+            <div class="camp-content">
+                <div class="campfire-scene">
+                    <div class="fire-placeholder">🔥 Ognisko</div>
+                    <div id="campfire-companions"></div>
+                </div>
+
+                <!-- RPG-owy dymek dialogowy -->
+                <div id="dialogue-bubble" class="hidden">
+                    <div class="dialogue-header">
+                        <strong id="dialogue-speaker">Imię</strong>
+                        <button onclick="closeDialogue()" class="close-dialogue-btn">⚡ Zamknij</button>
+                    </div>
+                    <p id="dialogue-text">Treść rozmowy...</p>
+                </div>
+            </div>
+
+            <div class="bottom-nav">
+                <button onclick="switchScreen('barracks')">⚔️ Koszary (Zarządzanie Armią)</button>
+                <button onclick="switchScreen('world-map')">🗺️ Otwórz Mapę Świata</button>
+                <button onclick="switchScreen('main-menu')">⚙️ Wyjście do Menu</button>
+            </div>
+        </div>
+        <div id="screen-barracks" class="game-screen hidden">
+            <div class="screen-header">
+                <h2>🛡️ Koszary i Zarządzanie Drużyną</h2>
+                <button onclick="recruitSoldierTest()" style="background: #22c55e;">+ Zwerbuj Rekruta (50
+                    Złota)</button>
+            </div>
+
+            <div class="barracks-layout">
+                <!-- Kolumna Bohaterów Wyprawy -->
+                <div class="barracks-column">
+                    <h3>👥 Oficerowie (Kompania)</h3>
+                    <div id="heroes-list" class="units-grid"></div>
+                </div>
+
+                <!-- Kolumna Zwerbowanych Wojsk -->
+                <div class="barracks-column">
+                    <h3>🗡️ Wolne Oddziały</h3>
+                    <div id="soldiers-list" class="units-grid"></div>
+                </div>
+            </div>
+
+            <div class="bottom-nav">
+                <button onclick="switchScreen('camp')">⛺ Powrót do Obozu</button>
+            </div>
+        </div>
+        <!-- 3. EKRAN: INTERAKTYWNA MAPA ŚWIATA -->
+        <div id="screen-world-map" class="game-screen hidden">
+            <h2>🗺️ Mapa Świata</h2>
+            <p>Wybierz cel podróży. Bezpieczne przemieszczanie obozu pozwala na eksplorację nowych terenów.</p>
+
+            <!-- Kontener na generowane lokacje -->
+            <div class="map-grid" id="map-locations-container"></div>
+
+            <div class="bottom-nav">
+                <button onclick="switchScreen('camp')">⛺ Powrót do Obozu</button>
+            </div>
+        </div>
+
+        <!-- 4. EKRAN: TAKTYCZNA BITWA (Canvas) -->
+        <div id="screen-battle" class="game-screen hidden">
+            <div class="screen-header">
+                <h2>⚔️ Pole Bitwy (RTS Mode)</h2>
+            </div>
+
+            <div class="battle-container">
+                <canvas id="battleCanvas" width="800" height="450"></canvas>
+            </div>
+
+            <div class="bottom-nav">
+                <button onclick="switchScreen('barracks')">⚔️ Koszary (Zarządzanie Armią)</button> <!-- DODAJ TO -->
+                <button onclick="switchScreen('world-map')">🗺️ Otwórz Mapę Świata</button>
+                <button onclick="switchScreen('main-menu')">⚙️ Wyjście do Menu</button>
+            </div>
+        </div>
+
+    </div>
+    <div id="screen-travel" class="game-screen hidden">
+        <div class="travel-container">
+            <h2 id="travel-title">🧭 W drodze...</h2>
+            <p id="travel-flavor" class="travel-flavor-text">"Przemierzacie niebezpieczne szlaki..."</p>
+            <div class="travel-progress-bar">
+                <div class="travel-progress-fill"></div>
+            </div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+
+</html>

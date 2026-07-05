@@ -18,18 +18,29 @@
         <button class="sidebar-btn" data-tab="altar-tab"><span>Altar</span></button>
         <button class="sidebar-btn" data-tab="crystal-shop-tab"><span>Crystal Shop</span></button>
         <button class="sidebar-btn" data-tab="settings-tab"><span>Ustawienia</span></button>
+        <button class="sidebar-btn" data-tab="world-map-tab"><span>World Map</span></button>
     </div>
-    <div id="crisis-overlay" class="tutorial-overlay hidden" style="z-index: 100000; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(5, 7, 12, 0.85); backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center;">
-        <div class="crisis-card animate-pop" style="background: linear-gradient(135deg, #111827 0%, #030712 100%); border: 2px solid #ef4444; box-shadow: 0 0 30px rgba(239, 68, 68, 0.25), inset 0 0 15px rgba(239, 68, 68, 0.1); border-radius: 16px; width: 450px; padding: 25px; text-align: center; font-family: 'Cinzel', serif; color: #f3f4f6;">
+    <div id="crisis-overlay" class="tutorial-overlay hidden"
+        style="z-index: 100000; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(5, 7, 12, 0.85); backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center;">
+        <div class="crisis-card animate-pop"
+            style="background: linear-gradient(135deg, #111827 0%, #030712 100%); border: 2px solid #ef4444; box-shadow: 0 0 30px rgba(239, 68, 68, 0.25), inset 0 0 15px rgba(239, 68, 68, 0.1); border-radius: 16px; width: 450px; padding: 25px; text-align: center; font-family: 'Cinzel', serif; color: #f3f4f6;">
             <div class="crisis-header" style="margin-bottom: 20px;">
-                <span class="crisis-badge-alert" style="background: rgba(239, 68, 68, 0.15); border: 1px solid #ef4444; color: #ef4444; padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: bold; tracking-letter: 1px;">⚠️ REKONESANS WOJSKOWY</span>
-                <h2 id="crisis-popup-title" style="font-size: 1.6rem; color: #f87171; margin: 15px 0 5px 0; text-shadow: 0 0 10px rgba(239, 68, 68, 0.3);">Wybuchł Konflikt!</h2>
+                <span class="crisis-badge-alert"
+                    style="background: rgba(239, 68, 68, 0.15); border: 1px solid #ef4444; color: #ef4444; padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: bold; tracking-letter: 1px;">⚠️
+                    REKONESANS WOJSKOWY</span>
+                <h2 id="crisis-popup-title"
+                    style="font-size: 1.6rem; color: #f87171; margin: 15px 0 5px 0; text-shadow: 0 0 10px rgba(239, 68, 68, 0.3);">
+                    Wybuchł Konflikt!</h2>
             </div>
-            <div class="crisis-body" style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 12px; padding: 15px; margin-bottom: 20px;">
-                <p id="crisis-popup-text" style="font-size: 0.9rem; line-height: 1.5; color: #cbd5e1; margin: 0; text-align: left;"></p>
+            <div class="crisis-body"
+                style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 12px; padding: 15px; margin-bottom: 20px;">
+                <p id="crisis-popup-text"
+                    style="font-size: 0.9rem; line-height: 1.5; color: #cbd5e1; margin: 0; text-align: left;"></p>
             </div>
             <div class="crisis-footer">
-                <span class="click-prompt" style="font-size: 0.75rem; color: #94a3b8; display: block; background: rgba(255, 255, 255, 0.04); padding: 8px; border-radius: 6px; border: 1px dashed rgba(255, 255, 255, 0.1); cursor: pointer;">⚔️ Kliknij gdziekolwiek na tym oknie, aby zamknąć i ruszyć do Tawerny...</span>
+                <span class="click-prompt"
+                    style="font-size: 0.75rem; color: #94a3b8; display: block; background: rgba(255, 255, 255, 0.04); padding: 8px; border-radius: 6px; border: 1px dashed rgba(255, 255, 255, 0.1); cursor: pointer;">⚔️
+                    Kliknij gdziekolwiek na tym oknie, aby zamknąć i ruszyć do Tawerny...</span>
             </div>
         </div>
     </div>
@@ -301,6 +312,37 @@
                 <p style="color: #f87171; font-size: 0.85rem; margin-bottom: 12px;">Spowoduje to bezpowrotne
                     wyczyszczenie całego imperium, poziomów, złota i diamentów.</p>
                 <button onclick="resetProgress()" class="btn-reset">Zresetuj Cały Postęp</button>
+            </div>
+        </div>
+    </div>
+    <div id="world-map-tab" class="tab-content hidden">
+        <div id="world-map-container" class="map-grid"></div>
+        <div class="map-wrapper">
+            <!-- Twój wygenerowany obrazek mapy jako podkład pod interaktywne strefy -->
+            <img src="watermarked_img_3717427206643532346.png" alt="Mapa Świata" class="map-bg-img">
+
+            <!-- Nakładka SVG z obszarami dopasowanymi do regionów grafiki -->
+            <svg viewBox="0 0 1000 562" class="map-overlay-svg">
+                <!-- Zgniłe Mokradła (Lewa strona) -->
+                <polygon points="50,120 300,90 410,250 430,420 370,520 70,520" class="map-region"
+                    onclick="openRegionPopup('Zgniłe Mokradła', 'Bagna pełne niebezpiecznych stworów i ukrytych skarbów. Poziom trudności: Niski.')" />
+
+                <!-- Kopalnia Złota (Góra po prawej) -->
+                <polygon points="450,50 780,50 820,220 620,380 440,240" class="map-region"
+                    onclick="openRegionPopup('Kopalnia Złota', 'Górzysty teren opanowany przez nieumarłych górników. Generuje potężne ilości złota.')" />
+
+                <!-- Smocze Gniazdo (Dół po prawej) -->
+                <polygon points="630,390 830,230 960,300 960,530 630,530" class="map-region"
+                    onclick="openRegionPopup('Smocze Gniazdo', 'Wulkaniczne pustkowia pilnowane przez potężnego smoka. Znajdziesz tu najrzadsze klejnoty.')" />
+            </svg>
+        </div>
+
+        <!-- Proste okienko popup (Modal) -->
+        <div id="region-modal" class="region-modal">
+            <div class="modal-content">
+                <h3 id="modal-title">Nazwa Regionu</h3>
+                <p id="modal-desc">Opis...</p>
+                <button class="modal-close-btn" onclick="closeRegionPopup()">Zamknij</button>
             </div>
         </div>
     </div>
