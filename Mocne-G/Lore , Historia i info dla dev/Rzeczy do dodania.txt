@@ -167,6 +167,87 @@ Arkelas oraz wszyscy jego legendarni oficerowie (Eleniel, Kaelen, Brammer, Vaelr
 
 Rozbudowujemy mechanikę weteranów o system dynamicznego awansu społecznego w strukturach armii. Zwykli żołnierze nie są skazani na wieczną służbę w cieniu legendarnych herosów – ich lojalność, waleczność i przeżywalność na polu bitwy otwierają przed nimi drogę na sam szczyt hierarchii wojskowej.  Automatyczne awanse zasłużonych: Jeśli zwykły żołnierz wykaże się w walce i przetrwa odpowiednio długo kolejne starcia, system automatycznie przyznaje mu status zasłużonego weterana, trwale podnosząc jego bazowe statystyki.  Mianowanie na Oficerów i Dowódców: Po osiągnięciu odpowiedniego poziomu doświadczenia i zasług, gracz otrzymuje możliwość oficjalnego promowania takiego wojownika na Oficera lub Dowódcę. Pozwala to na stworzenie własnej, unikalnej kadry dowódczej wspierającej 6 głównych towarzyszy Arkelasa na szeroką skalę frontu.  Artefakty Dowódcze i Aury Oddziału: Wraz z objęciem wysokiej roli dowódczej, awansowany żołnierz odblokowuje ekskluzywny slot na Artefakty Taktyczne. Włożenie tam unikalnego przedmiotu (np. runicznego sztandaru lub skradzionego talizmanu Zardasa) nie tylko drastycznie wzmacnia samego dowódcę, ale generuje potężną aurę pasywną podnoszącą morale, pancerz lub siłę ataku całej przypisanej do niego jednostki w trybie RTS
 
+23. System Cyklicznych Misji Fabularnych i Event End-game: „Gorszy niż Zardas”
+Wprowadzamy dynamiczne misje lojalnościowe, które gracz otrzymuje cyklicznie w Obozie (Camp Hub) lub na Mapie Świata w miarę postępu fabuły. Każda decyzja podjęta w tych zadaniach drastycznie redefiniuje postrzeganie Arkelasa przez jego oficerów.
+
+Mechanika Misji Towarzyszy: Raz na kilka tur konkretny kompan (np. Eleniel lub Brammer) zgłasza się do Arkelasa z osobistą prośbą lub kryzysem politycznym. Zignorowanie misji, jej całkowite zawalenie lub podjęcie bezwzględnych decyzji (np. spalenie wioski orków dla celów taktycznych) natychmiastowo obniża relacje z danym towarzyszem oraz powiązaną z nim frakcją w Radzie Siedmiorga.
+
+Moralne Wybory w Dialogach: Rozmowy w dymkach dialogowych niosą realną wagę. Wybieranie opcji bezwzględnych, chciwych lub autorytarnych systematycznie buduje ukryty wskaźnik Tyranii Arkelasa.
+
+End-game’owy Event Buntu („Gorszy niż Zardas”): Jeśli gracz przez całą grę podejmował tyraniczne decyzje i doprowadził lojalność większości kompanów do poziomu krytycznego, w Akcie III przed ostatecznym starciem odpala się Wielki Pucz w Obozie.
+
+Konfrontacja i Finałowa Zdrada: W przededniu bitwy z Zardasem, pozostali przy życiu kompani odwracają się od głównego bohatera. W kluczowej, dramatycznej scenie dialogowej stają naprzeciwko Arkelasa, a przywódca rebelii mówi mu prosto w twarz: „Spójrz na to, co zrobiłeś z Aldenorem w imię jego ratowania... Stałeś się gorszym tyranem niż Zardas”.
+
+Rozgałęzienie Rozgrywki: Wydarzenie to całkowicie zmienia finał gry. Gracz traci dostęp do zbuntowanych kompanów oraz ich armii, zmuszony do stoczenia krwawej walki na dwa fronty – przeciwko rebelii dawnych przyjaciół oraz nacierającym siłom głównego maga.
+
+
+24. Kompleksowy System Pozyskiwania Surowców i Pętli EkonomicznejAby gospodarka obozu, kuźnia oraz szpital działały sprawnie, gra operuje na czterech głównych surowcach, z których każdy ma unikalne źródło pozyskiwania i przypisaną rolę mechaniczną:💰 Złoto (Gold) – Pasywny Dochód i HandelZastosowanie: Rekrutacja podstawowego wojska, ulepszanie budynków obozu, leczenie lżejszych kontuzji w Szpitalu.Jak zarabiać:Kopalnie (Pasywny Dochód): Kluczowe źródło. Odbicie kopalni na mapie świata w Bitwach o Węzły Surowcowe na stałe przypisuje ją do obozu, generując określoną sumę złota automatycznie co każdą turę (np. $+50$ złota/turę).Handel: Sprzedaż niepotrzebnego wyposażenia u rzemieślników w Głównych Miastach.Standardowe Bitwy: Nagroda za pokonanie zwykłych oddziałów Zardasa.⛓️ Żelazo (Iron) – Baza UzbrojeniaZastosowanie: Wytwarzanie pakietów pancerzy i broni w Kuźni (niezbędne do awansowania rekrutów w zaawansowane jednostki).Jak zarabiać:Misje Sabotażowe: Najszybszy sposób – napady na wrogie konwoje zaopatrzeniowe Zardasa i wykradanie skrzyń z surowcami.Eksploracja Regionów Górskich: Przeszukiwanie jaskiń i interakcja z ukrytymi lokacjami w Khaz-Borath (Krasnoludowie) oraz Gargorath (Giganci).🌿 Zioła (Herbs) – Zaopatrzenie SzpitalaZastosowanie: Wytwarzanie mikstur alchemicznych dla bohaterów przez Skraga oraz bezpośrednie przyspieszanie rekrutacji/leczenia Ciężko Rannych żołnierzy w Szpitalu Polowym.Jak zarabiać:Aktywna Eksploracja: Zbieranie roślin podczas chodzenia Arkelasem w trybie eksploracji miast oraz prastarych lokacji leśnych.Region Aldorii: Pasywne nagrody lub misje poboczne w Królestwie Przymierza, gdzie puszcze obfitują w rzadką florę.🪙 Commander Coins (Monety Dowódcy) – Elitarna Waluta Wpływu i RelacjiZastosowanie: Zaklinanie pancerzy bohaterów, odblokowywanie legendarnych cech pasywnych oraz kucie potężnych relikwii (np. ulepszenia dla Rogu Odwagi).Jak zarabiać (Ekskluzywne metody – brak możliwości farmowania):Ważne Misje Fabularne i Finały Aktów: Nagroda za pomyślne ukończenie kamieni milowych kampanii i pokonanie bossów armii Zardasa.Dobre Relacje z Ludźmi i Towarzyszami: Kluczowa mechanika RPG. Gracz otrzymuje Commander Coins, gdy za pomocą wyborów w dymkach dialogowych rozwiąże konflikt dyplomatyczny w Radzie, osiągnie kamień milowy lojalności z danym kompanem (np. Eleniel lub Brammerem) lub bezinteresownie pomoże mieszkańcom Aldenoru w cyklicznych eventach.
+
+25. System Wyzwalania Obiektów Strategicznych w Misjach Fabularnych (Post-Battle Income)Ważne misje fabularne oraz unikalne punkty na Mapie Świata nie służą wyłącznie posuwaniu fabuły do przodu – pozwalają Arkelasowi na permanentne odbijanie z rąk Zardasa kluczowych obiektów infrastruktury Aldenoru. Po ich wyzwoleniu, obiekty te zostają trwale przypisane do logistyki Obozu i generują potężny bonus: pasywny zastrzyk surowców po każdej udanej walce (niezależnie od standardowych łupów wojennych).  System ten obejmuje różne rodzaje obiektów, dystrybuujących odmienne surowce:⛏️ Wyzwolone Kopalnie (np. Królewskie Żyły w Khaz-Borath):Lore: Starożytne kopalnie krasnoludów odzyskane z rąk podziemnych potworów Zardasa.  Efekt: Zabezpieczenie dróg transportowych sprawia, że po każdej wygranej bitwie/potyczce do skarbca obozu trafia stała premia, np. +300 Złota.🏭 Odbite Huty i Manufaktury (np. Kuźnie Polowe Valenoru):Lore: Wojskowe zakłady przetwórcze, które najeźdźca zaadaptował na własne potrzeby.  Efekt: Po ich wyzwoleniu Brammer uruchamia produkcję masową. Każde starcie na mapie kończy się dostawą ciężkich wozów z zaopatrzeniem rzemieślniczym: +50 Żelaza po każdej walce.  🌱 Magiczne Enklawy i Zagajniki (np. Prastare Ogrody w Aldorii):Lore: Rezerwaty natury i miejsca kultu Istot Lasu, skażone czarną magią.  Efekt: Po oczyszczeniu terenu przez Eleniel i Kaelena, leśne elfy odwdzięczają się stałym wsparciem medycznym. Zbieracze wysyłają do Szpitala zapasy lecznicze: +40 Ziół po każdej walce.  🗼 Strażnice i Posterunki Graniczne:Lore: Sieć wież sygnalizacyjnych rozrzuconych wzdłuż granic królestw.  Efekt: Zapewniają lepszy zwiad i bezpieczeństwo militarne. Każda wygrana walka przy aktywnych strażnicach generuje mniejsze zużycie Zaopatrzenia (Supplies) podczas podróży, chroniąc armię przed debuffami głodu
+
+26. Wielopoziomowy System Treningu i Specjalizacji Frakcyjnej Jednostek (Class Training & Specialization)Zwykli ochotnicy rekrutowani w Głównych Miastach (posiadający losowe imiona i wygląd z Generatora Osobowości) zaczynają jako bezklasowi, słabi „Rekruci”[source: 8]. Aby stworzyć z nich elitarną armię zdolną stawić czoła Zardasowi, gracz musi poddać ich procesowi szkolenia w dedykowanych sektorach Obozu (The Camp Hub)[source: 8]. Każda ścieżka treningowa jest nadzorowana przez innego towarzysza-oficera, wymaga odmiennych zasobów i odblokowuje unikalne role taktyczne na Canvasie RTS[source: 8]:🔮 Ścieżka Magiczna: Nowicjusz / Mag Bitewny (Mage Class)Struktura w Obozie: Wieża Magiczna (odblokowywana po dołączeniu Eleniel Voidweaver)[source: 8].Koszt szkolenia: Złoto + Esencja Gwiazd (Star Essence)[source: 8].Mechanika: Gracz wysyła rekrutów do Wieży na czas 1–2 bitew[source: 8]. Po ukończeniu szkolenia powracają oni do Koszar jako elitarni magowie, zdolni do rzucania obszarowych czarów (AoE) niszczących przywołańce Zardasa[source: 8].Zależność fabularna: Jeśli Eleniel zginie w Akcie I, strukturę przejmuje „Nowicjusz z Elenvair” – koszt szkolenia magów permanentnie rośnie o $+50\%$, a najwyższy stopień wtajemniczenia magów zostaje zablokowany (System Sukcesji)[source: 8].🏹 Ścieżka Zwiadowcza: Łucznik / Strażnik Kniei (Archer Class)Struktura w Obozie: Garnizon Leśny / Strzelnica (odblokowywana po dołączeniu Kaelena Moss-Foota)[source: 8].Koszt szkolenia: Złoto + Zioła (Herbs)[source: 8].Mechanika: Kaelen uczy rekrutów sztuki kamuflażu, szybkiego przemieszczania się oraz strzelectwa wyborowego[source: 8]. Jednostki te operują na tyłach armii, zadając wysokie obrażenia kłute i nakładając statusy unieruchomienia (Root) lub spowolnienia na nacierających wrogów[source: 8].Zależność fabularna: Kontuzja Kaelena (Trauma Poziomu 1 lub 2) wydłuża czas szkolenia łuczników o jedną turę na czas jego pobytu w Szpitalu Polowym[source: 8].⚔️ Ścieżka Wojskowa: Wojownik / Tarczownik / Ciężki Piechur (Warrior Class)Struktura w Obozie: Plac Musztry i Kuźnia Polowa (odblokowywana po dołączeniu Brammera Stoneshielda, rozbudowywana w Akcie II przez Korra i Vaelrę)[source: 8].Koszt szkolenia: Złoto + Żelazo (Iron) + Pakiet Uzbrojenia z Kuźni[source: 8].Mechanika: Rekruci przechodzą morderczy trening defensywny i ofensywny[source: 8]. Aby sfinalizować awans na Wojownika, gracz musi ręcznie przypisać im wyprodukowany w Kuźni Pakiet Uzbrojenia (np. Żelazny Napięstnik Valenoru)[source: 8]. Zyskują wtedy ogromny bonus do HP i pancerza, stając się trzonem linii obrony (Hold the Line)[source: 8].
+
+
+
+
+
+
+
+
+
+
+
+Rózne typy walki :
+
+1. Potyczki Obronno-Opóźniające (Hold the Line / Tactical Retreat)
+
+Cel fabularny: Zardas maszeruje na wschód. Twoim zadaniem jest kupienie czasu dla 7 Królestw.  Jak to działa na Canvasie: Wróg nadciąga falami z prawej strony ekranu. Twój cel to nie całkowita eliminacja wroga, ale przetrwanie X minut lub ochrona konkretnego punktu (np. barykady, wąskiego gardła w wąwozie Gargorath).  Mechanika: Gracz buduje linie obrony za pomocą piechoty z Valenoru i run Brammera. Po upływie czasu odpala się strefa ewakuacji z lewej strony – musisz wycofać ocalałe jednostki, by nie zginęły na zawsze (permadeath/szpital).
+
+2. Misje Sabotażowe i Zwiadowcze (Tactical Strike / Sabotage)
+
+Cel fabularny: Wykorzystanie unikalnych talentów Twoich kompanów, takich jak zwiad Kaelena czy wybuchy Skraga.  Jak to działa na Canvasie: Mapa ma strukturę korytarzową (lasy, jaskinie) z gęstą mgłą wojny. Wróg ma stacjonarne obozy pilnujące zasobów.  Mechanika: Mała potyczka RTS, gdzie celem jest przekradnięcie się (lub przebicie) do wrogiego konwoju zaopatrzeniowego lub kryształu czarnej magii, podłożenie ładunku przez Skraga (albo zniszczenie go przez magię Eleniel) i szybka ucieczka. Sukces drastycznie zwiększa Twoje Zaopatrzenie w Obozie
+
+3. Bitwy o Węzły Surowcowe (Stronghold / Resource Liberation)
+
+Cel fabularny: Odbijanie strategicznych miejsc, aby zasilić ekonomię obozu (np. zapomniane kopalnie krasnoludów w Khaz-Borath).  Jak to działa na Canvasie: Klasyczne starcie RTS z podziałem na fazy. Zaczynasz po lewej stronie planszy, wróg jest okopany po prawej.  Mechanika: Musisz przeprowadzić pełny szturm. Wykorzystujesz Vaelrę do przełamywania linii wroga, a Korra do rozbijania grup mniejszych goblinów obszarowymi uderzeniami. Wygrana na stałe odblokowuje pasywny przychód złota lub surowców na mapie świata (tak jak ta kopalnia, którą masz już zapisaną w kodzie!).
+4.Dynamiczne Zasadzki w Podróży (Ambush Survival)
+
+
+Cel fabularny: Tyły Twojej maszerującej armii zostają zaskoczone przez wysłanników Zardasa.  Jak to działa na Canvasie: Najbardziej chaotyczna walka. Twoje jednostki (sojusznicy) nie zaczynają w bezpiecznym szyku po lewej, ale są rozrzucone na środku ekranu, a wrogowie atakują ze wszystkich stron (z góry, z dołu, z prawej).  Mechanika: Pierwsze sekundy to czysta walka o przetrwanie i przegrupowanie. Idealny moment na użycie Rogu Odwagi Arkelasa z panelu bocznego, aby zdjąć z jednostek panikę i zorganizować krąg obronny
+
+
+Wplyw wygranych i przegranych w standardowych bitwach :
+
+Wpływ na Ekonomię Obazu (Zasoby)
+Wynik bitwy bezpośrednio dyktuje, jak bogaty (lub biedny) jest Twój obóz.Misje Sabotażowe: Sukces to ogromny zastrzyk rzadkich surowców (np. czarny proch dla Skraga, eliksiry dla Eleniel). Porażka oznacza, że wróg odcina Twoje linie zaopatrzenia i w następnej turze w obozie tracisz część zapasów jedzenia.  Szturm na Węzły Surowcowe: Wygrana odblokowuje pasywny przychód (np. $+50$ złota na turę z kopalni). Jeśli wróg w kontrataku odbije ten węzeł, tracisz ten bonus.
+
+Wpływ na Stan Armii (Mechanika RPG)
+Twoi żołnierze i kompani to nie roboty – ponoszą koszty każdej walki.System Rannych (Szpital): Jednostki, które padną w walce, nie giną bezpowrotnie (chyba że włączysz tryb hardcore), ale trafiają do namiotu medycznego w obozie na X tur.  Morale i "Róg Odwagi": Wygrana w ciężkiej Zasadzce podnosi globalne morale armii (jednostki zadają większe obrażenia w kolejnych walkach). Porażka lub chaotyczna ucieczka sprawia, że żołnierze łatwiej wpadają w panikę.  
+
+Wpływ na Zegar Zagłady (Pasek Postępu Zardasa)Głównym celem Arkelasa jest spowolnienie armii Zardasa. Możesz wprowadzić wskaźnik "Postępu Inwazji" na mapie świata.  Misje Obronne: Każda minuta, którą wytrzymasz na Canvasie, cofa lub zatrzymuje pasek postępu Zardasa. Kupujesz czas dla 7 Królestw.  Ignorowanie Misji: Jeśli gracz zignoruje misję obronną i ucieknie od razu do obozu, armia Zardasa przesuwa się do przodu, blokując dostęp do niektórych lokacji handlowych lub kopalni na mapie.  
+
+
+Typ 5: Otwarte Bitwy Polowe (Grand Field Battles)
+Cel fabularny: Zardas wysyła swoją elitarną awangardę, by ostatecznie zmiażdżyć Twój opór, albo Ty decydujesz się na otwarte starcie, by odbić kluczowe miasto prowincji.
+
+Jak to działa na Canvasie: Zapomnij o ciasnych korytarzach i ucieczkach. Szeroka, otwarta mapa (np. równiny Aldenoru). Ty zaczynasz po lewej stronie z pełną armią, wróg po prawej. Formacje piechoty stają naprzeciw siebie.
+
+Mechanika: Klasyczny, wielkoskalowy RTS. Tutaj liczy się zarządzanie grupami jednostek, trzymanie linii obrony przez tarczowników i flankowanie jazdą. Umiejętności bohaterów (jak okrzyk Arkelasa czy czary Eleniel) mają tutaj charakter obszarowy (AoE) i mogą odwrócić losy starcia setek żołnierzy.
+
+Wplyw wygranej / przegranej podczas wielkiej bitwy .
+🏆 Konsekwencje Zwycięstwa:
+Złamanie kręgosłupa inwazji: Pasek postępu Zardasa zostaje zablokowany lub drastycznie cofnięty na wiele tur. Zyskujesz mnóstwo czasu na spokojny rozwój obozu.
+
+Wojenne Łupy i Reputacja: Zdobywasz elitarne zasoby (np. plany machin oblężniczych dla Skraga) oraz odblokowujesz możliwość rekrutacji zaawansowanych jednostek w obozie (np. ciężkiej kawalerii).
+
+Wzrost Morale: Cała Twoja armia otrzymuje pasywny bonus do obrażeń na kilka kolejnych potyczek.
+
+💀 Konsekwencje Porażki:
+Masowe straty (Szpital w obozie pęka w szwach): Otwarte bitwy to nie potyczki podjazdowe. Jeśli przegrasz, większość Twoich jednostek zostaje ciężko ranna lub ginie, co drastycznie osłabi Twoją obronę w kolejnych turze.
+
+Utrata terytorium: Wróg natychmiast przejmuje sąsiednie węzły surowcowe (np. Twoje kopalnie), a Twój obóz może zostać zmuszony do chaotycznej i kosztownej relokacji w bezpieczniejsze miejsce.
+
+
 
 System zapisow w przeglądarce :
 
