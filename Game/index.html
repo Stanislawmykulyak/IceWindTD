@@ -149,9 +149,16 @@
       </div>
     </div>
     <div id="hud-top-left">
-      <div class="hp-bar-container">
-        <div id="hp-bar-fill" style="width: 100%;"></div>
-        <span id="hp-text">100 / 100</span>
+      <!-- Pasek HP -->
+      <div class="bar-container">
+        <div id="hp-bar" class="bar hp"></div>
+        <span id="hp-text" class="bar-text">100 / 100</span>
+      </div>
+
+      <!-- Pasek Staminy bezpośrednio pod spodem -->
+      <div class="bar-container">
+        <div id="stamina-bar" class="bar stamina"></div>
+        <span id="stamina-text" class="bar-text">100 / 100</span>
       </div>
     </div>
     <div id="subtitle-box" class="subtitle-box hidden">
@@ -163,7 +170,7 @@
   <script src="dialogues.js"></script>
   <script src="quests.js"></script>
   <script src="script.js"></script>
-  
+
 </body>
 
 </html>

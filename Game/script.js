@@ -1235,23 +1235,35 @@ const player = {
     y: 550,
     radius: 12,
     gold: 100,
-    hp: 150,
-    maxHp: 150,
+    hp: 1150,
+    maxHp: 1150,
     color: '#3498db',
-    angle: 0, // Kąt obrotu gracza w stronę myszki
+    angle: 0,
     iFrames: false,
-    // 2. Statusy postaci
+
+    // 2. Statusy postaci i Unik (Roll)
     isMounted: false,
     isSleeping: false,
     isParrying: false,
+    isRolling: false,
+    rollSpeed: 3.5,
+    rollDuration: 400, // Czas trwania uniku w ms
+    rollCooldown: 1000, // Co ile można robić roll
+    lastRollTime: 0,
+    rollDirX: 0,
+    rollDirY: 0,
+    stamina: 100,
+    maxStamina: 100,
+    staminaRegenRate: 0.2,
+    isStaggered: false,
 
-    // 3. Właściwości Systemu Walki (Circular Hitbox)
-    damage: 35,
-    attackRange: 40,       // Promień kołowego hitboxa
-    attackOffset: 25,      // Przesunięcie hitboxa przed gracza
-    attackCooldown: 350,   // Co ile ms można atakować
+    // 3. Właściwości Systemu Walki
+    damage: 155,
+    attackRange: 50,
+    attackOffset: 25,
+    attackCooldown: 750,
     lastAttackTime: 0,
-    attackVisualTimer: 0,  // Czas trwania wizualnego łuku (klatki)
+    attackVisualTimer: 0,
 
     // 4. Ekwipunek i Plecak
     maxWeight: 100.0,
@@ -1272,7 +1284,6 @@ const player = {
     equipment: { head: null, chest: null, legs: null, boots: null, weapon: null },
     horse: { x: 100, y: 550, radius: 15, color: '#8e44ad', isMounted: false },
 
-    // 5. Metody zarządzania ekwipunkiem i wagą
     getWeight() {
         const invWeight = this.inventory.reduce((sum, item) => sum + (item.weight || 0), 0);
         const eqWeight = Object.values(this.equipment).reduce((sum, item) => sum + (item ? item.weight || 0 : 0), 0);
@@ -1334,22 +1345,23 @@ const player = {
         menuSystem.renderInventoryTab();
     },
 
-    // 6. Logika otrzymywania obrażeń
-    takeDamage(amount) {
-        if (this.iFrames) return; // Jeśli dostał ułamek sekundy temu, ignoruj cios
+    takeDamage(amount, attacker) {
+        if (this.iFrames || this.isRolling) return;
+
+        if (this.isParrying && attacker) {
+            showToast("PERFECT PARRY! Wróg ogłuszony!");
+            attacker.isWindup = false;
+            attacker.isStaggered = true;
+            setTimeout(() => { attacker.isStaggered = false; }, 2500);
+            return;
+        }
 
         const armor = Object.values(this.equipment).reduce((sum, item) => sum + (item && item.armor ? item.armor : 0), 0);
         const finalDamage = Math.max(2, amount - armor);
 
-        if (this.isParrying) {
-            showToast("Sparowano atak!");
-            return;
-        }
-
         this.hp = Math.max(0, this.hp - finalDamage);
         this.updateHpUI();
 
-        // Włączamy 400ms ochrony po dostaniu hita
         this.iFrames = true;
         setTimeout(() => { this.iFrames = false; }, 400);
 
@@ -1366,21 +1378,47 @@ const player = {
         if (text) text.innerText = `${this.hp} / ${this.maxHp}`;
     },
 
-    // 7. Nowy System Ataku (Offset Hitbox + Knockback dla SquadManager)
-    performAttack(squadManager) {
+    // Wykonanie uniku (roll) – zużywa 25 staminy
+    performRoll(moveX, moveY) {
         const now = Date.now();
-        if (now - this.lastAttackTime < this.attackCooldown) return;
+        if (this.isRolling || this.isMounted || this.stamina < 25 || now - this.lastRollTime < this.rollCooldown) return;
 
+        this.stamina -= 20;
+        this.isRolling = true;
+        this.iFrames = true;
+        this.lastRollTime = now;
+
+        // Jeśli gracz się nie rusza, roll idzie w stronę gdzie patrzy postać
+        if (moveX === 0 && moveY === 0) {
+            this.rollDirX = Math.cos(this.angle);
+            this.rollDirY = Math.sin(this.angle);
+        } else {
+            const len = Math.hypot(moveX, moveY);
+            this.rollDirX = moveX / len;
+            this.rollDirY = moveY / len;
+        }
+
+        setTimeout(() => {
+            this.isRolling = false;
+            this.iFrames = false;
+        }, this.rollDuration);
+    },
+
+    // Atak – BEZ KOSZTU STAMINY (tylko cooldown)
+    performAttack(squadManager) {
+        if (this.isStaggered || this.isRolling) return;
+        const now = Date.now();
+
+        // Weryfikacja staminy i cooldownu
+        if (this.stamina < 10 || now - this.lastAttackTime < this.attackCooldown) return;
+
+        this.stamina -= 10; // Atak zużywa staminę
         this.lastAttackTime = now;
-        this.attackVisualTimer = 8; // Efekt wizualny na 8 klatek
+        this.attackVisualTimer = 8;
 
-        // Wyznaczanie środka okręgu hitboxa przed graczem
         const hitboxX = this.x + Math.cos(this.angle) * this.attackOffset;
         const hitboxY = this.y + Math.sin(this.angle) * this.attackOffset;
-
-        // Bierzemy pod uwagę broń założoną z ekwipunku
-        const weaponBonus = this.equipment.weapon ? 15 : 0;
-        const totalDamage = this.damage + weaponBonus;
+        const totalDamage = this.damage + (this.equipment.weapon ? 12 : 0);
 
         if (squadManager && squadManager.members) {
             squadManager.members.forEach(enemy => {
@@ -1388,27 +1426,22 @@ const player = {
                 const dy = enemy.y - hitboxY;
                 const dist = Math.hypot(dx, dy);
 
-                // Kolizja dwóch okręgów (Hitbox + Promień wroga)
                 if (dist < this.attackRange + enemy.radius) {
-                    enemy.hp -= totalDamage;
-                    showToast(`Trafiono ${enemy.name} za ${totalDamage} dmg!`);
+                    const isCrit = enemy.isStaggered;
+                    const dmgDealt = isCrit ? totalDamage * 1.5 : totalDamage;
 
-                    // Knockback (Odrzut wroga)
+                    enemy.hp -= dmgDealt;
+                    showToast(isCrit ? `KRYTYK! ${dmgDealt} dmg!` : `Trafiono za ${dmgDealt} dmg!`);
+
                     const kbAngle = Math.atan2(enemy.y - this.y, enemy.x - this.x);
-                    const kbForce = 22;
+                    const kbForce = isCrit ? 22 : 10;
                     enemy.x += Math.cos(kbAngle) * kbForce;
                     enemy.y += Math.sin(kbAngle) * kbForce;
-
-                    if (enemy.hp <= 0) {
-                        this.gold += enemy.rewardGold || 5;
-                        showToast(`Zabito ${enemy.name}! +${enemy.rewardGold || 5}🪙`);
-                    }
                 }
             });
         }
     },
 
-    // 8. Pozostałe akcje gracza
     startSleep() {
         if (this.isSleeping) return;
         this.isSleeping = true;
@@ -1450,6 +1483,28 @@ const player = {
     update(keys, stateTextUI) {
         if (this.isSleeping) return;
 
+        // Logika Wykonywania Uniku (Roll na Spację)
+        let moveX = 0, moveY = 0;
+        if (keys['w'] || keys['arrowup']) moveY -= 1;
+        if (keys['s'] || keys['arrowdown']) moveY += 1;
+        if (keys['a'] || keys['arrowleft']) moveX -= 1;
+        if (keys['d'] || keys['arrowright']) moveX += 1;
+
+        if (keys[' '] || keys['space']) {
+            this.performRoll(moveX, moveY);
+        }
+
+        if (this.isRolling) {
+            const nextX = this.x + this.rollDirX * this.rollSpeed;
+            const nextY = this.y + this.rollDirY * this.rollSpeed;
+
+            if (!gameMap.checkCollision(nextX, this.y, this.radius)) this.x = nextX;
+            if (!gameMap.checkCollision(this.x, nextY, this.radius)) this.y = nextY;
+
+            if (stateTextUI) { stateTextUI.innerText = "Unik (Roll)"; stateTextUI.style.color = "#f1c40f"; }
+            return;
+        }
+
         let currentSpeed = CONFIG.walk_speed;
 
         if (this.isMounted) {
@@ -1461,12 +1516,6 @@ const player = {
         } else {
             if (stateTextUI) { stateTextUI.innerText = "Pieszo (Chód)"; stateTextUI.style.color = "#4cd137"; }
         }
-
-        let moveX = 0, moveY = 0;
-        if (keys['w'] || keys['arrowup']) moveY -= 1;
-        if (keys['s'] || keys['arrowdown']) moveY += 1;
-        if (keys['a'] || keys['arrowleft']) moveX -= 1;
-        if (keys['d'] || keys['arrowright']) moveX += 1;
 
         if (moveX !== 0 && moveY !== 0) {
             moveX *= 0.7071;
@@ -1485,7 +1534,6 @@ const player = {
         }
     },
 
-    // 9. Rysowanie gracza i śladu ataku
     draw(ctx) {
         if (gameMap.currentLocation === 'kruczy_dol' && !this.horse.isMounted) {
             ctx.beginPath();
@@ -1500,16 +1548,18 @@ const player = {
             ctx.fillText('Koń [E]', this.horse.x - 18, this.horse.y - 20);
         }
 
-        // Korpusa gracza
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-        ctx.fillStyle = this.isMounted ? '#9b59b6' : this.color;
+
+        // Zmiana koloru gracza podczas wykonywania uniku
+        if (this.isRolling) ctx.fillStyle = '#f39c12';
+        else ctx.fillStyle = this.isMounted ? '#9b59b6' : this.color;
+
         ctx.fill();
         ctx.strokeStyle = '#ffffff';
         ctx.lineWidth = 2;
         ctx.stroke();
 
-        // Rysowanie śladu machnięcia (cięcia)
         if (this.attackVisualTimer > 0) {
             this.attackVisualTimer--;
             ctx.save();
@@ -1527,6 +1577,23 @@ const player = {
 // ==========================================
 // 6.7 SYSTEM WALKI I ZBIOROWE AI SZAJKI
 // ==========================================
+function updateUI() {
+    // Wartości zaokrąglamy w górę (Math.ceil), żeby nie wyświetlać ułamków
+    const currentHp = Math.max(0, Math.ceil(player.hp));
+    const currentStamina = Math.max(0, Math.ceil(player.stamina));
+
+    // Aktualizacja HP
+    const hpBar = document.getElementById('hp-bar');
+    const hpText = document.getElementById('hp-text');
+    if (hpBar) hpBar.style.width = `${(currentHp / player.maxHp) * 100}%`;
+    if (hpText) hpText.textContent = `${currentHp} / ${player.maxHp}`;
+
+    // Aktualizacja Staminy
+    const staminaBar = document.getElementById('stamina-bar');
+    const staminaText = document.getElementById('stamina-text');
+    if (staminaBar) staminaBar.style.width = `${(currentStamina / player.maxStamina) * 100}%`;
+    if (staminaText) staminaText.textContent = `${currentStamina} / ${player.maxStamina}`;
+}
 
 class HumanEnemy {
     constructor(x, y, type = 'zbir_lekki', squad) {
@@ -1560,6 +1627,9 @@ class HumanEnemy {
         const dxToPlayer = player.x - this.x;
         const dyToPlayer = player.y - this.y;
         const distToPlayer = Math.hypot(dxToPlayer, dyToPlayer);
+        if (this.isStaggered) {
+            return;
+        }
 
         // Sprawdzamy czy ten zbir ma prawo do natarcia (token ataku od szajki)
         const isAttacker = (this.squad.currentAttacker === this);
@@ -1613,46 +1683,96 @@ class HumanEnemy {
     }
 
     attack(player) {
-        const now = Date.now();
-        if (now - this.lastAttackTime >= this.attackCooldown) {
-            player.takeDamage(this.damage);
-            this.lastAttackTime = now;
-            // Po ataku oddaje token natarcia innym zbirom z grupy
-            this.squad.releaseAttackToken(this);
+    const now = Date.now();
+    if (this.isStaggered || this.isWindup) return;
+    if (now - this.lastAttackTime < this.attackCooldown) return;
+
+    this.isWindup = true;
+    this.windupStart = now;
+    this.windupDuration = 650; // Dłuższy czas na reakcję gracza (zamiast 450ms)
+
+    // ZABLOKOWANIE KĄTA: Zapamiętujemy gdzie gracz stoi W MOMENCIE rozpoczęcia zamachu
+    this.targetAngleAtWindup = Math.atan2(player.y - this.y, player.x - this.x);
+
+    setTimeout(() => {
+        if (!this.isStaggered) {
+            // Skok w stronę zapamiętanego kąta – jeśli gracz zrobił krok w bok, wrak uderzy w próżnię
+            this.x += Math.cos(this.targetAngleAtWindup) * 30;
+            this.y += Math.sin(this.targetAngleAtWindup) * 30;
+
+            const dist = Math.hypot(player.x - this.x, player.y - this.y);
+            if (dist <= this.attackRange + 5) {
+                player.takeDamage(this.damage, this);
+            }
         }
-    }
+        this.isWindup = false;
+        this.lastAttackTime = Date.now();
+        this.squad.releaseAttackToken(this);
+    }, this.windupDuration);
+}
 
     draw(ctx) {
+        // Wizualny indykator ataku (strefa zagrożenia na ziemi)
+        if (this.isWindup) {
+            const progress = Math.min(1, (Date.now() - this.windupStart) / this.windupDuration);
+
+            ctx.save();
+            ctx.beginPath();
+            ctx.moveTo(this.x, this.y);
+            ctx.arc(
+                this.x,
+                this.y,
+                this.attackRange + 15,
+                this.targetAngleAtWindup - Math.PI / 3,
+                this.targetAngleAtWindup + Math.PI / 3
+            );
+            ctx.closePath();
+
+            // Czerwone wypełnienie narastające w czasie ładowania
+            ctx.fillStyle = `rgba(231, 76, 60, ${0.15 + progress * 0.35})`;
+            ctx.fill();
+            ctx.strokeStyle = `rgba(231, 76, 60, ${0.5 + progress * 0.5})`;
+            ctx.lineWidth = 2 + progress * 2;
+            ctx.stroke();
+            ctx.restore();
+        }
+
+        // Rysowanie ciała wroga
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-        ctx.fillStyle = this.color;
+
+        if (this.isStaggered) ctx.fillStyle = '#f1c40f';
+        else if (this.isWindup) ctx.fillStyle = '#e74c3c';
+        else ctx.fillStyle = this.color;
+
         ctx.fill();
         ctx.strokeStyle = '#000000';
         ctx.lineWidth = 1.5;
         ctx.stroke();
 
         // Pasek HP nad głową
-        const barW = 26;
+        const barW = 28;
         const barH = 4;
+        const hpPercent = Math.max(0, this.hp / this.maxHp);
+
         ctx.fillStyle = '#c0392b';
         ctx.fillRect(this.x - barW / 2, this.y - this.radius - 8, barW, barH);
         ctx.fillStyle = '#2ecc71';
-        ctx.fillRect(this.x - barW / 2, this.y - this.radius - 8, Math.max(0, (this.hp / this.maxHp)) * barW, barH);
+        ctx.fillRect(this.x - barW / 2, this.y - this.radius - 8, barW * hpPercent, barH);
     }
 }
-
 // Zarządca Grupowego AI
 class SquadManager {
     constructor() {
         this.members = [];
-        this.currentAttacker = null;
-        this.lastTokenSwitch = 0;
+        this.activeAttackers = [];
+        this.maxAttackers = 2; // Jednocześnie atakuje do 2 wrogów
         this.baseAngle = 0;
     }
 
     spawnSquad(centerX, centerY, count = 3) {
         this.members = [];
-        this.currentAttacker = null;
+        this.activeAttackers = [];
 
         for (let i = 0; i < count; i++) {
             const spawnAngle = (Math.PI * 2 / count) * i;
@@ -1662,45 +1782,66 @@ class SquadManager {
 
             this.members.push(new HumanEnemy(spawnX, spawnY, type, this));
         }
-        showToast("Zostałeś zaczepiony przez szajkę!");
+        showToast("Zaatakowała cię szajka!");
     }
 
     update(player) {
         if (this.members.length === 0) return;
 
-        // Powolna rotacja szyku wokół gracza (efekt okrążania)
-        this.baseAngle += 0.01;
-
-        // Przydzielanie kątów w szyku wszystkim żywym zbirom
+        this.baseAngle += 0.015;
         const step = (Math.PI * 2) / this.members.length;
         this.members.forEach((member, idx) => {
             member.slotAngle = this.baseAngle + (idx * step);
         });
 
-        // Żonglowanie atakującym (rotacja co 2.5s jeśli nikt nie atakuje)
-        const now = Date.now();
-        if (!this.currentAttacker || now - this.lastTokenSwitch > 4000) {
-            const randomMember = this.members[Math.floor(Math.random() * this.members.length)];
-            this.currentAttacker = randomMember;
-            this.lastTokenSwitch = now;
+        // Przydzielanie żetonów ataku do limitu maxAttackers
+        while (this.activeAttackers.length < this.maxAttackers && this.members.length > 0) {
+            const available = this.members.filter(m => !this.activeAttackers.includes(m) && !m.isStaggered);
+            if (available.length === 0) break;
+            const nextAttacker = available[Math.floor(Math.random() * available.length)];
+            this.activeAttackers.push(nextAttacker);
         }
 
-        // Aktualizacja każdego członka szajki
         for (let i = this.members.length - 1; i >= 0; i--) {
             const m = this.members[i];
-            m.update(player);
+
+            // Jeżeli jednostka jest zestunowana – całkowity brak ruchu i ataku
+            if (m.isStaggered) {
+                m.applySeparation(this.members);
+                if (m.hp <= 0) {
+                    this.releaseAttackToken(m);
+                    this.members.splice(i, 1);
+                }
+                continue; // Przejdź do następnego bez liczenia ruchu
+            }
+
+            const isAttacker = this.activeAttackers.includes(m);
+            if (isAttacker) {
+                const distToPlayer = Math.hypot(player.x - m.x, player.y - m.y);
+                if (distToPlayer <= m.attackRange) {
+                    m.attack(player);
+                } else {
+                    m.moveTowards(player.x, player.y, m.speed * 1.25);
+                }
+            } else {
+                const targetX = player.x + Math.cos(m.slotAngle) * 60;
+                const targetY = player.y + Math.sin(m.slotAngle) * 60;
+                m.moveTowards(targetX, targetY, m.speed);
+            }
+
+            m.applySeparation(this.members);
 
             if (m.hp <= 0) {
-                if (this.currentAttacker === m) this.currentAttacker = null;
+                this.releaseAttackToken(m);
                 this.members.splice(i, 1);
             }
         }
     }
 
     releaseAttackToken(attacker) {
-        if (this.currentAttacker === attacker) {
-            this.currentAttacker = null;
-            this.lastTokenSwitch = Date.now();
+        const idx = this.activeAttackers.indexOf(attacker);
+        if (idx !== -1) {
+            this.activeAttackers.splice(idx, 1);
         }
     }
 
@@ -1714,12 +1855,16 @@ const squadManager = new SquadManager();
 window.addEventListener('mousedown', (e) => {
     if (dialogueManager.isActive || menuSystem.isOpen || player.isSleeping) return;
 
-    if (e.button === 0) { // Lewy Przycisk Myszy - Atak
+    if (e.button === 0) {
         player.performAttack(squadManager);
-    } else if (e.button === 2) { // Prawy Przycisk Myszy - Parowanie
+    } else if (e.button === 2) {
         e.preventDefault();
-        player.isParrying = true;
-        setTimeout(() => { player.isParrying = false; }, 400); // Okienko na sparowanie (400ms)
+        if (player.stamina >= 12 && !player.isParrying) {
+            player.stamina -= 12;
+            player.isParrying = true;
+            // Okienko na sparowanie trwa teraz 250ms (wymaga wyczucia!)
+            setTimeout(() => { player.isParrying = false; }, 250);
+        }
     }
 });
 
@@ -1800,8 +1945,11 @@ questManager.init();
 function gameLoop() {
     const currentLoc = gameMap.getCurrentData();
 
-    // 1. Aktualizacja logiki (tylko gdy brak menu / dialogów / snu)
     if (!dialogueManager.isActive && !player.isSleeping && !menuSystem.isOpen) {
+        // Poprawna regeneracja staminy w pętli gry
+        if (player.stamina < player.maxStamina) {
+            player.stamina = Math.min(player.maxStamina, player.stamina + player.staminaRegenRate);
+        }
         player.update(keys, stateText);
         gameMap.updateNPCs();
         squadManager.update(player);
@@ -1809,7 +1957,6 @@ function gameLoop() {
 
     camera.follow(player, currentLoc.width, currentLoc.height);
 
-    // 2. Renderowanie w świecie gry (z kamerą)
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     ctx.save();
@@ -1818,8 +1965,6 @@ function gameLoop() {
 
     gameMap.draw(ctx);
     player.draw(ctx);
-
-    // Rysowanie potworów MUSI być przed ctx.restore()!
     squadManager.draw(ctx);
 
     if (gameMap.currentLocation === 'kruczy_dol' && timeSystem.isNight) {
@@ -1829,13 +1974,12 @@ function gameLoop() {
 
     ctx.restore();
 
-    // 3. Renderowanie UI (poza kamerą)
     gameMap.drawMinimap();
 
     if (menuSystem.isOpen && menuSystem.activeTab === 'map') {
         gameMap.drawFullMap();
     }
-
+    updateUI();
     requestAnimationFrame(gameLoop);
 }
 gameLoop();

@@ -1073,3 +1073,70 @@ canvas#gameCanvas {
     color: #ffffff;
     text-shadow: 1px 1px 2px #000;
 }
+#stamina-container {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 300px;
+    height: 18px;
+    background-color: rgba(0, 0, 0, 0.6);
+    border: 2px solid #222;
+    border-radius: 4px;
+    overflow: hidden;
+    z-index: 100;
+}
+
+#stamina-bar {
+    width: 100%;
+    height: 100%;
+    background-color: #ffcc00;
+    transition: width 0.05s linear;
+}
+#hud {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    gap: 4px; /* Odstęp między paskiem HP a Staminy */
+    z-index: 100;
+}
+
+.bar-container {
+    position: relative;
+    width: 300px;
+    height: 18px;
+    background-color: rgba(0, 0, 0, 0.7);
+    border: 2px solid #111;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.bar {
+    height: 100%;
+    transition: width 0.05s linear;
+}
+
+.bar.hp {
+    background-color: #e74c3c; /* Czerwony HP */
+}
+
+.bar.stamina {
+    background-color: #f1c40f; /* Żółty Stamina */
+}
+
+.bar-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: #ffffff;
+    font-family: Arial, sans-serif;
+    font-size: 11px;
+    font-weight: bold;
+    letter-spacing: 0.5px;
+    text-shadow: 1px 1px 2px #000, -1px -1px 2px #000, 1px -1px 2px #000, -1px 1px 2px #000;
+    pointer-events: none; /* Zapobiega kolizji z klikaniem myszy */
+}
