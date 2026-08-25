@@ -1038,3 +1038,38 @@ canvas#gameCanvas {
     color: #f1c40f;
     text-shadow: 1px 1px 2px #000;
 }
+#hud-top-left {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    z-index: 10;
+    pointer-events: none;
+}
+
+.hp-bar-container {
+    width: 200px;
+    height: 22px;
+    background: rgba(10, 8, 12, 0.85);
+    border: 2px solid #5a4529;
+    border-radius: 4px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.7);
+}
+
+#hp-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #c0392b, #e74c3c);
+    transition: width 0.2s ease;
+}
+
+#hp-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 11px;
+    font-weight: bold;
+    color: #ffffff;
+    text-shadow: 1px 1px 2px #000;
+}

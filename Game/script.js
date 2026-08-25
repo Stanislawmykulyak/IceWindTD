@@ -483,9 +483,11 @@ const menuSystem = {
                 slot.onmouseleave = () => showTooltip(null);
 
                 // 1. Pojedyncze kliknięcie -> Wybór itemu
-                slot.onclick = () => {
+                slot.onclick = (e) => {
                     player.selectedItemIndex = i;
-                    menuSystem.renderInventoryTab();
+                    grid.querySelectorAll('.grid-slot').forEach((s, idx) => {
+                        s.classList.toggle('selected', idx === i);
+                    });
                 };
 
                 // 2. Podwójne kliknięcie -> Założenie pancerza/broni
@@ -1099,7 +1101,7 @@ const shopSystem = {
     buyItem(itemIndex) {
         const shop = this.shops[this.currentShopId];
         if (!shop) return;
-        
+
         const item = shop.items[itemIndex];
         if (!item) return;
 
@@ -1200,12 +1202,60 @@ const shopSystem = {
 // ==========================================
 // 6. GRACZ
 // ==========================================
+// Globalne zmienne pozycji myszy na ekranie
+let mouseScreenX = 0;
+let mouseScreenY = 0;
+
+window.addEventListener('mousemove', (e) => {
+    mouseScreenX = e.clientX;
+    mouseScreenY = e.clientY;
+
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+
+    // Pozycja myszy na canvasie w pikselach ekranu
+    const mouseCanvasX = (e.clientX - rect.left) * scaleX;
+    const mouseCanvasY = (e.clientY - rect.top) * scaleY;
+
+    // Przeliczenie myszy na pozycję w świecie gry (z uwzględnieniem Kamery i ZOOMu)
+    const mouseWorldX = (mouseCanvasX / CONFIG.ZOOM) + camera.x;
+    const mouseWorldY = (mouseCanvasY / CONFIG.ZOOM) + camera.y;
+
+    // Wyznaczenie kąta od gracza w świecie gry do myszki
+    const dx = mouseWorldX - player.x;
+    const dy = mouseWorldY - player.y;
+
+    player.angle = Math.atan2(dy, dx);
+});
+
 const player = {
-    x: 100, y: 550, radius: 12, gold: 100,
-    isMounted: false, isSleeping: false, color: '#3498db',
+    // 1. Pozycja i podstawowe statystyki
+    x: 100,
+    y: 550,
+    radius: 12,
+    gold: 100,
+    hp: 150,
+    maxHp: 150,
+    color: '#3498db',
+    angle: 0, // Kąt obrotu gracza w stronę myszki
+    iFrames: false,
+    // 2. Statusy postaci
+    isMounted: false,
+    isSleeping: false,
+    isParrying: false,
+
+    // 3. Właściwości Systemu Walki (Circular Hitbox)
+    damage: 35,
+    attackRange: 40,       // Promień kołowego hitboxa
+    attackOffset: 25,      // Przesunięcie hitboxa przed gracza
+    attackCooldown: 350,   // Co ile ms można atakować
+    lastAttackTime: 0,
+    attackVisualTimer: 0,  // Czas trwania wizualnego łuku (klatki)
+
+    // 4. Ekwipunek i Plecak
     maxWeight: 100.0,
     selectedItemIndex: null,
-
     inventory: [
         {
             id: 'list_nicolas',
@@ -1222,6 +1272,7 @@ const player = {
     equipment: { head: null, chest: null, legs: null, boots: null, weapon: null },
     horse: { x: 100, y: 550, radius: 15, color: '#8e44ad', isMounted: false },
 
+    // 5. Metody zarządzania ekwipunkiem i wagą
     getWeight() {
         const invWeight = this.inventory.reduce((sum, item) => sum + (item.weight || 0), 0);
         const eqWeight = Object.values(this.equipment).reduce((sum, item) => sum + (item ? item.weight || 0 : 0), 0);
@@ -1234,7 +1285,6 @@ const player = {
             return false;
         }
 
-        // Przedmioty użytkowe/różności stakujemy
         const existingItem = this.inventory.find(item => item.id === id);
         if (existingItem && type === 'misc') {
             existingItem.count = (existingItem.count || 1) + count;
@@ -1255,7 +1305,6 @@ const player = {
         const item = this.inventory[index];
         if (!item) return;
 
-        // Obsługa czytania ksiąg/listów z poziomu plecaka
         if (item.type === 'quest' && item.content) {
             documentViewer.open(item.name, item.content, item.monologueId, item.questTrigger);
             return;
@@ -1285,6 +1334,81 @@ const player = {
         menuSystem.renderInventoryTab();
     },
 
+    // 6. Logika otrzymywania obrażeń
+    takeDamage(amount) {
+        if (this.iFrames) return; // Jeśli dostał ułamek sekundy temu, ignoruj cios
+
+        const armor = Object.values(this.equipment).reduce((sum, item) => sum + (item && item.armor ? item.armor : 0), 0);
+        const finalDamage = Math.max(2, amount - armor);
+
+        if (this.isParrying) {
+            showToast("Sparowano atak!");
+            return;
+        }
+
+        this.hp = Math.max(0, this.hp - finalDamage);
+        this.updateHpUI();
+
+        // Włączamy 400ms ochrony po dostaniu hita
+        this.iFrames = true;
+        setTimeout(() => { this.iFrames = false; }, 400);
+
+        if (this.hp === 0) {
+            showToast("Zginąłeś! Odradzanie...");
+            setTimeout(() => { this.hp = this.maxHp; this.updateHpUI(); }, 2000);
+        }
+    },
+
+    updateHpUI() {
+        const fill = document.getElementById('hp-bar-fill');
+        const text = document.getElementById('hp-text');
+        if (fill) fill.style.width = `${(this.hp / this.maxHp) * 100}%`;
+        if (text) text.innerText = `${this.hp} / ${this.maxHp}`;
+    },
+
+    // 7. Nowy System Ataku (Offset Hitbox + Knockback dla SquadManager)
+    performAttack(squadManager) {
+        const now = Date.now();
+        if (now - this.lastAttackTime < this.attackCooldown) return;
+
+        this.lastAttackTime = now;
+        this.attackVisualTimer = 8; // Efekt wizualny na 8 klatek
+
+        // Wyznaczanie środka okręgu hitboxa przed graczem
+        const hitboxX = this.x + Math.cos(this.angle) * this.attackOffset;
+        const hitboxY = this.y + Math.sin(this.angle) * this.attackOffset;
+
+        // Bierzemy pod uwagę broń założoną z ekwipunku
+        const weaponBonus = this.equipment.weapon ? 15 : 0;
+        const totalDamage = this.damage + weaponBonus;
+
+        if (squadManager && squadManager.members) {
+            squadManager.members.forEach(enemy => {
+                const dx = enemy.x - hitboxX;
+                const dy = enemy.y - hitboxY;
+                const dist = Math.hypot(dx, dy);
+
+                // Kolizja dwóch okręgów (Hitbox + Promień wroga)
+                if (dist < this.attackRange + enemy.radius) {
+                    enemy.hp -= totalDamage;
+                    showToast(`Trafiono ${enemy.name} za ${totalDamage} dmg!`);
+
+                    // Knockback (Odrzut wroga)
+                    const kbAngle = Math.atan2(enemy.y - this.y, enemy.x - this.x);
+                    const kbForce = 22;
+                    enemy.x += Math.cos(kbAngle) * kbForce;
+                    enemy.y += Math.sin(kbAngle) * kbForce;
+
+                    if (enemy.hp <= 0) {
+                        this.gold += enemy.rewardGold || 5;
+                        showToast(`Zabito ${enemy.name}! +${enemy.rewardGold || 5}🪙`);
+                    }
+                }
+            });
+        }
+    },
+
+    // 8. Pozostałe akcje gracza
     startSleep() {
         if (this.isSleeping) return;
         this.isSleeping = true;
@@ -1361,6 +1485,7 @@ const player = {
         }
     },
 
+    // 9. Rysowanie gracza i śladu ataku
     draw(ctx) {
         if (gameMap.currentLocation === 'kruczy_dol' && !this.horse.isMounted) {
             ctx.beginPath();
@@ -1375,6 +1500,7 @@ const player = {
             ctx.fillText('Koń [E]', this.horse.x - 18, this.horse.y - 20);
         }
 
+        // Korpusa gracza
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
         ctx.fillStyle = this.isMounted ? '#9b59b6' : this.color;
@@ -1382,8 +1508,223 @@ const player = {
         ctx.strokeStyle = '#ffffff';
         ctx.lineWidth = 2;
         ctx.stroke();
+
+        // Rysowanie śladu machnięcia (cięcia)
+        if (this.attackVisualTimer > 0) {
+            this.attackVisualTimer--;
+            ctx.save();
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.radius + this.attackRange, this.angle - Math.PI / 3, this.angle + Math.PI / 3);
+            ctx.strokeStyle = '#f1c40f';
+            ctx.lineWidth = 4;
+            ctx.lineCap = 'round';
+            ctx.stroke();
+            ctx.restore();
+        }
     }
 };
+
+// ==========================================
+// 6.7 SYSTEM WALKI I ZBIOROWE AI SZAJKI
+// ==========================================
+
+class HumanEnemy {
+    constructor(x, y, type = 'zbir_lekki', squad) {
+        this.x = x;
+        this.y = y;
+        this.type = type;
+        this.squad = squad;
+
+        const config = ENEMY_CONFIG[type];
+        this.name = config.name;
+        this.hp = config.maxHp;
+        this.maxHp = config.maxHp;
+        this.speed = config.speed;
+        this.damage = config.damage;
+        this.radius = config.radius;
+        this.color = config.color;
+        this.attackRange = config.attackRange;
+        this.attackCooldown = config.attackCooldown;
+        this.rewardGold = config.rewardGold;
+
+        this.lastAttackTime = 0;
+        this.slotAngle = 0; // Kąt pozycyjny w szyku wokół gracza
+    }
+
+    update(player) {
+        // 1. Wyznaczenie docelowej pozycji na okręgu wokół gracza (Zbiorowe AI)
+        const surroundRadius = 55; // Odległość okrążania
+        const targetX = player.x + Math.cos(this.slotAngle) * surroundRadius;
+        const targetY = player.y + Math.sin(this.slotAngle) * surroundRadius;
+
+        const dxToPlayer = player.x - this.x;
+        const dyToPlayer = player.y - this.y;
+        const distToPlayer = Math.hypot(dxToPlayer, dyToPlayer);
+
+        // Sprawdzamy czy ten zbir ma prawo do natarcia (token ataku od szajki)
+        const isAttacker = (this.squad.currentAttacker === this);
+
+        if (isAttacker) {
+            // Zbir idzie prosto na gracza zadać cios
+            if (distToPlayer <= this.attackRange) {
+                this.attack(player);
+            } else {
+                this.moveTowards(player.x, player.y, this.speed * 1.2);
+            }
+        } else {
+            // Pozostali członkowie grupy okrążają i trzymają pozycję (flankowanie)
+            const dx = targetX - this.x;
+            const dy = targetY - this.y;
+            const distToSlot = Math.hypot(dx, dy);
+
+            if (distToSlot > 5) {
+                this.moveTowards(targetX, targetY, this.speed);
+            }
+        }
+
+        // Separacja - zbiry nie nakładają się na siebie
+        this.applySeparation(this.squad.members);
+    }
+
+    moveTowards(tx, ty, moveSpeed) {
+        const dx = tx - this.x;
+        const dy = ty - this.y;
+        const dist = Math.hypot(dx, dy);
+        if (dist > 0) {
+            this.x += (dx / dist) * moveSpeed;
+            this.y += (dy / dist) * moveSpeed;
+        }
+    }
+
+    applySeparation(allies) {
+        allies.forEach(other => {
+            if (other === this) return;
+            const dx = this.x - other.x;
+            const dy = this.y - other.y;
+            const dist = Math.hypot(dx, dy);
+            const minDist = (this.radius + other.radius) + 6;
+
+            if (dist < minDist && dist > 0) {
+                const overlap = minDist - dist;
+                this.x += (dx / dist) * (overlap * 0.5);
+                this.y += (dy / dist) * (overlap * 0.5);
+            }
+        });
+    }
+
+    attack(player) {
+        const now = Date.now();
+        if (now - this.lastAttackTime >= this.attackCooldown) {
+            player.takeDamage(this.damage);
+            this.lastAttackTime = now;
+            // Po ataku oddaje token natarcia innym zbirom z grupy
+            this.squad.releaseAttackToken(this);
+        }
+    }
+
+    draw(ctx) {
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        ctx.fillStyle = this.color;
+        ctx.fill();
+        ctx.strokeStyle = '#000000';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+
+        // Pasek HP nad głową
+        const barW = 26;
+        const barH = 4;
+        ctx.fillStyle = '#c0392b';
+        ctx.fillRect(this.x - barW / 2, this.y - this.radius - 8, barW, barH);
+        ctx.fillStyle = '#2ecc71';
+        ctx.fillRect(this.x - barW / 2, this.y - this.radius - 8, Math.max(0, (this.hp / this.maxHp)) * barW, barH);
+    }
+}
+
+// Zarządca Grupowego AI
+class SquadManager {
+    constructor() {
+        this.members = [];
+        this.currentAttacker = null;
+        this.lastTokenSwitch = 0;
+        this.baseAngle = 0;
+    }
+
+    spawnSquad(centerX, centerY, count = 3) {
+        this.members = [];
+        this.currentAttacker = null;
+
+        for (let i = 0; i < count; i++) {
+            const spawnAngle = (Math.PI * 2 / count) * i;
+            const spawnX = centerX + Math.cos(spawnAngle) * 120;
+            const spawnY = centerY + Math.sin(spawnAngle) * 120;
+            const type = (i === 0) ? 'zbir_ciezki' : 'zbir_lekki';
+
+            this.members.push(new HumanEnemy(spawnX, spawnY, type, this));
+        }
+        showToast("Zostałeś zaczepiony przez szajkę!");
+    }
+
+    update(player) {
+        if (this.members.length === 0) return;
+
+        // Powolna rotacja szyku wokół gracza (efekt okrążania)
+        this.baseAngle += 0.01;
+
+        // Przydzielanie kątów w szyku wszystkim żywym zbirom
+        const step = (Math.PI * 2) / this.members.length;
+        this.members.forEach((member, idx) => {
+            member.slotAngle = this.baseAngle + (idx * step);
+        });
+
+        // Żonglowanie atakującym (rotacja co 2.5s jeśli nikt nie atakuje)
+        const now = Date.now();
+        if (!this.currentAttacker || now - this.lastTokenSwitch > 4000) {
+            const randomMember = this.members[Math.floor(Math.random() * this.members.length)];
+            this.currentAttacker = randomMember;
+            this.lastTokenSwitch = now;
+        }
+
+        // Aktualizacja każdego członka szajki
+        for (let i = this.members.length - 1; i >= 0; i--) {
+            const m = this.members[i];
+            m.update(player);
+
+            if (m.hp <= 0) {
+                if (this.currentAttacker === m) this.currentAttacker = null;
+                this.members.splice(i, 1);
+            }
+        }
+    }
+
+    releaseAttackToken(attacker) {
+        if (this.currentAttacker === attacker) {
+            this.currentAttacker = null;
+            this.lastTokenSwitch = Date.now();
+        }
+    }
+
+    draw(ctx) {
+        this.members.forEach(m => m.draw(ctx));
+    }
+}
+
+const squadManager = new SquadManager();
+
+window.addEventListener('mousedown', (e) => {
+    if (dialogueManager.isActive || menuSystem.isOpen || player.isSleeping) return;
+
+    if (e.button === 0) { // Lewy Przycisk Myszy - Atak
+        player.performAttack(squadManager);
+    } else if (e.button === 2) { // Prawy Przycisk Myszy - Parowanie
+        e.preventDefault();
+        player.isParrying = true;
+        setTimeout(() => { player.isParrying = false; }, 400); // Okienko na sparowanie (400ms)
+    }
+});
+
+// Blokada menu kontekstowego na prawym kliku
+window.addEventListener('contextmenu', e => e.preventDefault());
 
 // ==========================================
 // 7. WEJŚCIE I KONTROLA GRAFIKI
@@ -1419,7 +1760,9 @@ window.addEventListener('keydown', (e) => {
             return;
         }
     }
-
+    if (key === 't') {
+        squadManager.spawnSquad(player.x, player.y, 3);
+    }
     if (key === 'e') {
         // Jeśli okno czytania jest otwarte -> zamknij je
         if (readingModal && !readingModal.classList.contains('hidden')) {
@@ -1455,14 +1798,18 @@ gameMap.spawnVillageNPCs();
 questManager.init();
 
 function gameLoop() {
+    const currentLoc = gameMap.getCurrentData();
+
+    // 1. Aktualizacja logiki (tylko gdy brak menu / dialogów / snu)
     if (!dialogueManager.isActive && !player.isSleeping && !menuSystem.isOpen) {
         player.update(keys, stateText);
         gameMap.updateNPCs();
+        squadManager.update(player);
     }
 
-    const currentLoc = gameMap.getCurrentData();
     camera.follow(player, currentLoc.width, currentLoc.height);
 
+    // 2. Renderowanie w świecie gry (z kamerą)
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     ctx.save();
@@ -1472,6 +1819,9 @@ function gameLoop() {
     gameMap.draw(ctx);
     player.draw(ctx);
 
+    // Rysowanie potworów MUSI być przed ctx.restore()!
+    squadManager.draw(ctx);
+
     if (gameMap.currentLocation === 'kruczy_dol' && timeSystem.isNight) {
         ctx.fillStyle = CONFIG.COLOR_NIGHT_FILTER;
         ctx.fillRect(0, 0, currentLoc.width, currentLoc.height);
@@ -1479,6 +1829,7 @@ function gameLoop() {
 
     ctx.restore();
 
+    // 3. Renderowanie UI (poza kamerą)
     gameMap.drawMinimap();
 
     if (menuSystem.isOpen && menuSystem.activeTab === 'map') {

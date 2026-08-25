@@ -148,17 +148,22 @@
         <button class="reading-close-btn" onclick="documentViewer.close()">Zamknij [ESC / E]</button>
       </div>
     </div>
-
+    <div id="hud-top-left">
+      <div class="hp-bar-container">
+        <div id="hp-bar-fill" style="width: 100%;"></div>
+        <span id="hp-text">100 / 100</span>
+      </div>
+    </div>
     <div id="subtitle-box" class="subtitle-box hidden">
       <span id="subtitle-text"></span>
     </div>
 
   </div> <!-- /#game-container -->
-
+  <script src="stats.js"></script>
   <script src="dialogues.js"></script>
   <script src="quests.js"></script>
   <script src="script.js"></script>
-
+  
 </body>
 
 </html>
