@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="pl">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aldenor: Kruczy Dół</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+  <div id="game-container">
+    <canvas id="gameCanvas" width="900" height="600"></canvas>
+
+    <!-- WIEDŹMIŃSKIE MENU PEŁNOEKRANOWE -->
+    <div id="menu-overlay" class="menu-overlay hidden">
+      <div class="menu-close-hint">[ESC / KLAWISZ ZAKŁADKI] Zamknij</div>
+      <div class="menu-header">
+        <button class="menu-tab-btn" onclick="menuSystem.openTab('map')">Mapa (M)</button>
+        <button class="menu-tab-btn" onclick="menuSystem.openTab('inventory')">Ekwipunek (I)</button>
+        <button class="menu-tab-btn" onclick="menuSystem.openTab('quests')">Zadania (J)</button>
+      </div>
+
+      <div class="menu-body">
+        <!-- ZAKŁADKA MAPA -->
+        <div id="tab-map" class="tab-content">
+          <canvas id="fullmapCanvas"></canvas>
+        </div>
+
+        <!-- ZAKŁADKA EKWIPUNEK -->
+        <div id="tab-inventory" class="tab-content">
+          <div class="inventory-wrapper">
+            <!-- LEWA STRONA: Plecak -->
+            <div class="inventory-grid-section">
+              <div class="inv-header">
+                <h3>Plecak</h3>
+                <div class="inv-stats-bar">
+                  <span>🪙 <b id="menu-gold-val">0</b></span>
+                  <span class="sep">|</span>
+                  <span>⚖️ <b id="menu-weight-val">0.0</b> / <span id="menu-max-weight-val">60.0</span> kg</span>
+                </div>
+              </div>
+              <div id="inv-grid-container" class="grid-container scrollable-grid"></div>
+            </div>
+
+            <!-- PRAWA STRONA: Rynsztunek -->
+            <div class="equipment-section">
+              <h3>Rynsztunek</h3>
+              <div class="paperdoll-container">
+                <div class="eq-column">
+                  <div class="eq-slot" id="eq-head" onclick="player.unequipItem('head')">
+                    <span class="slot-icon">🪖</span>
+                    <span class="slot-label">Głowa</span>
+                  </div>
+                  <div class="eq-slot" id="eq-chest" onclick="player.unequipItem('chest')">
+                    <span class="slot-icon">🛡️</span>
+                    <span class="slot-label">Tułów</span>
+                  </div>
+                  <div class="eq-slot" id="eq-legs" onclick="player.unequipItem('legs')">
+                    <span class="slot-icon">👖</span>
+                    <span class="slot-label">Nogi</span>
+                  </div>
+                  <div class="eq-slot" id="eq-boots" onclick="player.unequipItem('boots')">
+                    <span class="slot-icon">🥾</span>
+                    <span class="slot-label">Stopy</span>
+                  </div>
+                </div>
+
+                <div class="character-silhouette">
+                  <div class="silhouette-icon">🗡️</div>
+                </div>
+
+                <div class="eq-column">
+                  <div class="eq-slot weapon-slot" id="eq-weapon" onclick="player.unequipItem('weapon')">
+                    <span class="slot-icon">⚔️</span>
+                    <span class="slot-label">Miecz</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- TOOLTIP -->
+          <div id="item-tooltip" class="item-tooltip hidden">
+            <div class="tooltip-header">
+              <span id="tooltip-icon" class="tooltip-icon">📦</span>
+              <div>
+                <div id="tooltip-name" class="tooltip-title">---</div>
+                <div id="tooltip-type" class="tooltip-type">---</div>
+              </div>
+            </div>
+            <div class="tooltip-divider"></div>
+            <div class="tooltip-info-row">Waga: <span id="tooltip-weight">-</span></div>
+            <div class="tooltip-info-row">Wartość: <span id="tooltip-value">-</span></div>
+            <div id="tooltip-stats" class="tooltip-stats-box">---</div>
+          </div>
+        </div>
+
+        <!-- ZAKŁADKA ZADANIA (DWUKOLUMNOWY DZIENNIK) -->
+        <div id="tab-quests" class="tab-content">
+          <div class="journal-wrapper">
+            <!-- LEWA STRONA: Lista zadań -->
+            <div class="journal-list-section">
+              <h3>Dziennik Zadań</h3>
+              <div id="quest-list-container" class="scrollable-quests"></div>
+            </div>
+
+            <!-- PRAWA STRONA: Opis wybranego zadania -->
+            <div class="journal-details-section">
+              <div id="quest-details-content"></div>
+            </div>
+          </div>
+        </div>
+      </div> <!-- /.menu-body -->
+    </div> <!-- /#menu-overlay -->
+
+    <!-- HUD I ELEMENTY GRY (POZA OVERLAYEM MENU) -->
+    <div id="hud-top-right">
+      <canvas id="minimapCanvas" width="150" height="150"></canvas>
+      <div class="quest-hud-box">
+        <div class="quest-hud-title">Zadanie Główne</div>
+        <div id="hud-quest-name" class="quest-hud-name">Q1: Nieznana Przystań</div>
+        <div id="hud-quest-obj" class="quest-hud-objective">• Porozmawiaj z Karczmarzem Barnabą</div>
+      </div>
+    </div>
+
+    <div id="toast-message" class="hidden"></div>
+
+    <div id="dialogue-box" class="hidden">
+      <div id="dialogue-speaker">Karczmarz</div>
+      <div id="dialogue-text">...</div>
+      <div id="dialogue-options"></div>
+    </div>
+
+    <div id="sleep-overlay" class="hidden">
+      <div class="sleep-content">
+        <h2>Sen...</h2>
+        <p>Odpoczywasz po długiej podróży. Świt nadchodzi...</p>
+        <div class="spinner"></div>
+      </div>
+    </div>
+    <!-- OKNO INTERFEJSU DO CZYTANIA DOKUMENTÓW -->
+    <div id="reading-overlay" class="reading-modal hidden">
+      <div class="reading-card">
+        <div id="reading-title" class="reading-title">Tytuł dokumentu</div>
+        <div id="reading-text" class="reading-content">Treść dokumentu...</div>
+        <button class="reading-close-btn" onclick="documentViewer.close()">Zamknij [ESC / E]</button>
+      </div>
+    </div>
+
+    <div id="subtitle-box" class="subtitle-box hidden">
+      <span id="subtitle-text"></span>
+    </div>
+
+  </div> <!-- /#game-container -->
+
+  <script src="dialogues.js"></script>
+  <script src="quests.js"></script>
+  <script src="script.js"></script>
+
+</body>
+
+</html>

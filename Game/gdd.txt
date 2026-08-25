@@ -1,0 +1,50 @@
+Dobra no wiec chce zrobic gre rpg w ktorej gracz wciela sie w glownego bohatera Arkelasa Maine'a ,ktory obecnie przebywa w miasteczku Kruczy Dol gdzie spotyka sie ze swoim druhem Nicolasem z ktorym sluzyl w 3 Armii Alderskiej  zanim ta zostala rozbita w bitwie pod Marandor a oni poszli do rezerwy , od ktorego dostal list zeby ten przyjechal mu w czyms pomoc ale nie sprecyzowal z czym. Arkelas wiec przyjezdza do miasteczka poznym wieczorem i kieruje sie do karczmy gdzie zamierza przespac sie i rano dowiedziec sie gdzie mieszka Nicolas . I tak zaczyna sie akcja gry , wieczorem kiedy wjezdza sie na koniu do wioski i zaczyna sie z jednym zadaniem glownym Q1 ktorego 1 celem jest : Odwiedz Nicolasa 
+
+
+
+Rzeczy które chce mieć w 1 wersji gry (HTML /JS /CSS)
+-Open World Swiat (Krzuczy Dol i okolica) z rzeka , lasem oraz 2 polanami 
+na ktorych znajdowalyby sie zwierzeta ktore spawnowaly by sie w stadach i mialy wlasne ai odpowiedzialne za poruszanie sie 
+-Mapa Kruczego dolu z ok 10/15 domami ,3 drogami oraz karczmą
+-System fast travel pozwalajacy natychmiast poruszac sie miedzy odkrytymi znakami na mapie z okienkiem szybkiej podrozy jak w wiedzminie podczas podrozy
+-Mapa pod M pokazujaca cala okolice Kruczego dolu , wszystkie domy , drogi , znaczniki miedzy ktorymi bylby system fast travel, polane , las , rzeke 
+-System questow , quest manager oraz struktura questow wygladajaca tak : 
+Nazwa questa ( Na razie QN nazwy dodamy na końcu) :
+-Cele questu
+-Cele questu
+I żeby te cele nie były widoczne wszystkie na raz tylko odkrywaly się po kolei po ukończeniu poprzedniego celu,
+-Podzial questow na glowne , zadania poboczne i zlecenia
+-W menu questow będzie widoczny wybor po lewej stronie z 3 zakładek , glowne , poczne , zlecenia i otwarta będzie ta w której znajduje się quest ktory obecnie robisz i tam jak klikniesz zakladke i quest to po pierwsze będzie widoczna nazwa questa , jego progress czyli cele obecne i cele na zielono które już zrobiles wcześniej oraz będzie można zmienić obecnie robiony quest na ten i żeby to go teraz robic i na nim się skupic + będzie opis questa cos jak dopiski jaskra w Wiedzminie 3
+czasami będzie można kilka rzeczy na raz zrobic
+-1 dopracowany watek glowny + 2 poboczne questy
+-Bronie i zbroje maja swoje statystyki ktore wplywaja na ilosc zadanych oraz otrzymanych obrazen
+-Roznorodna Roslinnosc pojawiajaca sie na swiecie w tym ziola ktore mozna zbierac za pomoca e do ekwipunku i pozniej w alembiku utworzyc miksture
+-Alembik znajdowal by sie gdzies w wiosce i tam by stal po prostu
+-Receptura na miksture leczenia oraz interfejs i mechanika alembiku w ktorym tworzylo by sie mikstury na razie tylko miksture zycia
+-System zywotnosci ,otrzymywania obraazen , oraz paska zycia i leczenia sie za pomoca jedzenia i pozniej eliksirow
+-System ekwipunku w ktorym mozna trzymac mnostwo rzeczy ale jak w wiedzminie jest limitu udzwigu , oraz osobne sloty na uzbrojenie i miecz 
+-System walki real time:
+-Klikniecie mieczem powoduje atak i jesli przeciwnik jest w zasiegu miecza to zadaje mu obrazenia zalezne od miecza
+-Klikniecie lpm powoduje sparowanie ataku przeciwnika jesli trafi sie w tzw. okienko
+-Cooldown ataku i czas animacji ktory uniemozliwi spamowanie ataku 
+-Pauza gry i interfejs gracza w ktorym moze np. zciszyc muzyke lub efekty dzwiekowe
+-System zapisu i odczytu gry
+-Kamera i sledzenie gracza
+-System dialogowy
+-Wybor dialogow za pomocą wyboru jednej z kilku opcji ,za pomocą myszki , numerkow , czy strzalek na klawiaturze (gora/dol)
+-Waluta w postaci złotych monet (dostajemy 100 na start)
+-Każdy przedmiot ma jakas wartość w zlocie
+-Wskazniki interakcji e np. porozmawiaj ,zbiez ziola ,uzyj alembiku
+-System powiadomien który jest prosty i nie obstruktuje i nie przeszkadza w grze
+-Najezdzajac na przedmiot w ekwipunku wyswietla się male okienko obok z nazwa przedmiotu ,pod tym udźwig ,a pod tym wartość przedmiotu
+-System handlu z odpowiednimi rolami np. karczmarz , handlarz,kowal , zielarz i możliwość sprzedaży przedmiotow za zloto i wtedy te przedmioty trafiają do karczmarza do ekwipunku oraz możliwość kupna rzeczy za pieniądze , i u karczmarza będzie można kupic jedzenie to u kowala bron i zbroje a u zielarza ziola potrzebne do mikstur .
+-AI odpowiedzialne za walke grupy przeciwnikow i to jak atakują
+-Powiadomienie ile zadales przeciwnikowi a ile on tobie
+-System lootu z wrogow w postaci zwlok do ktorych jak sie podejdzie i uzyje e to mozna przeniesc rzeczy do ekwipunku pula nagrod z ktorej losuje loot
+-1 walka z grupa 3 przeciwnikow  
+-Pasek szybkiego wyboru , mikstury , miecz etc.
+-Muzyka w tle
+-Efekty dzwiekowe
+-System kolizji
+-System odpowiedzialny za tlumy ludzi , kilka na raz ktory spawnuje wiesniakow i kaze im chodzic jakimiś sciezkami przez co miasto wygląda na zywe
+-Ekran porazki : jesli zginiesz to ekran sie przyciemnia a ty budzisz sie z polowa zlota ktore miales , zaokragla sie w dol czyli z 7 to 3
