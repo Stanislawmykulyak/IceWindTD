@@ -231,8 +231,6 @@ const dialogueManager = {
                         const goldUi = document.getElementById('player-gold');
                         if (goldUi) goldUi.innerText = player.gold;
                         player.addItem('room_key', '🔑 Klucz do Pokoju #4', '🔑', 'quest', 0.1, 'Klucz do pokoju w karczmie');
-
-                        questManager.completeObjective('Q1', 0);
                     },
                     choices: [{ text: "Dzięki, idę do pokoju.", next: "exit" }]
                 }
