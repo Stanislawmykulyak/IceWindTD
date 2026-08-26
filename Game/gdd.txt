@@ -1,7 +1,5 @@
 Dobra no wiec chce zrobic gre rpg w ktorej gracz wciela sie w glownego bohatera Arkelasa Maine'a ,ktory obecnie przebywa w miasteczku Kruczy Dol gdzie spotyka sie ze swoim druhem Nicolasem z ktorym sluzyl w 3 Armii Alderskiej  zanim ta zostala rozbita w bitwie pod Marandor a oni poszli do rezerwy , od ktorego dostal list zeby ten przyjechal mu w czyms pomoc ale nie sprecyzowal z czym. Arkelas wiec przyjezdza do miasteczka poznym wieczorem i kieruje sie do karczmy gdzie zamierza przespac sie i rano dowiedziec sie gdzie mieszka Nicolas . I tak zaczyna sie akcja gry , wieczorem kiedy wjezdza sie na koniu do wioski i zaczyna sie z jednym zadaniem glownym Q1 ktorego 1 celem jest : Odwiedz Nicolasa 
 
-
-
 Rzeczy które chce mieć w 1 wersji gry (HTML /JS /CSS)
 -Open World Swiat (Krzuczy Dol i okolica) z rzeka , lasem oraz 2 polanami 
 na ktorych znajdowalyby sie zwierzeta ktore spawnowaly by sie w stadach i mialy wlasne ai odpowiedzialne za poruszanie sie 
@@ -24,9 +22,42 @@ czasami będzie można kilka rzeczy na raz zrobic
 -System zywotnosci ,otrzymywania obraazen , oraz paska zycia i leczenia sie za pomoca jedzenia i pozniej eliksirow
 -System ekwipunku w ktorym mozna trzymac mnostwo rzeczy ale jak w wiedzminie jest limitu udzwigu , oraz osobne sloty na uzbrojenie i miecz 
 -System walki real time:
+
+1. Poruszanie i Uniki (Alt + Directional Roll)
+
+Alt (Krótki Odskok w Tył): Szybka reakcja, niski koszt staminy, krótki dystans. Pozwala błyskawicznie wycofać się przed szybkim cięciem i wrócić z kontrą.
+
+Kierunkowy Roll (W/A/S/D + Unik): Dłuższy dystans i więcej klatek nietykalności (i-frames). Kluczowy do ucieczki z okrążenia, gdy potrzebujesz przestrzeni na wypicie eliksiru.
+
+2. AI Wrogów – System Tokenów i Pacing (Klucz do płynności)
+Żeby wrogowie nie zalewali Cię masą ataków, musisz wdrożyć System Tokenów Ataku (Attack Token System):
+
+Tokeny Ataku: Tylko 1 lub 2 wrogów na raz może posiadać "token" uprawniający do zadania ciosu.
+
+Tryb Gardy i Krążenia: Reszta przeciwników przechodzi w tryb pasywny – idzie o 30-40% wolniej, utrzymuje bezpieczny dystans (np. 150 px) i krąży wokół gracza.
+
+Efekt: Walka zyskuje takt i rytm. Zyskujesz czas na odskok, zjedzenie jedzenia i przemyślenie kolejnego ruchu.
+
+3. Rozbicie Statystyk Obrażeń (Refaktoryzacja)
+W kodzie zmieniamy prosty baseDamage na czytelny obiekt statystyk:
+
+lightDamage (np. 15 DMG) – szybkie, płynne uderzenia (LPM).
+
+heavyDamage (np. 40 DMG) – ładuje się przy przytrzymaniu LPM powyżej 800 ms. Taki atak powinien dodatkowo odpychać wroga (knockback) i przełamywać ich blok.
+
+4. Garda vs Parry (Zrównoważona Obrona)
+Przebudowany mechanizm defensywy dający idealny balans między ryzykiem a nagrodą:
+
+Garda (Trzymanie przycisku poza okienkiem): Po prostu trzymasz blok. Otrzymujesz 50% obrażeń, a reszta idzie w staminę. Zapobiega natychmiastowej śmierci, ale powoli wyczerpuje Twoje zasoby.
+
+Parry (Trafienie w okienko reakcji, np. pierwsze 150 ms): Otrzymujesz 0% obrażeń, całkowicie przerywasz animację ataku wroga, wprawiasz go w ogłuszenie (Stun) i otwierasz okno na szybką kontrę z dodatkowym mnożnikiem damage'u.
+
 -Klikniecie mieczem powoduje atak i jesli przeciwnik jest w zasiegu miecza to zadaje mu obrazenia zalezne od miecza
 -Klikniecie lpm powoduje sparowanie ataku przeciwnika jesli trafi sie w tzw. okienko
 -Cooldown ataku i czas animacji ktory uniemozliwi spamowanie ataku 
+
+
+
 -Pauza gry i interfejs gracza w ktorym moze np. zciszyc muzyke lub efekty dzwiekowe
 -System zapisu i odczytu gry
 -Kamera i sledzenie gracza
