@@ -1445,8 +1445,6 @@ const player = {
     color: '#3498db',
     angle: 0,
     iFrames: false,
-
-    // 2. Statusy postaci i Unik (Roll)
     isMounted: false,
     isSleeping: false,
 
@@ -1571,7 +1569,6 @@ const player = {
     update(keys, stateTextUI) {
         if (this.isSleeping) return;
 
-        // Logika Wykonywania Uniku (Roll na Spację)
         let moveX = 0, moveY = 0;
         if (keys['w'] || keys['arrowup']) moveY -= 1;
         if (keys['s'] || keys['arrowdown']) moveY += 1;
@@ -1623,8 +1620,6 @@ const player = {
 
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-
-        // Zmiana koloru gracza podczas wykonywania uniku
         if (this.isRolling) ctx.fillStyle = '#f39c12';
         else ctx.fillStyle = this.isMounted ? '#9b59b6' : this.color;
 
@@ -1714,10 +1709,6 @@ function gameLoop() {
     const currentLoc = gameMap.getCurrentData();
 
     if (!dialogueManager.isActive && !player.isSleeping && !menuSystem.isOpen) {
-        // Poprawna regeneracja staminy w pętli gry
-        if (player.stamina < player.maxStamina) {
-            player.stamina = Math.min(player.maxStamina, player.stamina + player.staminaRegenRate);
-        }
         player.update(keys, stateText);
         gameMap.updateNPCs();
     }
