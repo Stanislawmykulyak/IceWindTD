@@ -190,7 +190,9 @@ const dialogueManager = {
                             condition: () => player.hasItem('room_key')
                         },
                         { text: "Szukam pewnej osoby nazywa się Nicolas i podobno tutaj mieszka ", next: "nicolas_info" },
-                        { text: "[Zamknij rozmowę]", next: "exit" }
+                        { text: "[Zamknij rozmowę]", next: "exit" },
+
+                        {text: "Czy znajduje się tutaj jakiś młyn ?", next: "mlyn" }
                     ]
                 },
                 already_have_key: {
@@ -199,8 +201,6 @@ const dialogueManager = {
                 },
                 nicolas_info: {
                     text: "Nicolas? A tak, kojarzę go. Mieszka wzdłuż głównej drogi",
-
-                    choices: [{ text: "A i jeszcze chciałbym się zapytać czy znajduje się tutaj jakiś młyn ?", next: "mlyn" }],
                     choices: [{ text: "Dzięki Wielkie", next: "exit" }],
                 },
                 mlyn: {
@@ -352,7 +352,13 @@ function showTooltip(item, event) {
     document.getElementById('tooltip-type').innerText = typeNames[item.type] || 'Przedmiot';
     document.getElementById('tooltip-weight').innerText = `${item.weight || 0.1} kg`;
     document.getElementById('tooltip-value').innerText = `${item.value || 0} 🪙`;
-    document.getElementById('tooltip-stats').innerText = item.stats || 'Brak dodatkowych właściwości.';
+
+    // Dynamiczne generowanie tekstu statystyk
+    let statsText = item.stats || '';
+    if (item.damage) statsText = `⚔️ Obrażenia: +${item.damage}`;
+    if (item.armor) statsText = `🛡️ Pancerz: +${item.armor}`;
+
+    document.getElementById('tooltip-stats').innerText = statsText || 'Brak dodatkowych właściwości.';
 
     if (event) {
         tooltip.style.left = `${event.clientX + 15}px`;
@@ -368,6 +374,28 @@ window.addEventListener('mousemove', (e) => {
         tooltip.style.left = e.clientX + 15 + 'px';
         tooltip.style.top = e.clientY + 15 + 'px';
         tooltip.classList.remove('hidden');
+    }
+});
+
+window.addEventListener('mousedown', (e) => {
+    // Reaguj tylko na Lewy Przycisk Myszy (LPM)
+    if (e.button !== 0) return;
+
+    // Sprawdź, czy gracz nie ma otwartego menu, dialogu, okna czytania lub nie śpi
+    const readingModal = document.getElementById('reading-overlay');
+    const isReading = readingModal && !readingModal.classList.contains('hidden');
+
+    if (menuSystem.isOpen || dialogueManager.isActive || player.isSleeping || isReading) {
+        return;
+    }
+
+    const now = Date.now();
+    // Odpal atak jeśli minął cooldown
+    if (now - player.lastAttackTime >= player.attackCooldown) {
+        player.isAttacking = true;
+        player.attackStartTime = now;
+        player.lastAttackTime = now;
+        player.attackAngle = getPlayerAimAngle();
     }
 });
 
@@ -432,6 +460,49 @@ const subtitleManager = {
     }
 };
 let draggedItemIndex = null;
+
+// ==========================================
+// OBSŁUGA DRAG & DROP DLA EKWIPUNKU I RYNSZTUNKU
+// ==========================================
+const dragDropManager = {
+    draggedData: null,
+
+    onDragStart(event, type, indexOrSlot) {
+        this.draggedData = { type, id: indexOrSlot };
+        event.dataTransfer.setData('text/plain', JSON.stringify(this.draggedData));
+    },
+
+    allowDrop(event) {
+        event.preventDefault();
+    },
+
+    onDropToEquipment(event, slotType) {
+        event.preventDefault();
+        if (!this.draggedData) return;
+
+        // Przeciąganie z plecaka do rynsztunku
+        if (this.draggedData.type === 'inventory') {
+            const item = player.inventory[this.draggedData.id];
+            if (item && item.type === slotType) {
+                player.equipItem(this.draggedData.id);
+            } else {
+                showToast("Ten przedmiot nie pasuje do tego slotu!");
+            }
+        }
+        this.draggedData = null;
+    },
+
+    onDropToInventory(event) {
+        event.preventDefault();
+        if (!this.draggedData) return;
+
+        // Przeciąganie z rynsztunku do plecaka
+        if (this.draggedData.type === 'equipment') {
+            player.unequipItem(this.draggedData.id);
+        }
+        this.draggedData = null;
+    }
+};
 
 const menuSystem = {
     isOpen: false,
@@ -514,6 +585,10 @@ const menuSystem = {
     if (!grid) return;
     grid.innerHTML = '';
 
+    // Włączenie dopuszczania dropu na obszarze plecaka
+    grid.setAttribute('ondragover', 'dragDropManager.allowDrop(event)');
+    grid.setAttribute('ondrop', 'dragDropManager.onDropToInventory(event)');
+
     const goldVal = document.getElementById('menu-gold-val');
     if (goldVal) goldVal.innerText = player.gold;
 
@@ -524,70 +599,36 @@ const menuSystem = {
     if (maxWeightVal) maxWeightVal.innerText = player.maxWeight;
 
     const totalSlots = Math.max(25, player.inventory.length);
-
-    // --- RENDEROWANIE PLECAKA ---
     for (let i = 0; i < totalSlots; i++) {
         const slot = document.createElement('div');
         const item = player.inventory[i];
 
         if (item) {
             slot.className = `grid-slot ${player.selectedItemIndex === i ? 'selected' : ''}`;
+            slot.setAttribute('draggable', 'true');
+            slot.ondragstart = (e) => dragDropManager.onDragStart(e, 'inventory', i);
+
             const countBadge = (item.count && item.count > 1) ? `<span class="slot-count">${item.count}</span>` : '';
             slot.innerHTML = `${item.icon || '📦'}${countBadge}`;
-            
-            // Przeciąganie (Drag & Drop)
-            slot.draggable = true;
-            slot.ondragstart = (e) => {
-                draggedItemIndex = i;
-                showTooltip(null);
-                if (['head', 'chest', 'legs', 'boots', 'weapon'].includes(item.type)) {
-                    menuSystem.highlightEquipSlot(item.type);
-                }
-            };
-            slot.ondragend = () => {
-                draggedItemIndex = null;
-                menuSystem.clearEquipHighlights();
-            };
-
             slot.onmouseenter = (e) => showTooltip(item, e);
             slot.onmouseleave = () => showTooltip(null);
 
-            // Shift-Click oraz zwykłe kliknięcie
-            slot.onclick = (e) => {
-                if (e.shiftKey) {
-                    showTooltip(null);
-                    player.equipItem(i);
-                } else {
-                    player.selectedItemIndex = i;
-                    menuSystem.renderInventoryTab();
-                }
+            slot.onclick = () => {
+                player.selectedItemIndex = i;
+                menuSystem.renderInventoryTab();
             };
 
-            // Double Click
             slot.ondblclick = () => {
                 showTooltip(null);
                 player.equipItem(i);
             };
         } else {
             slot.className = 'grid-slot empty';
-            
-            // Upuszczanie zdjętego pancerza na pusty slot w plecaku
-            slot.ondragover = (e) => e.preventDefault();
-            slot.ondrop = (e) => {
-                e.preventDefault();
-                const data = e.dataTransfer.getData('text/plain');
-                if (data) {
-                    const parsed = JSON.parse(data);
-                    if (parsed.source === 'equipment') {
-                        player.unequipItem(parsed.slotType);
-                    }
-                }
-            };
         }
         grid.appendChild(slot);
     }
 
-    // --- RENDEROWANIE SLOTÓW RYNSZTUNKU ---
+    // KONFIGURACJA SLOTÓW RYNSZTUNKU (GŁOWA, TUŁÓW, NOGI, STOPY, MIECZ)
     const slotsConfig = [
         { id: 'eq-head', key: 'head', defaultIcon: '🪖', label: 'Głowa' },
         { id: 'eq-chest', key: 'chest', defaultIcon: '🛡️', label: 'Tułów' },
@@ -601,55 +642,34 @@ const menuSystem = {
         if (!elem) return;
         const item = player.equipment[cfg.key];
 
-        // Obsługa upuszczania przedmiotu na slot sprzętu
-        elem.ondragover = (e) => e.preventDefault();
-        elem.ondrop = (e) => {
-            e.preventDefault();
-            if (draggedItemIndex !== null) {
-                const draggedItem = player.inventory[draggedItemIndex];
-                if (draggedItem && draggedItem.type === cfg.key) {
-                    player.equipItem(draggedItemIndex);
-                }
-            }
-            menuSystem.clearEquipHighlights();
-        };
+        // Ustawienie zdarzeń Drag & Drop na każdym slocie uzbrojenia
+        elem.setAttribute('ondragover', 'dragDropManager.allowDrop(event)');
+        elem.setAttribute('ondrop', `dragDropManager.onDropToEquipment(event, '${cfg.key}')`);
 
         if (item) {
             elem.className = 'eq-slot equipped';
+            elem.setAttribute('draggable', 'true');
+            elem.ondragstart = (e) => dragDropManager.onDragStart(e, 'equipment', cfg.key);
             elem.innerHTML = `<span class="slot-icon">${item.icon}</span>`;
-            elem.draggable = true;
-            
-            // Możliwość przeciągnięcia z rynsztunku do plecaka
-            elem.ondragstart = (e) => {
-                showTooltip(null);
-                e.dataTransfer.setData('text/plain', JSON.stringify({ source: 'equipment', slotType: cfg.key }));
-            };
 
             elem.onmouseenter = (e) => showTooltip(item, e);
             elem.onmouseleave = () => showTooltip(null);
 
-            // Kliknięcie / Shift-click / Dblclick ściąga pancerz
-            elem.onclick = (e) => {
-                if (e.shiftKey) {
-                    showTooltip(null);
-                    player.unequipItem(cfg.key);
-                }
-            };
-            elem.ondblclick = () => {
+            // Kliknięcie / Podwójne kliknięcie ściąga pancerz
+            elem.onclick = () => {
                 showTooltip(null);
                 player.unequipItem(cfg.key);
             };
         } else {
             elem.className = 'eq-slot';
+            elem.removeAttribute('draggable');
+            elem.ondragstart = null;
             elem.innerHTML = `<span class="slot-icon">${cfg.defaultIcon}</span><span class="slot-label">${cfg.label}</span>`;
-            elem.draggable = false;
             elem.onmouseenter = null;
             elem.onmouseleave = null;
             elem.onclick = null;
-            elem.ondblclick = null;
         }
-    });
-},
+    })},
 
     renderQuestsTab() {
         const listEl = document.getElementById('journal-quests-list') || document.getElementById('quest-list-container');
@@ -1186,224 +1206,7 @@ const documentViewer = {
 // ==========================================
 // 5.5 SYSTEM HANDLU (SKLEP)
 // ==========================================
-const shopSystem = {
-    isOpen: false,
-    currentShopId: null,
-    get isOpen() { return this.currentShopId !== null; },
-    shops: {
-        karczmarz_shop: {
-            name: "Karczmarz Barnaba",
-            gold: 500,
-            items: [
-                { id: 'chleb', name: 'Świeży Chleb', icon: '🍞', type: 'misc', weight: 0.5, value: 5, stats: '+10 Posiłek', count: 5, maxCount: 5, restock: true },
-                { id: 'piwo', name: 'Kufel Piwa', icon: '🍺', type: 'misc', weight: 0.8, value: 3, stats: '+5 Pragnienie', count: 8, maxCount: 8, restock: true },
-                { id: 'sztylet', name: 'Zardzewiały Sztylet', icon: '🗡️', type: 'weapon', weight: 1.5, value: 25, stats: 'Obrażenia: 5-8', count: 1, maxCount: 1, restock: false },
-                { id: 'skora_pancerz', name: 'Skórzana Kurtka', icon: '🛡️', type: 'chest', weight: 4.0, value: 60, stats: 'Pancerz: +3', count: 1, maxCount: 1, restock: false }
-            ]
-        }
-    },
 
-    openShop(shopId) {
-        this.currentShopId = shopId;
-        this.isOpen = true;
-        const modal = document.getElementById('shop-modal');
-        if (modal) modal.classList.remove('hidden');
-        this.render();
-    },
-
-    closeShop() {
-        this.currentShopId = null;
-        hideShopTooltip(); // <-- DODAJE TO
-        const modal = document.getElementById('shop-modal');
-        if (modal) modal.classList.add('hidden');
-    },
-    close() { this.closeShop(); },
-    buyItem(itemIndex) {
-        const shop = this.shops[this.currentShopId];
-        if (!shop) return;
-
-        const item = shop.items[itemIndex];
-        if (!item) return;
-
-        if (item.count <= 0) {
-            showToast("Brak towaru na stanie!");
-            return;
-        }
-
-        if (player.gold < item.value) {
-            showToast("Za mało złota!");
-            return;
-        }
-
-        if (player.getWeight() + item.weight > player.maxWeight) {
-            showToast("Brak miejsca w plecaku!");
-            return;
-        }
-
-        player.gold -= item.value;
-        if (shop.gold !== undefined) shop.gold += item.value;
-        item.count--;
-
-        player.addItem(item.id, item.name, item.icon, item.type, item.weight, item.stats, 1);
-
-        if (item.count <= 0 && !item.restock) {
-            shop.items.splice(itemIndex, 1);
-        }
-
-        showToast(`Kupiono: ${item.name} (-${item.value} 🪙)`);
-        this.render();
-    },
-
-    sellItem(invIndex) {
-        const item = player.inventory[invIndex];
-        if (!item) return;
-
-        if (item.type === 'quest') {
-            showToast("Przedmiot fabularny!");
-            return;
-        }
-
-        const sellPrice = Math.floor((item.value || 2) * 0.6);
-        const shop = this.shops[this.currentShopId];
-
-        player.gold += sellPrice;
-        if (shop && shop.gold !== undefined) shop.gold = Math.max(0, shop.gold - sellPrice);
-
-        // Dodanie przedmiotu do listy sklepu
-        if (shop) {
-            const existingShopItem = shop.items.find(i => i.id === item.id);
-            if (existingShopItem) {
-                existingShopItem.count = (existingShopItem.count || 1) + 1;
-            } else {
-                shop.items.push({
-                    id: item.id,
-                    name: item.name,
-                    icon: item.icon,
-                    type: item.type,
-                    weight: item.weight,
-                    value: item.value || 2,
-                    stats: item.stats,
-                    count: 1,
-                    restock: false
-                });
-            }
-        }
-
-        if (item.count && item.count > 1) {
-            item.count--;
-        } else {
-            player.inventory.splice(invIndex, 1);
-        }
-
-        showToast(`Sprzedano: ${item.name} (+${sellPrice} 🪙)`);
-        this.render();
-    },
-
-    onDragStart(event, source, index) {
-        event.dataTransfer.setData('text/plain', JSON.stringify({ source, index }));
-    },
-
-    onDropToPlayer(event) {
-        event.preventDefault();
-        try {
-            const data = JSON.parse(event.dataTransfer.getData('text/plain'));
-            if (data.source === 'shop') this.buyItem(data.index);
-        } catch (e) { }
-    },
-
-    onDropToMerchant(event) {
-        event.preventDefault();
-        try {
-            const data = JSON.parse(event.dataTransfer.getData('text/plain'));
-            if (data.source === 'player') this.sellItem(data.index);
-        } catch (e) { }
-    },
-
-    onItemClick(event, source, index) {
-        if (event.shiftKey) {
-            if (source === 'player') this.sellItem(index);
-            if (source === 'shop') this.buyItem(index);
-        }
-    },
-
-    onItemDblClick(source, index) {
-        if (source === 'player') this.sellItem(index);
-        if (source === 'shop') this.buyItem(index);
-    },
-
-    render() {
-        const shop = this.shops[this.currentShopId];
-        if (!shop) return;
-
-        // Liczniki Złota na górze
-        const playerGoldEl = document.getElementById('shop-player-gold');
-        if (playerGoldEl) playerGoldEl.innerText = player.gold;
-
-        const merchantGoldEl = document.getElementById('shop-merchant-gold');
-        if (merchantGoldEl) merchantGoldEl.innerText = shop.gold !== undefined ? shop.gold : '∞';
-
-        const merchantNameEl = document.getElementById('shop-merchant-name');
-        if (merchantNameEl) merchantNameEl.innerText = shop.name || 'Kupiec';
-
-        // 1. EKWIPUNEK GRACZA (LEWA STRONA) - 10 KOLUMN, NIESKOŃCZONOŚĆ (MIN. 60 KRATEK)
-        const playerGrid = document.getElementById('shop-player-grid');
-        if (playerGrid) {
-            playerGrid.innerHTML = '';
-            const playerSlotsCount = Math.max(60, Math.ceil((player.inventory.length + 1) / 10) * 10);
-
-            for (let i = 0; i < playerSlotsCount; i++) {
-                const item = player.inventory[i];
-                const slot = document.createElement('div');
-
-                if (item) {
-                    const countBadge = (item.count && item.count > 1) ? `<span class="slot-count">${item.count}</span>` : '';
-                    slot.className = 'grid-slot occupied';
-                    slot.setAttribute('draggable', 'true');
-                    slot.innerHTML = `${item.icon || '📦'}${countBadge}`;
-
-                    slot.ondragstart = (e) => this.onDragStart(e, 'player', i);
-                    slot.onclick = (e) => this.onItemClick(e, 'player', i);
-                    slot.ondblclick = () => { hideShopTooltip(); this.onItemDblClick('player', i); };
-                    slot.onmouseenter = (e) => showShopTooltip(item, e, 'sell');
-                    slot.onmousemove = (e) => moveShopTooltip(e);
-                    slot.onmouseleave = () => hideShopTooltip();
-                } else {
-                    slot.className = 'grid-slot empty';
-                }
-                playerGrid.appendChild(slot);
-            }
-        }
-
-        // 2. EKWIPUNEK KUPCA (PRAWA STRONA) - 10 KOLUMN (MIN. 60 KRATEK)
-        const merchantGrid = document.getElementById('shop-merchant-grid');
-        if (merchantGrid) {
-            merchantGrid.innerHTML = '';
-            const shopSlotsCount = Math.max(60, Math.ceil((shop.items.length + 1) / 10) * 10);
-
-            for (let i = 0; i < shopSlotsCount; i++) {
-                const item = shop.items[i];
-                const slot = document.createElement('div');
-
-                if (item) {
-                    const countBadge = (item.count && item.count > 1) ? `<span class="slot-count">${item.count}</span>` : '';
-                    slot.className = 'grid-slot occupied';
-                    slot.setAttribute('draggable', 'true');
-                    slot.innerHTML = `${item.icon || '📦'}${countBadge}`;
-
-                    slot.ondragstart = (e) => this.onDragStart(e, 'shop', i);
-                    slot.onclick = (e) => this.onItemClick(e, 'shop', i);
-                    slot.ondblclick = () => { hideShopTooltip(); this.onItemDblClick('shop', i); };
-                    slot.onmouseenter = (e) => showShopTooltip(item, e, 'buy');
-                    slot.onmousemove = (e) => moveShopTooltip(e);
-                    slot.onmouseleave = () => hideShopTooltip()
-                } else {
-                    slot.className = 'grid-slot empty';
-                }
-                merchantGrid.appendChild(slot);
-            }
-        }
-    }
-};
 // ==========================================
 // 6. GRACZ
 // ==========================================
@@ -1440,14 +1243,11 @@ const player = {
     y: 550,
     radius: 12,
     gold: 100,
-    hp: 1150,
-    maxHp: 1150,
     color: '#3498db',
     angle: 0,
     iFrames: false,
     isMounted: false,
     isSleeping: false,
-
     // 4. Ekwipunek i Plecak
     maxWeight: 100.0,
     selectedItemIndex: null,
@@ -1464,6 +1264,173 @@ const player = {
             content: "Arkelasie , mój Drogi przyjacielu <br> Mam nadzieję ,że przeczytasz ten list a życie mija ci spokojnie, jak pewnie wiesz osiedliłem się miasteczku Kruczy Dół , ze względu na jego położenie na szlaku handlowym między Valengardem a Rendią jak i ze względu na powierzone mi zadanie . Niestety ostatnio zauważam coraz to bardziej niepokojące rzeczy , wczoraj zauważyłem dwóch ludzi obserwujących mnie ,których nigdy wcześniej nie widziałem a kilka dni temu ktoś włamał mi się do domu . Potrzebuję twojej pomocy Arkelasie bo czuje ,że wpadłem w niezłe gówno. Spotkajmy się tam gdzie chłopi chodzą z patelnią <br> Z poważaniem ,Nicolas "
         }
     ],
+    equipment: {
+        weapon: null,
+        head: null,
+        chest: null,
+        legs: null,
+        boots: null
+    },
+    health: 100,
+    maxHealth: 100,
+    damageMultiplier: 1.0,
+    isParrying: false,
+    isDodging: false,
+    canAttack: true,
+    attackCooldown: false,
+    parryWindow: false,
+
+    baseDamage: 10,
+    baseArmor: 0,
+    equippedWeapon: null, // Założona broń
+    equippedArmor: null,
+    // === SYSTEM WALKI I WACHLARZA ===
+    isAttacking: false,
+    attackStartTime: 0,
+    attackDuration: 180, // czas trwania animacji wachlarza w ms
+    attackAngle: 0,
+    attackCooldown: 350, // cooldown między atakami w ms
+    lastAttackTime: 0,    // Cooldown między atakami (ms)
+    updateHPUI() {
+        const fill = document.getElementById('hp-bar-fill');
+        const text = document.getElementById('hp-text');
+        if (fill) fill.style.width = `${Math.max(0, (this.hp / this.maxHp) * 100)}%`;
+        if (text) text.innerText = `${Math.max(0, this.hp)} / ${this.maxHp}`;
+    },
+    // Dynamiczny odczyt pancerza i ataku
+    getCombatStats() {
+        let weaponDmg = 5; // Domyślne obrażenia bez broni
+        let totalArmor = 0;
+
+        if (this.equipment?.weapon?.damage) {
+            weaponDmg = this.equipment.weapon.damage;
+        }
+
+        if (this.equipment) {
+            Object.values(this.equipment).forEach(item => {
+                if (item && item.armor) totalArmor += item.armor;
+            });
+        }
+
+        return { weaponDmg, totalArmor };
+    },
+    getDamage() {
+        const weaponDamage = this.equipment.weapon ? (this.equipment.weapon.damage || 0) : 0;
+        return this.baseDamage + weaponDamage;
+    },
+    getArmor() {
+        let totalArmor = this.baseArmor;
+        const slots = ['head', 'chest', 'legs', 'boots'];
+        slots.forEach(slot => {
+            if (this.equipment[slot] && this.equipment[slot].armor) {
+                totalArmor += this.equipment[slot].armor;
+            }
+        });
+        return totalArmor;
+    },
+    // Wyprowadzenie ataku
+    attack() {
+        if (!this.canAttack || this.isAttacking || this.isSleeping || menuSystem.isOpen || dialogueManager.isActive) {
+            return;
+        }
+
+        this.isAttacking = true;
+        this.canAttack = false;
+        this.attackProgress = 0;
+
+        const startTime = performance.now();
+
+        // 1. Detekcja trafień w wachlarzu
+        this.checkHitbox();
+
+        // 2. Animacja płynnego zamachu
+        const animInterval = requestAnimationFrame(function animate(now) {
+            const elapsed = now - startTime;
+            player.attackProgress = Math.min(1.0, elapsed / player.attackDuration);
+
+            if (player.attackProgress < 1.0) {
+                requestAnimationFrame(animate);
+            } else {
+                player.isAttacking = false;
+            }
+        });
+
+        // 3. Cooldown ataku
+        setTimeout(() => {
+            player.canAttack = true;
+        }, this.attackCooldown);
+    },
+    takeDamage(amount) {
+        if (this.isParrying && this.parryWindow) {
+            showToast("⚔️ Sparowano atak!");
+            return;
+        }
+
+        this.hp -= amount;
+        showToast(`Otrzymałeś -${amount} obrażeń!`);
+        this.updateHPUI();
+
+        if (this.hp <= 0) {
+            this.handleDeath();
+        }
+    },
+
+    heal(amount) {
+        this.hp = Math.min(this.maxHp, this.hp + amount);
+        this.updateHPUI();
+        showToast(`Odzyskano +${amount} HP`);
+    },
+    // Parowanie (PPM)
+    parry() {
+        if (this.isParrying) return;
+        this.isParrying = true;
+        this.parryWindow = true;
+
+        // Okienko sparowania trwa 300ms
+        setTimeout(() => { this.parryWindow = false; }, 300);
+        setTimeout(() => { this.isParrying = false; }, 800);
+    },
+    checkHitbox() {
+        const loc = gameMap.getCurrentData();
+        if (!loc.npcs) return;
+
+        const damage = this.getDamage();
+
+        loc.npcs.forEach(npc => {
+            if (isEntityInArc(this, npc, this.attackRange, this.attackAngle, this.facingAngle)) {
+                // Obrażenia i efekt
+                const finalDmg = Math.floor(damage * (0.9 + Math.random() * 0.2)); // Losowość +-10%
+
+                // Pływające cyfry obrażeń
+                damageNumbers.add(npc.x, npc.y - 15, `-${finalDmg}`, '#e74c3c');
+                showToast(`Trafiłeś ${npc.name} za ${finalDmg} pkt. obrażeń!`);
+
+                // Drobny efekt odepchnięcia (knockback)
+                const pushAngle = Math.atan2(npc.y - this.y, npc.x - this.x);
+                npc.x += Math.cos(pushAngle) * 12;
+                npc.y += Math.sin(pushAngle) * 12;
+            }
+        });
+    },
+    // Unik (Alt) - I-frame niewrażliwości
+    dodge() {
+        if (this.isDodging) return;
+        this.isDodging = true;
+        showToast("Unik!");
+
+        setTimeout(() => { this.isDodging = false; }, 350);
+    },
+    handleDeath() {
+        showToast("Zginąłeś! Budzisz się z połową złota...");
+        this.gold = Math.floor(this.gold / 2); // Zaokrąglanie w dół
+        this.hp = this.maxHp;
+        this.updateHPUI();
+
+        // Przeniesienie do karczmy
+        gameMap.currentLocation = 'pokoj_gracza';
+        this.x = 150;
+        this.y = 180;
+    },
     equipment: { head: null, chest: null, legs: null, boots: null, weapon: null },
     horse: { x: 100, y: 550, radius: 15, color: '#8e44ad', isMounted: false },
 
@@ -1473,7 +1440,7 @@ const player = {
         return parseFloat((invWeight + eqWeight).toFixed(1));
     },
 
-    addItem(id, name, icon = '📦', type = 'misc', weight = 1.0, stats = '', count = 1) {
+    addItem(id, name, icon = '📦', type = 'misc', weight = 1.0, stats = '', count = 1, damage = 0, armor = 0) {
         if (this.getWeight() + (weight * count) > this.maxWeight) {
             showToast("Jesteś zbyt obciążony!");
             return false;
@@ -1483,7 +1450,7 @@ const player = {
         if (existingItem && type === 'misc') {
             existingItem.count = (existingItem.count || 1) + count;
         } else {
-            this.inventory.push({ id, name, icon, type, weight, stats, count: count });
+            this.inventory.push({ id, name, icon, type, weight, stats, count, damage, armor });
         }
 
         showToast(`Otrzymano: ${name} ${count > 1 ? `x${count}` : ''}`);
@@ -1495,37 +1462,37 @@ const player = {
             Object.values(this.equipment).some(item => item && item.id === id);
     },
 
-    equipItem(index) {
-        const item = this.inventory[index];
-        if (!item) return;
-
-        if (item.type === 'quest' && item.content) {
-            documentViewer.open(item.name, item.content, item.monologueId, item.questTrigger);
+    equipItem(itemIndex) {
+        const item = this.inventory[itemIndex];
+        // Sprawdzamy, czy przedmiot można założyć
+        if (!item || !['weapon', 'head', 'chest', 'legs', 'boots'].includes(item.type)) {
+            showToast("Tego przedmiotu nie można założyć.");
             return;
         }
 
-        if (item.type === 'quest' || item.type === 'misc') return;
+        const slot = item.type;
 
-        const currentEquipped = this.equipment[item.type];
-        this.inventory.splice(index, 1);
-
-        if (currentEquipped) {
-            this.inventory.push(currentEquipped);
+        // Jeśli slot jest zajęty, zamień przedmioty
+        if (this.equipment[slot]) {
+            this.unequipItem(slot);
         }
 
-        this.equipment[item.type] = item;
+        // Przenieś z plecaka do slotu sprzętu
+        this.equipment[slot] = item;
+        this.inventory.splice(itemIndex, 1);
+
         showToast(`Założono: ${item.name}`);
-        menuSystem.renderInventoryTab();
     },
 
-    unequipItem(slotType) {
-        const item = this.equipment[slotType];
+    unequipItem(slot) {
+        const item = this.equipment[slot];
         if (!item) return;
 
-        this.equipment[slotType] = null;
+        // Dodanie do ekwipunku
         this.inventory.push(item);
+        this.equipment[slot] = null;
+
         showToast(`Zdjęto: ${item.name}`);
-        menuSystem.renderInventoryTab();
     },
 
     startSleep() {
@@ -1605,6 +1572,7 @@ const player = {
     },
 
     draw(ctx) {
+        // Rysowanie konia (gdy gracz nie jedzie)
         if (gameMap.currentLocation === 'kruczy_dol' && !this.horse.isMounted) {
             ctx.beginPath();
             ctx.arc(this.horse.x, this.horse.y, this.horse.radius, 0, Math.PI * 2);
@@ -1618,21 +1586,163 @@ const player = {
             ctx.fillText('Koń [E]', this.horse.x - 18, this.horse.y - 20);
         }
 
+        // --- WACHLARZ ATAKU (POJAWIA SIĘ TYLKO PODCZAS KLIKNIĘCIA LPM) ---
+        if (this.isAttacking) {
+            const elapsed = Date.now() - this.attackStartTime;
+
+            if (elapsed < this.attackDuration) {
+                const progress = elapsed / this.attackDuration; // Od 0.0 do 1.0
+                const fov = Math.PI / 1.8; // Rozwarcie wachlarza (ok. 100 stopni)
+                const attackRange = 55;   // Zasięg wachlarza w pikselach
+
+                ctx.save();
+                ctx.beginPath();
+                ctx.moveTo(this.x, this.y);
+
+                const startAngle = this.attackAngle - fov / 2;
+                const endAngle = this.attackAngle + fov / 2;
+
+                ctx.arc(this.x, this.y, attackRange, startAngle, endAngle);
+                ctx.closePath();
+
+                // Efekt świetlny wachlarza z płynnym zanikaniem (fade-out)
+                const alpha = (1 - progress) * 0.65;
+                ctx.fillStyle = `rgba(241, 196, 15, ${alpha})`; // Złocisto-żółta poświata
+                ctx.fill();
+
+                ctx.strokeStyle = `rgba(255, 255, 255, ${alpha + 0.25})`;
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                ctx.restore();
+            } else {
+                this.isAttacking = false; // Koniec animacji wachlarza
+            }
+        }
+
+        // Rysowanie postaci gracza
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-        if (this.isRolling) ctx.fillStyle = '#f39c12';
-        else ctx.fillStyle = this.isMounted ? '#9b59b6' : this.color;
-
+        ctx.fillStyle = this.isMounted ? '#9b59b6' : this.color;
         ctx.fill();
         ctx.strokeStyle = '#ffffff';
         ctx.lineWidth = 2;
         ctx.stroke();
+    }
+}
 
-    }}
+function isEntityInArc(attacker, target, range, arcAngle, facingAngle) {
+    const dx = target.x - attacker.x;
+    const dy = target.y - attacker.y;
+    const dist = Math.hypot(dx, dy);
 
-// ==========================================
-// 6.7 SYSTEM WALKI I ZBIOROWE AI SZAJKI
-// ==========================================
+    // 1. Sprawdzamy czy cel jest w zasięgu promienia (uwzględniamy gabaryt celu)
+    const targetRadius = target.radius || 10;
+    if (dist > range + targetRadius) return false;
+
+    // 2. Kąt od gracza do celu
+    const angleToTarget = Math.atan2(dy, dx);
+
+    // 3. Najkrótsza różnica kątowa sprowadzona do zakresu [-PI, PI]
+    let angleDiff = angleToTarget - facingAngle;
+    angleDiff = Math.atan2(Math.sin(angleDiff), Math.cos(angleDiff));
+
+    // 4. Czy kąt mieści się w połowie szerokości wachlarza?
+    return Math.abs(angleDiff) <= (arcAngle / 2);
+}
+
+function drawAttackArc(ctx, p) {
+    const startAngle = p.facingAngle - (p.attackAngle / 2);
+    const endAngle = p.facingAngle + (p.attackAngle / 2);
+
+    ctx.save();
+
+    // 1. Podgląd strefy rażenia (półprzezroczysty wachlarz pod kursorem)
+    ctx.beginPath();
+    ctx.moveTo(p.x, p.y);
+    ctx.arc(p.x, p.y, p.attackRange, startAngle, endAngle);
+    ctx.closePath();
+
+    if (p.isAttacking) {
+        // Efekt podczas zamachu - rozbłysk
+        ctx.fillStyle = 'rgba(231, 76, 60, 0.35)';
+        ctx.strokeStyle = '#e74c3c';
+        ctx.lineWidth = 2;
+    } else {
+        // Spokojny wskaźnik celowania
+        ctx.fillStyle = 'rgba(241, 196, 15, 0.08)';
+        ctx.strokeStyle = 'rgba(241, 196, 15, 0.3)';
+        ctx.lineWidth = 1;
+    }
+    ctx.fill();
+    ctx.stroke();
+
+    // 2. Animowany zamach miecza (smuga ostrza przesuwająca się po wachlarzu)
+    if (p.isAttacking) {
+        const currentSweepAngle = startAngle + (p.attackAngle * p.attackProgress);
+
+        // Smuga miecza
+        ctx.beginPath();
+        ctx.moveTo(p.x, p.y);
+        ctx.lineTo(
+            p.x + Math.cos(currentSweepAngle) * (p.attackRange + 5),
+            p.y + Math.sin(currentSweepAngle) * (p.attackRange + 5)
+        );
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 4;
+        ctx.shadowColor = '#f1c40f';
+        ctx.shadowBlur = 12;
+        ctx.stroke();
+    }
+
+    ctx.restore();
+}
+
+const damageNumbers = {
+    list: [],
+    add(x, y, text, color = '#e74c3c') {
+        this.list.push({ x, y, text, color, alpha: 1.0, life: 40 });
+    },
+    updateAndDraw(ctx) {
+        for (let i = this.list.length - 1; i >= 0; i--) {
+            const num = this.list[i];
+            num.y -= 0.6; // Unoszenie się do góry
+            num.alpha -= 0.02; // Znikanie
+            num.life--;
+
+            ctx.save();
+            ctx.globalAlpha = Math.max(0, num.alpha);
+            ctx.fillStyle = num.color;
+            ctx.font = 'bold 14px sans-serif';
+            ctx.shadowColor = '#000000';
+            ctx.shadowBlur = 4;
+            ctx.fillText(num.text, num.x - 10, num.y);
+            ctx.restore();
+
+            if (num.life <= 0) {
+                this.list.splice(i, 1);
+            }
+        }
+    }
+};
+
+window.addEventListener('mousemove', (e) => {
+    const rect = canvas.getBoundingClientRect();
+    const mouseCanvasX = e.clientX - rect.left;
+    const mouseCanvasY = e.clientY - rect.top;
+
+    // Przeliczenie z widoku ekranu na koordynaty świata
+    const worldMouseX = camera.x + (mouseCanvasX / CONFIG.ZOOM);
+    const worldMouseY = camera.y + (mouseCanvasY / CONFIG.ZOOM);
+
+    // Kąt patrzenia gracza w stronę myszy
+    player.facingAngle = Math.atan2(worldMouseY - player.y, worldMouseX - player.x);
+});
+
+function calculateDamage(attackerDmg, defenderArmor, multiplier = 1.0) {
+    const armorFactor = 100 / (100 + defenderArmor);
+    return Math.max(1, Math.round(attackerDmg * armorFactor * multiplier));
+}
 
 // Blokada menu kontekstowego na prawym kliku
 window.addEventListener('contextmenu', e => e.preventDefault());
@@ -1695,6 +1805,27 @@ window.addEventListener('keydown', (e) => {
         }
     }
 });
+// Obsługa kliknięć myszy (LPM = Atak, PPM = Parowanie)
+canvas.addEventListener('mousedown', (e) => {
+    if (menuSystem.isOpen || dialogueManager.isActive) return;
+
+    if (e.button === 0) {
+        player.attack(window.currentTargetNPC);
+    } else if (e.button === 2) {
+        player.parry();
+    }
+});
+
+// Blokada domyślnego menu pod PPM
+canvas.addEventListener('contextmenu', e => e.preventDefault());
+
+// Przechwytywanie klawisza Alt
+window.addEventListener('keydown', (e) => {
+    if (e.key === 'Alt') {
+        e.preventDefault(); // Blokuje aktywację paska menu przeglądarki
+        player.dodge();
+    }
+});
 
 window.addEventListener('keyup', (e) => { keys[e.key.toLowerCase()] = false; });
 
@@ -1705,14 +1836,27 @@ resizeCanvas();
 gameMap.spawnVillageNPCs();
 questManager.init();
 
-function gameLoop() {
-    const currentLoc = gameMap.getCurrentData();
+const mouse = { x: 0, y: 0 };
 
+window.addEventListener('mousemove', (e) => {
+    mouse.x = e.clientX;
+    mouse.y = e.clientY;
+});
+
+function getPlayerAimAngle() {
+    // Przeliczenie pozycji myszy na współrzędne świata z uwzględnieniem kamery i zoomu
+    const worldMouseX = camera.x + mouse.x / CONFIG.ZOOM;
+    const worldMouseY = camera.y + mouse.y / CONFIG.ZOOM;
+    return Math.atan2(worldMouseY - player.y, worldMouseX - player.x);
+}
+
+function gameLoop() {
     if (!dialogueManager.isActive && !player.isSleeping && !menuSystem.isOpen) {
         player.update(keys, stateText);
         gameMap.updateNPCs();
     }
 
+    const currentLoc = gameMap.getCurrentData();
     camera.follow(player, currentLoc.width, currentLoc.height);
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -1723,6 +1867,9 @@ function gameLoop() {
 
     gameMap.draw(ctx);
     player.draw(ctx);
+
+    // === RYSOWANIE CYFR OBRAŻEŃ W ŚWIECIE GRY ===
+    damageNumbers.updateAndDraw(ctx);
 
     if (gameMap.currentLocation === 'kruczy_dol' && timeSystem.isNight) {
         ctx.fillStyle = CONFIG.COLOR_NIGHT_FILTER;
@@ -1736,6 +1883,7 @@ function gameLoop() {
     if (menuSystem.isOpen && menuSystem.activeTab === 'map') {
         gameMap.drawFullMap();
     }
+
     requestAnimationFrame(gameLoop);
 }
 gameLoop();

@@ -1232,3 +1232,55 @@ canvas#gameCanvas {
     text-shadow: 1px 1px 2px #000, -1px -1px 2px #000, 1px -1px 2px #000, -1px 1px 2px #000;
     pointer-events: none; /* Zapobiega kolizji z klikaniem myszy */
 }
+
+#hud-top-left {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    z-index: 10;
+    pointer-events: none;
+}
+
+.hp-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(14, 11, 18, 0.85);
+    padding: 8px 14px;
+    border: 2px solid #5a4529;
+    border-radius: 6px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.6);
+}
+
+.hp-label {
+    font-weight: bold;
+    color: #e74c3c;
+    font-size: 14px;
+}
+
+.hp-bar-outer {
+    position: relative;
+    width: 180px;
+    height: 18px;
+    background: #1a0d0d;
+    border: 1px solid #4a1c1c;
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.hp-bar-inner {
+    height: 100%;
+    background: linear-gradient(90deg, #c0392b, #e74c3c);
+    transition: width 0.25s ease-out;
+}
+
+.hp-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 11px;
+    font-weight: bold;
+    color: #ffffff;
+    text-shadow: 1px 1px 2px #000;
+}
