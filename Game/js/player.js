@@ -21,8 +21,8 @@ const player = {
             weight: 0.2,
             monologueId: 'read_nicolas_letter',
             questTrigger: { questId: 'Q1', step: 0 },
-            stats: 'Kliknij E aby przeczytać',
-            content: "Arkelasie , mój Drogi przyjacielu <br> Mam nadzieję ,że przeczytasz ten list a życie mija ci spokojnie, jak pewnie wiesz osiedliłem się miasteczku Kruczy Dół , ze względu na jego położenie na szlaku handlowym między Valengardem a Rendią jak i ze względu na powierzone mi zadanie . Niestety ostatnio zauważam coraz to bardziej niepokojące rzeczy , wczoraj zauważyłem dwóch ludzi obserwujących mnie ,których nigdy wcześniej nie widziałem a kilka dni temu ktoś włamał mi się do domu . Potrzebuję twojej pomocy Arkelasie bo czuje ,że wpadłem w niezłe gówno. Spotkajmy się tam gdzie chłopi chodzą z patelnią <br> Z poważaniem ,Nicolas "
+            stats: 'Kliknij 2krotnie aby przeczytać',
+            content: "Arkelasie , mój Drogi przyjacielu Mam nadzieję ,że przeczytasz ten list a życie mija ci spokojnie, jak pewnie wiesz osiedliłem się miasteczku Kruczy Dół , ze względu na jego położenie na szlaku handlowym między Valengardem a Rendią jak i ze względu na powierzone mi zadanie . Niestety ostatnio zauważam coraz to bardziej niepokojące rzeczy , wczoraj zauważyłem dwóch ludzi obserwujących mnie ,których nigdy wcześniej nie widziałem a kilka dni temu ktoś włamał mi się do domu . Potrzebuję twojej pomocy Arkelasie bo czuje ,że wpadłem w niezłe gówno. Spotkajmy się tam gdzie czarodziejki chodzą z patelnią <br> Z poważaniem ,Nicolas "
         }
     ],
     equipment: {
@@ -85,6 +85,15 @@ const player = {
         }
 
         return { weaponDmg, totalArmor };
+    },
+    collectLoot(itemId, amount = 1) {
+        if (itemId === 'gold_coins') {
+            this.gold += amount;
+            showToast(`+${amount} Złota`);
+            return true;
+        }
+        const tpl = ITEMS_DB[itemId] || { name: itemId, icon: '📦', type: 'misc', weight: 1.0, stats: '' };
+        return this.addItem(itemId, tpl.name, tpl.icon, tpl.type, tpl.weight, tpl.stats, amount, tpl.damage || 0, tpl.armor || 0);
     },
     getDamage(isHeavy = false) {
         const weapon = this.equipment.weapon;
@@ -317,11 +326,10 @@ const player = {
         if (typeof gameState !== 'undefined') gameState = 'EXPLORATION';
 
         // Przeniesienie do karczmy
-        gameMap.currentLocation = 'pokoj_gracza';
-        this.x = 150;
+        gameMap.currentLocation = 'pokoj_gracza'; // Nazwa lokacji/mapy
+        this.x = 250; // Pozycja X
         this.y = 180;
     },
-    equipment: { head: null, chest: null, legs: null, boots: null, weapon: null },
     horse: { x: 100, y: 550, radius: 15, color: '#8e44ad', isMounted: false },
 
     getWeight() {
@@ -354,6 +362,12 @@ const player = {
 
     equipItem(itemIndex) {
         const item = this.inventory[itemIndex];
+        if (!item) return;
+
+        if (item.type === 'quest' || item.type === 'document' || item.content) {
+            documentViewer.open(item.name, item.content, item.monologueId, item.questTrigger);
+            return;
+        }
         // Sprawdzamy, czy przedmiot można założyć
         if (!item || !['weapon', 'head', 'chest', 'legs', 'boots'].includes(item.type)) {
             showToast("Tego przedmiotu nie można założyć.");

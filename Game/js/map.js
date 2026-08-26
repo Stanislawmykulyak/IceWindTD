@@ -75,11 +75,24 @@ const gameMap = {
             ],
             npcs: []
         },
-        nicolas_wnetrze: {
-            width: 800, height: 600, bgColor: CONFIG.COLOR_INTERIOR,
-            buildings: [{ id: 'table', name: 'Stół z papierami', x: 350, y: 250, width: 100, height: 60, color: '#2b170a' }],
-            doors: [{ x: 380, y: 520, width: 40, height: 20, targetLocation: 'kruczy_dol', spawnX: 1960, spawnY: 610, label: 'Wyjdź [E]' }],
-            npcs: [{ id: 'nicolas', name: 'Nicolas', x: 400, y: 200, radius: 14, color: '#2ecc71', dialogueId: 'nicolas_intro', talkRadius: 60 }]
+        wioska_mlyn: {
+            name: "Stary Młyn",
+            width: 1200,
+            height: 800,
+            doors: [
+                { x: 50, y: 400, w: 40, h: 60, targetMap: 'kruczy_dol', targetX: 1800, targetY: 500 },
+                { x: 600, y: 300, w: 50, h: 50, targetMap: 'piwnica_mlyna', targetX: 250, targetY: 450 }
+            ],
+            npcs: []
+        },
+        piwnica_mlyna: {
+            name: "Piwnica Młyna",
+            width: 600,
+            height: 500,
+            doors: [
+                { x: 250, y: 480, w: 60, h: 20, targetMap: 'wioska_mlyn', targetX: 600, targetY: 360 }
+            ],
+            npcs: []
         }
     },
 
@@ -385,7 +398,11 @@ const gameMap = {
             dialogueManager.start(this.nearNPC.dialogueId);
             return true;
         }
-
+        const nearBag = LootManager.getNearBag(player);
+        if (nearBag) {
+            lootBagSystem.open(nearBag);
+            return true;
+        }
         if (this.nearBed) {
             player.startSleep();
             return true;

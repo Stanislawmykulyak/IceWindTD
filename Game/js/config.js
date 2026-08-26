@@ -21,7 +21,7 @@ const ENEMY_CONFIG = {
         name: 'Zbir',
         maxHp: 120,            // Zmniejszono z 1080 (pada na 3-4 ciosy)
         speed: 45,             // Zmniejszono z 85 px/s (daje czas na odejście/pozyjonowanie)
-        damage: 12,          
+        damage: 12,
         radius: 12,
         color: '#e74c3c',
         attackRange: 38,
@@ -32,22 +32,36 @@ const ENEMY_CONFIG = {
         name: 'Osiłek',
         maxHp: 220,            // Zmniejszono z 1780
         speed: 30,             // Zmniejszono z 55 px/s
-        damage: 20,          
+        damage: 20,
         radius: 16,
         color: '#c0392b',
         attackRange: 45,
         attackCooldown: 4.0,   // 4 sekundy przerwy po ataku
         rewardGold: 35
+    },
+    z1: {
+        name: "Zbir 1",
+        hp: 40,
+        maxHp: 40,
+        damage: 6,
+        speed: 1.8,
+        color: "#2e7d32", // zielony
+        radius: 14,
+        nonLethal: true
+    },
+    z2: {
+        name: "Zbir 2",
+        hp: 50,
+        maxHp: 50,
+        damage: 8,
+        speed: 1.5,
+        color: "#4e342e", // brunatny
+        radius: 15,
+        nonLethal: true
     }
 };
 
-function showToast(text) {
-    const toast = document.getElementById('toast-message');
-    if (!toast) return;
-    toast.innerText = text;
-    toast.classList.remove('hidden');
-    setTimeout(() => toast.classList.add('hidden'), 2500);
-}
+
 
 function calculateDamage(attackerDmg, defenderArmor, multiplier = 1.0) {
     const armorFactor = 100 / (100 + defenderArmor);
@@ -73,3 +87,28 @@ function isEntityInArc(attacker, target, range, arcAngle, facingAngle) {
     // 4. Czy kąt mieści się w połowie szerokości wachlarza?
     return Math.abs(angleDiff) <= (arcAngle / 2);
 }
+const ITEMS_DB = {
+    stary_sztylet: { name: 'Stary Sztylet', icon: '🗡️', type: 'weapon', weight: 1.2, damage: 15, lightDamage: 15, heavyDamage: 28, stats: 'Obrażenia: 15' },
+    zelazny_miecz: { name: 'Żelazny Miecz', icon: '⚔️', type: 'weapon', weight: 3.0, damage: 25, lightDamage: 25, heavyDamage: 45, stats: 'Obrażenia: 25' },
+    miedziana_moneta: { name: 'Miedziana Moneta', icon: '🪙', type: 'misc', weight: 0.05, stats: 'Warta parę miedziaków' },
+    mikstura_zdrowia: { name: 'Mikstura Zdrowia', icon: '🧪', type: 'misc', weight: 0.5, stats: 'Leczy HP' },
+    skora_wilka: { name: 'Skóra Wilka', icon: '🐺', type: 'misc', weight: 1.5, stats: 'Trofeum' },
+    kiel_wilka: { name: 'Kieł Wilka', icon: '🦷', type: 'misc', weight: 0.2, stats: 'Trofeum' }
+};
+
+const LOOT_TABLES = {
+    zbir_lekki: [
+        { id: 'gold_coins', min: 5, max: 15, chance: 1.0 },
+        { id: 'stary_sztylet', min: 1, max: 1, chance: 0.2 }, // 20% szans
+        { id: 'miedziana_moneta', min: 1, max: 3, chance: 0.5 }
+    ],
+    zbir_ciezki: [
+        { id: 'gold_coins', min: 20, max: 50, chance: 1.0 },
+        { id: 'zelazny_miecz', min: 1, max: 1, chance: 0.15 },
+        { id: 'mikstura_zdrowia', min: 1, max: 2, chance: 0.4 }
+    ],
+    wilk: [
+        { id: 'skora_wilka', min: 1, max: 1, chance: 0.8 },
+        { id: 'kiel_wilka', min: 1, max: 2, chance: 0.5 }
+    ]
+};

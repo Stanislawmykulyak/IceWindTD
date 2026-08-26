@@ -1,34 +1,48 @@
 const QUEST_DATABASE = {
     Q1: {
-        id: "Q1",
-        title: "Q1: List Od Przyjaciela",
-        category: "Główne",
-        completed: false,
-        currentStep: 0,
-        description: "Dostałeś od przyjaciela nie pokający list ",
-        objectives: [
-            { 
-                text: "Przeczytaj list", 
-                done: false, 
-            },
-            { 
-                text: "Przespij sie w karczmie", 
-                done: false, 
-                target: { location: 'pokoj_gracza', x: 150, y: 180, name: 'Łóżko' } 
-            },
-            { 
-                text: "Zapytaj się o Nicolasa oraz młyn ", 
-                done: false, 
-                target: { location: 'karczma_wnetrze', x: 400, y: 115, name: 'Karczmarz Barnaba' } 
-            }
-        ]
-    }
+    id: "Q1",
+    title: "Q1: List Od Przyjaciela",
+    category: "Główne",
+    completed: false,
+    currentStep: 0,
+    description: "Dostałeś od przyjaciela niepokojący list.",
+    objectives: [
+        { 
+            text: "Przeczytaj list", 
+            done: false 
+        },
+        { 
+            text: "Przespij sie w karczmie", 
+            done: false, 
+            target: { location: 'pokoj_gracza', x: 150, y: 180, name: 'Łóżko' } 
+        },
+        { 
+            text: "Zapytaj się o młyn", 
+            done: false, 
+            target: { location: 'karczma_wnetrze', x: 400, y: 115, name: 'Karczmarz Barnaba' } 
+        },
+        { 
+            text: "Udaj się do starego młyna", 
+            done: false, 
+            target: { location: 'wioska_mlyn', x: 800, y: 1200, name: 'Stary Młyn' } 
+        },
+        { 
+            text: "Wejdź do piwnicy młyna", 
+            done: false, 
+            target: { location: 'wioska_mlyn', x: 820, y: 1250, name: 'Drzwi do piwnicy' } 
+        },
+        { 
+            text: "Pokonaj zbirów w piwnicy", 
+            done: false 
+        }
+    ]
+}
 };
 
 const MONOLOGUE_DATABASE = {
     read_nicolas_letter: [
         { text: "Arkelas: Hmmm... Nicolas znowu wpadł w gówno po same uszy.", duration: 3500 },
-        { text: "Arkelas: 'Gdzie chłopi chodzą z patelnią'o co mogło mu chodzić ... aa, o to mu chodzi ", duration: 7500 },
+        { text: "Arkelas: 'Gdzie czarodziejki chodzą z patelnią'o co mogło mu chodzić ... aa, o to mu chodzi ", duration: 7500 },
         { text: "Arkelas: Prawie zapomnniałem jak nas ta wariatka probowala zabic podczas kampani", duration: 4000 },
         { text: "Arkelas: Tylko gdzie ja tu znajdę młyn ,no trudno trzeba będzie się zapytać w karczmie a na razie przydałoby się przespać po podróży", duration: 7000 },
         

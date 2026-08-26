@@ -5,12 +5,31 @@ class EnemyManager {
         this.maxAttackTokens = 2;
         this.activeTokenHolders = new Set();
     }
-    requestAttackToken(enemy) {
+    requestAttackToken(enemy, distToTarget) {
+        if (this.activeTokenHolders.has(enemy)) return true;
+
+        // 1. Dostępne wolne sloty
         if (this.activeTokenHolders.size < this.maxAttackTokens) {
             this.activeTokenHolders.add(enemy);
+            enemy.tokenTimer = 0;
             return true;
         }
-        return this.activeTokenHolders.has(enemy);
+
+        // 2. KRADZIEŻ: Jeśli wróg jest tuż przy graczu, zabiera token komuś z daleka
+        if (distToTarget <= enemy.attackRadius) {
+            for (let holder of this.activeTokenHolders) {
+                const holderDist = Math.hypot(holder.targetDist || 999);
+                // Jeśli trzymający token jest dalej niż 100px, trać token na rzecz bliższego!
+                if (holderDist > 100) {
+                    this.activeTokenHolders.delete(holder);
+                    this.activeTokenHolders.add(enemy);
+                    enemy.tokenTimer = 0;
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     releaseAttackToken(enemy) {
@@ -92,6 +111,14 @@ class EnemyManager {
     }
     update(deltaTime, player) {
         // 1. Fizyka separacji – wrogowie odpychają się od siebie i nie nakładają
+        this.activeTokenHolders.forEach(enemy => {
+            enemy.tokenTimer = (enemy.tokenTimer || 0) + deltaTime;
+
+            // Wygaśnięcie tokena po 1.5s lub gdy wróg stracił cel / zginął
+            if (enemy.tokenTimer > 1.5 || !enemy.isAlive || enemy.state === 'IDLE' || enemy.state === 'RETURNING') {
+                this.activeTokenHolders.delete(enemy);
+            }
+        });
         for (let i = 0; i < this.enemies.length; i++) {
             for (let j = i + 1; j < this.enemies.length; j++) {
                 const e1 = this.enemies[i];
@@ -119,7 +146,7 @@ class EnemyManager {
 
         // --- PRZYWRÓCONA LOGIKA AI DLA KAŻDEGO WROGA ---
         this.enemies.forEach(enemy => {
-            enemy.update(deltaTime, player, activePack, this.allies); // przekazujesz tablicę sojuszników
+            enemy.update(deltaTime, player, activePack, this.allies || [], this); // przekazujesz tablicę sojuszników
         });
 
         // Despawn martwych lub zignorowanych wrogów (dystans > 1800px)
@@ -144,6 +171,7 @@ class Enemy {
         this.y = config.y || 0;
         this.type = type;
         this.name = baseConfig.name;
+        this.lootTable = LOOT_TABLES[type] || [];
 
         // Statystyki z ENEMY_CONFIG
         this.maxHp = baseConfig.maxHp || 100;
@@ -168,132 +196,129 @@ class Enemy {
     }
 
     // Podmień całą metodę update() w klasie Enemy:
-update(dt, player, activePack, allies = [], manager = null) {
-    if (!this.isAlive) return;
+    update(dt, player, activePack, allies = [], manager = null) {
+        if (!this.isAlive) return;
 
-    // Pobieramy instancję EnemyManager (z argumentu lub z zakresu globalnego)
-    const em = manager || (typeof enemyManager !== 'undefined' ? enemyManager : null);
+        // Pobieramy instancję EnemyManager (z argumentu lub z zakresu globalnego)
+        const em = manager || (typeof enemyManager !== 'undefined' ? enemyManager : null);
 
-    // 1. Szukamy najbliższego celu (gracz lub sojusznik)
-    const validTargets = [player, ...allies.filter(a => a && a.isAlive)];
-    let target = player;
-    let distToTarget = Infinity;
+        // 1. Szukamy najbliższego celu (gracz lub sojusznik)
+        const validTargets = [player, ...allies.filter(a => a && a.isAlive)];
+        let target = player;
+        let distToTarget = Infinity;
 
-    validTargets.forEach(t => {
-        const d = Math.hypot(t.x - this.x, t.y - this.y);
-        if (d < distToTarget) {
-            distToTarget = d;
-            target = t;
-        }
-    });
-
-    // 2. Obsługa timerów
-    if (this.attackCooldown > 0) this.attackCooldown -= dt;
-    if (this.hitStun > 0) this.hitStun -= dt;
-
-    // 3. Maszyna stanów AI
-    switch (this.state) {
-        case 'IDLE':
-            if (distToTarget <= this.aggroRadius) {
-                this.state = 'CHASE';
+        validTargets.forEach(t => {
+            const d = Math.hypot(t.x - this.x, t.y - this.y);
+            if (d < distToTarget) {
+                distToTarget = d;
+                target = t;
             }
-            break;
+        });
 
-        case 'CHASE':
-            if (distToTarget > this.deaggroRadius) {
-                if (em) em.releaseAttackToken(this);
-                this.state = 'RETURNING';
+        // 2. Obsługa timerów
+        if (this.attackCooldown > 0) this.attackCooldown -= dt;
+        if (this.hitStun > 0) this.hitStun -= dt;
+
+        // 3. Maszyna stanów AI
+        switch (this.state) {
+            case 'IDLE':
+                if (distToTarget <= this.aggroRadius) {
+                    this.state = 'CHASE';
+                }
                 break;
-            }
 
-            // Gdy wróg dopadnie cel, sprawdza czy ma token na cios
-            if (distToTarget <= this.attackRadius) {
-                const hasToken = em ? em.requestAttackToken(this) : true;
+            case 'CHASE':
+                if (distToTarget > this.deaggroRadius) {
+                    if (em) em.releaseAttackToken(this);
+                    this.state = 'RETURNING';
+                    break;
+                }
 
-                if (hasToken && this.attackCooldown <= 0) {
-                    this.state = 'ATTACK';
-                    this.attackWindup = 0;
+                // Gdy wróg dopadnie cel, sprawdza czy ma token na cios
+                if (distToTarget <= this.attackRadius) {
+                    this.targetDist = distToTarget; // Zapisujemy aktualny dystans
+                    const hasToken = em ? em.requestAttackToken(this, distToTarget) : true;
+
+                    if (hasToken && this.attackCooldown <= 0) {
+                        this.state = 'ATTACK';
+                        this.attackWindup = 0;
+                    } else {
+                        this.state = 'CIRCLE';
+                    }
                 } else {
-                    // Brak tokena lub cooldown -> przechodzi w krążenie
+                    this.moveTowards(target.x, target.y, dt, 1.0); // Pełna prędkość dobiegu
+                }
+                break;
+
+            case 'CIRCLE':
+                if (distToTarget > this.deaggroRadius) {
+                    if (em) em.releaseAttackToken(this);
+                    this.state = 'RETURNING';
+                    break;
+                }
+
+                // Pierścień oczekiwania: bezpieczna strefa 100px - 140px
+                const minDist = 100;
+                const maxDist = 140;
+
+                if (distToTarget < minDist) {
+                    // Za blisko gracza -> powolny krok w tył
+                    const angle = Math.atan2(this.y - target.y, this.x - target.x);
+                    const targetX = target.x + Math.cos(angle) * minDist;
+                    const targetY = target.y + Math.sin(angle) * minDist;
+                    this.moveTowards(targetX, targetY, dt, 0.4);
+                } else if (distToTarget > maxDist) {
+                    // Za daleko od pierścienia -> podbiegnij bliżej
+                    this.moveTowards(target.x, target.y, dt, 0.7);
+                }
+                // Jeśli jest w przedziale 100-140px -> stoi w miejscu i czeka (fizyka sama go rozstawi)
+
+                // Cooldown minął -> wraca do szarży po token
+                if (this.attackCooldown <= 0) {
+                    this.state = 'CHASE';
+                }
+                break;
+
+            case 'ATTACK':
+                this.attackWindup += dt;
+
+                if (this.attackWindup >= 0.4) {
+                    const isTargetDodging = target.isInvulnerable || target.isDodging;
+                    if (distToTarget <= this.attackRadius + 15 && !isTargetDodging) {
+                        if (typeof target.takeDamage === 'function') {
+                            target.takeDamage(this.damage);
+                        }
+                    }
+                    this.attackCooldown = this.baseConfig?.attackCooldown || 3.0;
+                    this.attackWindup = 0;
+
+                    // PO ATAKU: Koniecznie oddaj token i przejdź w krążenie!
+                    if (em) em.releaseAttackToken(this);
                     this.state = 'CIRCLE';
                 }
-            } else {
-                this.moveTowards(target.x, target.y, dt, 1.0); // Pełna prędkość dobiegu
-            }
-            break;
-
-        case 'CIRCLE':
-            if (distToTarget > this.deaggroRadius) {
-                if (em) em.releaseAttackToken(this);
-                this.state = 'RETURNING';
                 break;
-            }
 
-            // Utrzymywanie bezpiecznego dystansu ~140px i krążenie
-            const preferredDist = Math.max(130, this.attackRadius + 70);
-            const angle = Math.atan2(this.y - target.y, this.x - target.x);
-            let targetX, targetY;
-
-            if (distToTarget < preferredDist - 20) {
-                // Za blisko gracza -> powolny odskok w tył
-                targetX = target.x + Math.cos(angle) * preferredDist;
-                targetY = target.y + Math.sin(angle) * preferredDist;
-            } else {
-                // Płynne krążenie wokół celu (kąt + offset)
-                const orbitAngle = angle + 0.5;
-                targetX = target.x + Math.cos(orbitAngle) * preferredDist;
-                targetY = target.y + Math.sin(orbitAngle) * preferredDist;
-            }
-
-            // Ruch z prędkością zredukowaną do 65% (pasywny tryb)
-            this.moveTowards(targetX, targetY, dt, 0.65);
-
-            // Jeśli minął cooldown i zwolnił się token -> ruszaj do ataku!
-            if (this.attackCooldown <= 0 && em && em.requestAttackToken(this)) {
-                this.state = 'CHASE';
-            }
-            break;
-
-        case 'ATTACK':
-            this.attackWindup += dt;
-
-            if (this.attackWindup >= 0.4) {
-                const isTargetDodging = target.isInvulnerable || target.isDodging;
-                if (distToTarget <= this.attackRadius + 15 && !isTargetDodging) {
-                    if (typeof target.takeDamage === 'function') {
-                        target.takeDamage(this.damage);
-                    }
-                }
-                this.attackCooldown = this.baseConfig?.attackCooldown || 3.0;
-                this.attackWindup = 0;
-
-                // PO ATAKU: Koniecznie oddaj token i przejdź w krążenie!
+            case 'RETURNING':
                 if (em) em.releaseAttackToken(this);
-                this.state = 'CIRCLE';
-            }
-            break;
-
-        case 'RETURNING':
-            if (em) em.releaseAttackToken(this);
-            this.moveTowards(this.homeX, this.homeY, dt, 1.0);
-            if (Math.hypot(this.homeX - this.x, this.homeY - this.y) < 15) {
-                this.state = 'IDLE';
-            }
-            break;
+                this.moveTowards(this.homeX, this.homeY, dt, 1.0);
+                if (Math.hypot(this.homeX - this.x, this.homeY - this.y) < 15) {
+                    this.state = 'IDLE';
+                }
+                break;
+        }
     }
-}
 
-// Zaktualizuj też metodę moveTowards w klasie Enemy (dopisany parametr speedMultiplier):
-moveTowards(tx, ty, dt, speedMultiplier = 1.0) {
-    const dx = tx - this.x;
-    const dy = ty - this.y;
-    const dist = Math.hypot(dx, dy);
-    if (dist > 0) {
-        const currentSpeed = this.speed * speedMultiplier;
-        this.x += (dx / dist) * currentSpeed * dt;
-        this.y += (dy / dist) * currentSpeed * dt;
+    // Zaktualizuj też metodę moveTowards w klasie Enemy (dopisany parametr speedMultiplier):
+    moveTowards(tx, ty, dt, speedMultiplier = 1.0) {
+        const dx = tx - this.x;
+        const dy = ty - this.y;
+        const dist = Math.hypot(dx, dy);
+        if (dist > 0) {
+            const currentSpeed = this.speed * speedMultiplier;
+            this.x += (dx / dist) * currentSpeed * dt;
+            this.y += (dy / dist) * currentSpeed * dt;
+        }
     }
-}
     takeDamage(amount, sourceX, sourceY) {
         if (!this.isAlive || this.hitStun > 0) return;
 
@@ -311,25 +336,39 @@ moveTowards(tx, ty, dt, speedMultiplier = 1.0) {
             this.isAlive = false;
             this.onDeath();
         }
+        if (this.hp - damageAmount <= 0 && this.config.nonLethal) {
+            this.hp = 1;
+            this.status = 'unconscious';
+            this.isAggressive = false;
+            this.canAttack = false;
+        } else {
+            this.hp -= damageAmount;
+            if (this.hp <= 0) this.isDead = true;
+        }
     }
     onDeath(lootManager) {
-        const lootTable = {
-            wolf: [
-                { id: 'wolf_pelt', name: 'Skóra wilka', value: 15, chance: 0.8 },
-                { id: 'wolf_tooth', name: 'Kieł wilka', value: 8, chance: 0.5 }
-            ],
-            bandit: [
-                { id: 'gold_coins', name: 'Mieszko monet', value: 25, chance: 0.9 },
-                { id: 'bread', name: 'Chleb', value: 5, chance: 0.4 }
-            ]
-        };
+        this.dropLoot();
+    }
+    dropLoot() {
+        if (!this.lootTable) return;
+        const bagItems = [];
+        let bagGold = 0;
 
-        const possibleLoot = lootTable[this.type] || [];
-        possibleLoot.forEach(drop => {
+        this.lootTable.forEach(drop => {
             if (Math.random() <= drop.chance) {
-                lootManager.spawnLoot(this.x, this.y, drop);
+                const count = Math.floor(Math.random() * (drop.max - drop.min + 1)) + drop.min;
+                if (drop.id === 'gold_coins') {
+                    bagGold += count;
+                } else {
+                    const tpl = ITEMS_DB[drop.id] || { name: drop.id, icon: '📦', type: 'misc', weight: 1.0, stats: '' };
+                    bagItems.push({ ...tpl, id: drop.id, count });
+                }
             }
         });
+
+        if (bagItems.length > 0 || bagGold > 0) {
+            LootManager.spawnBag(this.x, this.y, bagItems, bagGold);
+        }
     }
     draw(ctx) {
         if (!this.isAlive) return;
@@ -394,81 +433,67 @@ moveTowards(tx, ty, dt, speedMultiplier = 1.0) {
     }
 
 }
-// ==========================================
-// SYSTEM LOOTU (LootItem + LootManager)
-// ==========================================
-class LootItem {
-    constructor(x, y, itemData) {
-        // Losowy niewielki rozrzut przedmiotu przy upuszczeniu
-        this.x = x + (Math.random() * 20 - 10);
-        this.y = y + (Math.random() * 20 - 10);
-        this.item = itemData;
-        this.pickupRadius = 35;
-        this.isPickedUp = false;
+class LootBag {
+    constructor(id, x, y, items = [], gold = 0) {
+        this.id = id;
+        this.x = x;
+        this.y = y;
+        this.items = items;
+        this.gold = gold;
     }
 
-    update(player) {
-        if (this.isPickedUp) return;
-
-        const dist = Math.hypot(player.x - this.x, player.y - this.y);
-        if (dist <= this.pickupRadius) {
-            // Naprawiony wydatek: używamy metody player.addItem zamiast nieistniejącej player.inventory.addItem
-            const added = player.addItem(
-                this.item.id,
-                this.item.name,
-                this.item.icon || '📦',
-                this.item.type || 'misc',
-                this.item.weight || 0.1,
-                this.item.stats || '',
-                1,
-                this.item.damage || 0,
-                this.item.armor || 0
-            );
-
-            if (added) {
-                this.isPickedUp = true;
-            }
-        }
+    isEmpty() {
+        return this.items.length === 0 && this.gold <= 0;
     }
 
     draw(ctx) {
-        if (this.isPickedUp) return;
-
-        // Lekka poświata na ziemi
-        ctx.fillStyle = 'rgba(241, 196, 15, 0.3)';
+        ctx.save();
+        ctx.fillStyle = '#8b5a2b';
         ctx.beginPath();
-        ctx.arc(this.x, this.y, 10, 0, Math.PI * 2);
+        ctx.arc(this.x, this.y, 9, 0, Math.PI * 2);
         ctx.fill();
+        ctx.strokeStyle = '#f1c40f';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
 
-        // Punkt/Ikona podniesienia
-        ctx.fillStyle = '#f1c40f';
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, 4, 0, Math.PI * 2);
-        ctx.fill();
+        ctx.font = '11px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('🎒', this.x, this.y);
+
+        const dist = Math.hypot(player.x - this.x, player.y - this.y);
+        if (dist < 45) {
+            ctx.fillStyle = '#f1c40f';
+            ctx.font = 'bold 11px sans-serif';
+            ctx.fillText('Przeszukaj sakwę [E]', this.x, this.y - 16);
+        }
+        ctx.restore();
     }
 }
 
 class LootManager {
-    constructor() {
-        this.items = [];
+    static bags = [];
+
+    static spawnBag(x, y, items, gold) {
+        const id = `bag_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`;
+        const offset = { x: (Math.random() - 0.5) * 15, y: (Math.random() - 0.5) * 15 };
+        this.bags.push(new LootBag(id, x + offset.x, y + offset.y, items, gold));
     }
 
-    spawnLoot(x, y, itemData) {
-        this.items.push(new LootItem(x, y, itemData));
+    static draw(ctx) {
+        this.bags.forEach(bag => bag.draw(ctx));
     }
 
-    update(player) {
-        for (let i = this.items.length - 1; i >= 0; i--) {
-            const loot = this.items[i];
-            loot.update(player);
-            if (loot.isPickedUp) {
-                this.items.splice(i, 1);
-            }
-        }
+    static getNearBag(player) {
+        return this.bags.find(bag => Math.hypot(player.x - bag.x, player.y - bag.y) < 45);
     }
 
-    draw(ctx) {
-        this.items.forEach(loot => loot.draw(ctx));
+    static removeBag(bag) {
+        this.bags = this.bags.filter(b => b !== bag);
+    }
+
+    static update(player, keys) {
+        this.bags = this.bags.filter(bag => !bag.isEmpty());
     }
 }
 

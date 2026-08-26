@@ -29,6 +29,7 @@ let draggedItemIndex = null;
 
 
 const documentViewer = {
+    isOpen: false,
     currentMonologueId: null,
     currentQuestTrigger: null,
 
@@ -42,6 +43,7 @@ const documentViewer = {
 
         this.currentMonologueId = monologueId;
         this.currentQuestTrigger = questTrigger;
+        this.isOpen = true;
 
         if (modal) modal.classList.remove('hidden');
     },
@@ -50,13 +52,15 @@ const documentViewer = {
         const modal = document.getElementById('reading-overlay');
         if (modal) modal.classList.add('hidden');
 
+        this.isOpen = false;
+
         const trigger = this.currentQuestTrigger;
         const monologue = this.currentMonologueId;
 
         this.currentQuestTrigger = null;
         this.currentMonologueId = null;
 
-        if (monologue) {
+        if (monologue && typeof subtitleManager !== 'undefined') {
             subtitleManager.play(monologue, () => {
                 if (trigger && typeof questManager !== 'undefined') {
                     questManager.completeObjective(trigger.questId, trigger.step);
@@ -87,7 +91,6 @@ let mouseScreenY = 0;
 
 
 // Instancje menedżerów
-const lootManager = new LootManager();
 const enemyManager = new EnemyManager();
 
 
@@ -221,54 +224,52 @@ window.addEventListener('keydown', (e) => {
     const key = e.key.toLowerCase();
     keys[key] = true;
 
-    // Zamknięcie okna czytania
     const readingModal = document.getElementById('reading-overlay');
-    if (readingModal && !readingModal.classList.contains('hidden')) {
-        if (key === 'escape' || key === 'esc' || key === 'e') {
-            documentViewer.close();
-            return;
-        }
-    }
+    const isReading = readingModal && !readingModal.classList.contains('hidden');
 
     if (key === 'm') {
         menuSystem.toggle('map');
     } else if (key === 'i') {
-        menuSystem.toggle('inventory');
+        if (!isReading) menuSystem.toggle('inventory');
     } else if (key === 'j') {
-        menuSystem.toggle('quests');
+        if (!isReading) menuSystem.toggle('quests');
     } else if (key === 'escape' || key === 'esc') {
+        if (isReading) {
+            documentViewer.close();
+            return;
+        }
         if (menuSystem.isOpen) {
             menuSystem.close();
+            return;
         }
         if (shopSystem.isOpen) {
             shopSystem.close();
             return;
         }
-    }
-    if (key === 'e') {
-        // Jeśli okno czytania jest otwarte -> zamknij je
-        if (readingModal && !readingModal.classList.contains('hidden')) {
+    } else if (key === 'e') {
+        // 1. Zamknięcie czytania listu
+        if (isReading) {
             documentViewer.close();
             return;
         }
 
-        // Jeśli ekwipunek jest otwarty i zaznaczono przedmiot -> przeczytaj go
+        // 2. Otwarcie wybranego dokumentu w ekwipunku
         if (menuSystem.isOpen && menuSystem.activeTab === 'inventory') {
             if (player.selectedItemIndex !== null) {
                 const selectedItem = player.inventory[player.selectedItemIndex];
-                if (selectedItem && (selectedItem.content || selectedItem.monologueId)) {
+                if (selectedItem && (selectedItem.content || selectedItem.type === 'quest')) {
                     documentViewer.open(selectedItem.name, selectedItem.content, selectedItem.monologueId, selectedItem.questTrigger);
                 }
             }
             return;
         }
 
-        // Interakcja w świecie gry (rozmowa, drzwi, koń)
+        // 3. Interakcja w świecie gry (rozmowa, drzwi, koń)
         if (!dialogueManager.isActive && !player.isSleeping && !menuSystem.isOpen) {
             if (!gameMap.tryInteract()) player.toggleHorse();
         }
     }
-});
+    });
 window.addEventListener('mousedown', (e) => {
     const readingModal = document.getElementById('reading-overlay');
     const isReading = readingModal && !readingModal.classList.contains('hidden');
@@ -277,10 +278,10 @@ window.addEventListener('mousedown', (e) => {
 
     if (e.button === 0) { // LPM
         player.attackAngle = getPlayerAimAngle();
-        
+
         // e.ctrlKey zwraca true, jeśli podczas kliknięcia LPM przytrzymujesz Ctrl
         const isHeavy = e.ctrlKey;
-        
+
         player.attack(isHeavy); // true = ciężki, false = lekki
     } else if (e.button === 2) { // PPM -> Parowanie
         player.parry();
@@ -294,16 +295,14 @@ window.addEventListener('keydown', (e) => {
     const key = e.key.toLowerCase();
     keys[key] = true;
 
-    if (e.ctrlKey) {
+
+    if (key === 'w') {
         e.preventDefault();
     }
-    if(key === 'w'){
+    if (key === 'q') {
         e.preventDefault();
     }
-    if(key === 'q'){
-        e.preventDefault();
-    }
-    
+
     // --- ZAMIEŃ LUB DODAJ TUTAJ TE LINIE ---
     if (key === 't') {
         startBattle({ type: 'zbir_lekki', count: 5 });
@@ -362,7 +361,7 @@ function gameLoop() {
         gameMap.updateNPCs();
         enemyManager.update(dt, player);
         enemyManager.checkPlayerAttack(player);
-        lootManager.update(player);
+        LootManager.update(player, keys);
     }
 
     // 2. Pozycjonowanie kamery
@@ -378,11 +377,14 @@ function gameLoop() {
     ctx.translate(-camera.x, -camera.y);
 
     gameMap.draw(ctx);
-    lootManager.draw(ctx);
+    LootManager.draw(ctx);
     enemyManager.draw(ctx);
     player.draw(ctx);
     damageNumbers.updateAndDraw(ctx);
 
+    if (typeof encounterManager !== 'undefined') {
+        encounterManager.update();
+    }
     // Filtr nocy (jeśli dotyczy)
     if (gameMap.currentLocation === 'kruczy_dol' && timeSystem.isNight) {
         ctx.fillStyle = CONFIG.COLOR_NIGHT_FILTER;

@@ -505,6 +505,145 @@ const shopSystem = {
         }
     }
 };
+
+function showToast(text) {
+    const toast = document.getElementById('toast-message');
+    if (!toast) return;
+    toast.innerText = text;
+    toast.classList.remove('hidden');
+    setTimeout(() => toast.classList.add('hidden'), 2500);
+}
+
+
+const lootBagSystem = {
+    currentBag: null,
+
+    initUI() {
+        if (document.getElementById('loot-bag-modal')) return;
+
+        const modal = document.createElement('div');
+        modal.id = 'loot-bag-modal';
+        modal.className = 'hidden';
+        modal.style.cssText = `
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            background: rgba(20, 15, 10, 0.95); border: 2px solid #8c6d3f; border-radius: 8px;
+            padding: 16px; color: #fff; z-index: 1000; width: 300px; box-shadow: 0 0 20px #000;
+            font-family: sans-serif;
+        `;
+        modal.innerHTML = `
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 10px; border-bottom: 1px solid #8c6d3f; padding-bottom: 6px;">
+                <h3 style="margin:0; color:#f1c40f; font-size:15px;">🎒 Porzucona Sakwa</h3>
+                <button id="close-loot-btn" style="background:none; border:none; color:#aaa; font-weight:bold; cursor:pointer; font-size:16px;">✕</button>
+            </div>
+            <div id="loot-bag-gold" style="color:#f1c40f; font-weight:bold; margin-bottom:8px; font-size:13px;"></div>
+            <div id="loot-bag-items" style="display:grid; grid-template-columns: repeat(4, 1fr); gap:6px; max-height: 180px; overflow-y:auto; margin-bottom:12px;"></div>
+            <button id="loot-take-all-btn" style="width:100%; padding:8px; background:#8c6d3f; border:none; color:#fff; font-weight:bold; cursor:pointer; border-radius:4px;">Weź wszystko</button>
+        `;
+        document.body.appendChild(modal);
+
+        document.getElementById('close-loot-btn').onclick = () => this.close();
+        document.getElementById('loot-take-all-btn').onclick = () => this.takeAll();
+    },
+
+    open(bag) {
+        this.initUI();
+        this.currentBag = bag;
+        const modal = document.getElementById('loot-bag-modal');
+        if (modal) modal.classList.remove('hidden');
+        this.render();
+    },
+
+    close() {
+        this.currentBag = null;
+        const modal = document.getElementById('loot-bag-modal');
+        if (modal) modal.classList.add('hidden');
+    },
+
+    render() {
+        if (!this.currentBag || this.currentBag.isEmpty()) {
+            this.close();
+            return;
+        }
+
+        const goldElem = document.getElementById('loot-bag-gold');
+        if (goldElem) {
+            goldElem.innerText = this.currentBag.gold > 0 ? `🪙 Złoto: ${this.currentBag.gold}` : '';
+        }
+
+        const itemsGrid = document.getElementById('loot-bag-items');
+        if (!itemsGrid) return;
+        itemsGrid.innerHTML = '';
+
+        this.currentBag.items.forEach((item, index) => {
+            const slot = document.createElement('div');
+            slot.style.cssText = `
+                background: #2b1d11; border: 1px solid #5a3d24; border-radius: 4px;
+                height: 48px; display:flex; align-items:center; justify-content:center;
+                position:relative; cursor:pointer; font-size:20px;
+            `;
+            const countBadge = item.count > 1 ? `<span style="position:absolute; bottom:2px; right:4px; font-size:10px; color:#fff; font-weight:bold;">${item.count}</span>` : '';
+            slot.innerHTML = `${item.icon || '📦'}${countBadge}`;
+
+            slot.onclick = () => this.takeItem(index);
+            itemsGrid.appendChild(slot);
+        });
+    },
+
+    takeItem(index) {
+        if (!this.currentBag) return;
+        const item = this.currentBag.items[index];
+        if (!item) return;
+
+        const success = player.addItem(
+            item.id, item.name, item.icon, item.type,
+            item.weight, item.stats, item.count || 1,
+            item.damage || 0, item.armor || 0
+        );
+
+        if (success) {
+            this.currentBag.items.splice(index, 1);
+            if (this.currentBag.isEmpty()) {
+                LootManager.removeBag(this.currentBag);
+                this.close();
+            } else {
+                this.render();
+            }
+        }
+    },
+
+    takeAll() {
+        if (!this.currentBag) return;
+
+        if (this.currentBag.gold > 0) {
+            player.gold += this.currentBag.gold;
+            showToast(`+${this.currentBag.gold} Złota`);
+            this.currentBag.gold = 0;
+        }
+
+        for (let i = this.currentBag.items.length - 1; i >= 0; i--) {
+            const item = this.currentBag.items[i];
+            const success = player.addItem(
+                item.id, item.name, item.icon, item.type,
+                item.weight, item.stats, item.count || 1,
+                item.damage || 0, item.armor || 0
+            );
+
+            if (success) {
+                this.currentBag.items.splice(i, 1);
+            }
+        }
+
+        if (this.currentBag.isEmpty()) {
+            LootManager.removeBag(this.currentBag);
+            this.close();
+        } else {
+            this.render();
+        }
+    }
+};
+
+
+
 const subtitleManager = {
     queue: [],
     timer: null,
