@@ -431,6 +431,7 @@ const subtitleManager = {
         if (box) box.classList.add('hidden');
     }
 };
+let draggedItemIndex = null;
 
 const menuSystem = {
     isOpen: false,
@@ -471,7 +472,19 @@ const menuSystem = {
             if (dialogue) dialogue.classList.remove('hidden');
         }
     },
+    highlightEquipSlot(itemType) {
+        this.clearEquipHighlights();
+        const slotElem = document.getElementById(`eq-${itemType}`);
+        if (slotElem) {
+            slotElem.classList.add('highlight-valid');
+        }
+    },
 
+    clearEquipHighlights() {
+        document.querySelectorAll('.eq-slot').forEach(slot => {
+            slot.classList.remove('highlight-valid');
+        });
+    },
     openTab(tabName) {
         this.activeTab = tabName;
 
@@ -497,84 +510,146 @@ const menuSystem = {
     },
 
     renderInventoryTab() {
-        const grid = document.getElementById('inv-grid-container') || document.getElementById('inventory-grid');
-        if (!grid) return;
-        grid.innerHTML = '';
+    const grid = document.getElementById('inv-grid-container') || document.getElementById('inventory-grid');
+    if (!grid) return;
+    grid.innerHTML = '';
 
-        const goldVal = document.getElementById('menu-gold-val');
-        if (goldVal) goldVal.innerText = player.gold;
+    const goldVal = document.getElementById('menu-gold-val');
+    if (goldVal) goldVal.innerText = player.gold;
 
-        const weightVal = document.getElementById('menu-weight-val');
-        if (weightVal) weightVal.innerText = player.getWeight();
+    const weightVal = document.getElementById('menu-weight-val');
+    if (weightVal) weightVal.innerText = player.getWeight();
 
-        const maxWeightVal = document.getElementById('menu-max-weight-val');
-        if (maxWeightVal) maxWeightVal.innerText = player.maxWeight;
+    const maxWeightVal = document.getElementById('menu-max-weight-val');
+    if (maxWeightVal) maxWeightVal.innerText = player.maxWeight;
 
-        const totalSlots = Math.max(25, player.inventory.length);
-        for (let i = 0; i < totalSlots; i++) {
-            const slot = document.createElement('div');
-            const item = player.inventory[i];
+    const totalSlots = Math.max(25, player.inventory.length);
 
-            if (item) {
-                // Wyświetlanie zaznaczenia
-                slot.className = `grid-slot ${player.selectedItemIndex === i ? 'selected' : ''}`;
-                const countBadge = (item.count && item.count > 1) ? `<span class="slot-count">${item.count}</span>` : '';
-                slot.innerHTML = `${item.icon || '📦'}${countBadge}`;
-                slot.onmouseenter = (e) => showTooltip(item, e);
-                slot.onmouseleave = () => showTooltip(null);
+    // --- RENDEROWANIE PLECAKA ---
+    for (let i = 0; i < totalSlots; i++) {
+        const slot = document.createElement('div');
+        const item = player.inventory[i];
 
-                // 1. Pojedyncze kliknięcie -> Wybór itemu
-                slot.onclick = (e) => {
-                    player.selectedItemIndex = i;
-                    grid.querySelectorAll('.grid-slot').forEach((s, idx) => {
-                        s.classList.toggle('selected', idx === i);
-                    });
-                };
+        if (item) {
+            slot.className = `grid-slot ${player.selectedItemIndex === i ? 'selected' : ''}`;
+            const countBadge = (item.count && item.count > 1) ? `<span class="slot-count">${item.count}</span>` : '';
+            slot.innerHTML = `${item.icon || '📦'}${countBadge}`;
+            
+            // Przeciąganie (Drag & Drop)
+            slot.draggable = true;
+            slot.ondragstart = (e) => {
+                draggedItemIndex = i;
+                showTooltip(null);
+                if (['head', 'chest', 'legs', 'boots', 'weapon'].includes(item.type)) {
+                    menuSystem.highlightEquipSlot(item.type);
+                }
+            };
+            slot.ondragend = () => {
+                draggedItemIndex = null;
+                menuSystem.clearEquipHighlights();
+            };
 
-                // 2. Podwójne kliknięcie -> Założenie pancerza/broni
-                slot.ondblclick = () => {
+            slot.onmouseenter = (e) => showTooltip(item, e);
+            slot.onmouseleave = () => showTooltip(null);
+
+            // Shift-Click oraz zwykłe kliknięcie
+            slot.onclick = (e) => {
+                if (e.shiftKey) {
                     showTooltip(null);
                     player.equipItem(i);
-                };
-            } else {
-                slot.className = 'grid-slot empty';
-            }
-            grid.appendChild(slot);
+                } else {
+                    player.selectedItemIndex = i;
+                    menuSystem.renderInventoryTab();
+                }
+            };
+
+            // Double Click
+            slot.ondblclick = () => {
+                showTooltip(null);
+                player.equipItem(i);
+            };
+        } else {
+            slot.className = 'grid-slot empty';
+            
+            // Upuszczanie zdjętego pancerza na pusty slot w plecaku
+            slot.ondragover = (e) => e.preventDefault();
+            slot.ondrop = (e) => {
+                e.preventDefault();
+                const data = e.dataTransfer.getData('text/plain');
+                if (data) {
+                    const parsed = JSON.parse(data);
+                    if (parsed.source === 'equipment') {
+                        player.unequipItem(parsed.slotType);
+                    }
+                }
+            };
         }
+        grid.appendChild(slot);
+    }
 
-        const slotsConfig = [
-            { id: 'eq-head', key: 'head', defaultIcon: '🪖', label: 'Głowa' },
-            { id: 'eq-chest', key: 'chest', defaultIcon: '🛡️', label: 'Tułów' },
-            { id: 'eq-legs', key: 'legs', defaultIcon: '👖', label: 'Nogi' },
-            { id: 'eq-boots', key: 'boots', defaultIcon: '🥾', label: 'Stopy' },
-            { id: 'eq-weapon', key: 'weapon', defaultIcon: '⚔️', label: 'Miecz' }
-        ];
+    // --- RENDEROWANIE SLOTÓW RYNSZTUNKU ---
+    const slotsConfig = [
+        { id: 'eq-head', key: 'head', defaultIcon: '🪖', label: 'Głowa' },
+        { id: 'eq-chest', key: 'chest', defaultIcon: '🛡️', label: 'Tułów' },
+        { id: 'eq-legs', key: 'legs', defaultIcon: '👖', label: 'Nogi' },
+        { id: 'eq-boots', key: 'boots', defaultIcon: '🥾', label: 'Stopy' },
+        { id: 'eq-weapon', key: 'weapon', defaultIcon: '⚔️', label: 'Miecz' }
+    ];
 
-        slotsConfig.forEach(cfg => {
-            const elem = document.getElementById(cfg.id);
-            if (!elem) return;
-            const item = player.equipment[cfg.key];
+    slotsConfig.forEach(cfg => {
+        const elem = document.getElementById(cfg.id);
+        if (!elem) return;
+        const item = player.equipment[cfg.key];
 
-            if (item) {
-                elem.className = 'eq-slot equipped';
-                elem.innerHTML = `<span class="slot-icon">${item.icon}</span>`;
-                elem.onmouseenter = (e) => showTooltip(item, e);
-                elem.onmouseleave = () => showTooltip(null);
+        // Obsługa upuszczania przedmiotu na slot sprzętu
+        elem.ondragover = (e) => e.preventDefault();
+        elem.ondrop = (e) => {
+            e.preventDefault();
+            if (draggedItemIndex !== null) {
+                const draggedItem = player.inventory[draggedItemIndex];
+                if (draggedItem && draggedItem.type === cfg.key) {
+                    player.equipItem(draggedItemIndex);
+                }
+            }
+            menuSystem.clearEquipHighlights();
+        };
 
-                // Podwójne kliknięcie ściąga pancerz do plecaka
-                elem.ondblclick = () => {
+        if (item) {
+            elem.className = 'eq-slot equipped';
+            elem.innerHTML = `<span class="slot-icon">${item.icon}</span>`;
+            elem.draggable = true;
+            
+            // Możliwość przeciągnięcia z rynsztunku do plecaka
+            elem.ondragstart = (e) => {
+                showTooltip(null);
+                e.dataTransfer.setData('text/plain', JSON.stringify({ source: 'equipment', slotType: cfg.key }));
+            };
+
+            elem.onmouseenter = (e) => showTooltip(item, e);
+            elem.onmouseleave = () => showTooltip(null);
+
+            // Kliknięcie / Shift-click / Dblclick ściąga pancerz
+            elem.onclick = (e) => {
+                if (e.shiftKey) {
                     showTooltip(null);
                     player.unequipItem(cfg.key);
-                };
-            } else {
-                elem.className = 'eq-slot';
-                elem.innerHTML = `<span class="slot-icon">${cfg.defaultIcon}</span><span class="slot-label">${cfg.label}</span>`;
-                elem.onmouseenter = null;
-                elem.onmouseleave = null;
-                elem.ondblclick = null;
-            }
-        });
-    },
+                }
+            };
+            elem.ondblclick = () => {
+                showTooltip(null);
+                player.unequipItem(cfg.key);
+            };
+        } else {
+            elem.className = 'eq-slot';
+            elem.innerHTML = `<span class="slot-icon">${cfg.defaultIcon}</span><span class="slot-label">${cfg.label}</span>`;
+            elem.draggable = false;
+            elem.onmouseenter = null;
+            elem.onmouseleave = null;
+            elem.onclick = null;
+            elem.ondblclick = null;
+        }
+    });
+},
 
     renderQuestsTab() {
         const listEl = document.getElementById('journal-quests-list') || document.getElementById('quest-list-container');
