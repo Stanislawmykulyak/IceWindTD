@@ -192,7 +192,7 @@ const dialogueManager = {
                         { text: "Szukam pewnej osoby nazywa się Nicolas i podobno tutaj mieszka ", next: "nicolas_info" },
                         { text: "[Zamknij rozmowę]", next: "exit" },
 
-                        {text: "Czy znajduje się tutaj jakiś młyn ?", next: "mlyn" }
+                        { text: "Czy znajduje się tutaj jakiś młyn ?", next: "mlyn" }
                     ]
                 },
                 already_have_key: {
@@ -581,95 +581,96 @@ const menuSystem = {
     },
 
     renderInventoryTab() {
-    const grid = document.getElementById('inv-grid-container') || document.getElementById('inventory-grid');
-    if (!grid) return;
-    grid.innerHTML = '';
+        const grid = document.getElementById('inv-grid-container') || document.getElementById('inventory-grid');
+        if (!grid) return;
+        grid.innerHTML = '';
 
-    // Włączenie dopuszczania dropu na obszarze plecaka
-    grid.setAttribute('ondragover', 'dragDropManager.allowDrop(event)');
-    grid.setAttribute('ondrop', 'dragDropManager.onDropToInventory(event)');
+        // Włączenie dopuszczania dropu na obszarze plecaka
+        grid.setAttribute('ondragover', 'dragDropManager.allowDrop(event)');
+        grid.setAttribute('ondrop', 'dragDropManager.onDropToInventory(event)');
 
-    const goldVal = document.getElementById('menu-gold-val');
-    if (goldVal) goldVal.innerText = player.gold;
+        const goldVal = document.getElementById('menu-gold-val');
+        if (goldVal) goldVal.innerText = player.gold;
 
-    const weightVal = document.getElementById('menu-weight-val');
-    if (weightVal) weightVal.innerText = player.getWeight();
+        const weightVal = document.getElementById('menu-weight-val');
+        if (weightVal) weightVal.innerText = player.getWeight();
 
-    const maxWeightVal = document.getElementById('menu-max-weight-val');
-    if (maxWeightVal) maxWeightVal.innerText = player.maxWeight;
+        const maxWeightVal = document.getElementById('menu-max-weight-val');
+        if (maxWeightVal) maxWeightVal.innerText = player.maxWeight;
 
-    const totalSlots = Math.max(25, player.inventory.length);
-    for (let i = 0; i < totalSlots; i++) {
-        const slot = document.createElement('div');
-        const item = player.inventory[i];
+        const totalSlots = Math.max(25, player.inventory.length);
+        for (let i = 0; i < totalSlots; i++) {
+            const slot = document.createElement('div');
+            const item = player.inventory[i];
 
-        if (item) {
-            slot.className = `grid-slot ${player.selectedItemIndex === i ? 'selected' : ''}`;
-            slot.setAttribute('draggable', 'true');
-            slot.ondragstart = (e) => dragDropManager.onDragStart(e, 'inventory', i);
+            if (item) {
+                slot.className = `grid-slot ${player.selectedItemIndex === i ? 'selected' : ''}`;
+                slot.setAttribute('draggable', 'true');
+                slot.ondragstart = (e) => dragDropManager.onDragStart(e, 'inventory', i);
 
-            const countBadge = (item.count && item.count > 1) ? `<span class="slot-count">${item.count}</span>` : '';
-            slot.innerHTML = `${item.icon || '📦'}${countBadge}`;
-            slot.onmouseenter = (e) => showTooltip(item, e);
-            slot.onmouseleave = () => showTooltip(null);
+                const countBadge = (item.count && item.count > 1) ? `<span class="slot-count">${item.count}</span>` : '';
+                slot.innerHTML = `${item.icon || '📦'}${countBadge}`;
+                slot.onmouseenter = (e) => showTooltip(item, e);
+                slot.onmouseleave = () => showTooltip(null);
 
-            slot.onclick = () => {
-                player.selectedItemIndex = i;
-                menuSystem.renderInventoryTab();
-            };
+                slot.onclick = () => {
+                    player.selectedItemIndex = i;
+                    menuSystem.renderInventoryTab();
+                };
 
-            slot.ondblclick = () => {
-                showTooltip(null);
-                player.equipItem(i);
-            };
-        } else {
-            slot.className = 'grid-slot empty';
+                slot.ondblclick = () => {
+                    showTooltip(null);
+                    player.equipItem(i);
+                };
+            } else {
+                slot.className = 'grid-slot empty';
+            }
+            grid.appendChild(slot);
         }
-        grid.appendChild(slot);
-    }
 
-    // KONFIGURACJA SLOTÓW RYNSZTUNKU (GŁOWA, TUŁÓW, NOGI, STOPY, MIECZ)
-    const slotsConfig = [
-        { id: 'eq-head', key: 'head', defaultIcon: '🪖', label: 'Głowa' },
-        { id: 'eq-chest', key: 'chest', defaultIcon: '🛡️', label: 'Tułów' },
-        { id: 'eq-legs', key: 'legs', defaultIcon: '👖', label: 'Nogi' },
-        { id: 'eq-boots', key: 'boots', defaultIcon: '🥾', label: 'Stopy' },
-        { id: 'eq-weapon', key: 'weapon', defaultIcon: '⚔️', label: 'Miecz' }
-    ];
+        // KONFIGURACJA SLOTÓW RYNSZTUNKU (GŁOWA, TUŁÓW, NOGI, STOPY, MIECZ)
+        const slotsConfig = [
+            { id: 'eq-head', key: 'head', defaultIcon: '🪖', label: 'Głowa' },
+            { id: 'eq-chest', key: 'chest', defaultIcon: '🛡️', label: 'Tułów' },
+            { id: 'eq-legs', key: 'legs', defaultIcon: '👖', label: 'Nogi' },
+            { id: 'eq-boots', key: 'boots', defaultIcon: '🥾', label: 'Stopy' },
+            { id: 'eq-weapon', key: 'weapon', defaultIcon: '⚔️', label: 'Miecz' }
+        ];
 
-    slotsConfig.forEach(cfg => {
-        const elem = document.getElementById(cfg.id);
-        if (!elem) return;
-        const item = player.equipment[cfg.key];
+        slotsConfig.forEach(cfg => {
+            const elem = document.getElementById(cfg.id);
+            if (!elem) return;
+            const item = player.equipment[cfg.key];
 
-        // Ustawienie zdarzeń Drag & Drop na każdym slocie uzbrojenia
-        elem.setAttribute('ondragover', 'dragDropManager.allowDrop(event)');
-        elem.setAttribute('ondrop', `dragDropManager.onDropToEquipment(event, '${cfg.key}')`);
+            // Ustawienie zdarzeń Drag & Drop na każdym slocie uzbrojenia
+            elem.setAttribute('ondragover', 'dragDropManager.allowDrop(event)');
+            elem.setAttribute('ondrop', `dragDropManager.onDropToEquipment(event, '${cfg.key}')`);
 
-        if (item) {
-            elem.className = 'eq-slot equipped';
-            elem.setAttribute('draggable', 'true');
-            elem.ondragstart = (e) => dragDropManager.onDragStart(e, 'equipment', cfg.key);
-            elem.innerHTML = `<span class="slot-icon">${item.icon}</span>`;
+            if (item) {
+                elem.className = 'eq-slot equipped';
+                elem.setAttribute('draggable', 'true');
+                elem.ondragstart = (e) => dragDropManager.onDragStart(e, 'equipment', cfg.key);
+                elem.innerHTML = `<span class="slot-icon">${item.icon}</span>`;
 
-            elem.onmouseenter = (e) => showTooltip(item, e);
-            elem.onmouseleave = () => showTooltip(null);
+                elem.onmouseenter = (e) => showTooltip(item, e);
+                elem.onmouseleave = () => showTooltip(null);
 
-            // Kliknięcie / Podwójne kliknięcie ściąga pancerz
-            elem.onclick = () => {
-                showTooltip(null);
-                player.unequipItem(cfg.key);
-            };
-        } else {
-            elem.className = 'eq-slot';
-            elem.removeAttribute('draggable');
-            elem.ondragstart = null;
-            elem.innerHTML = `<span class="slot-icon">${cfg.defaultIcon}</span><span class="slot-label">${cfg.label}</span>`;
-            elem.onmouseenter = null;
-            elem.onmouseleave = null;
-            elem.onclick = null;
-        }
-    })},
+                // Kliknięcie / Podwójne kliknięcie ściąga pancerz
+                elem.onclick = () => {
+                    showTooltip(null);
+                    player.unequipItem(cfg.key);
+                };
+            } else {
+                elem.className = 'eq-slot';
+                elem.removeAttribute('draggable');
+                elem.ondragstart = null;
+                elem.innerHTML = `<span class="slot-icon">${cfg.defaultIcon}</span><span class="slot-label">${cfg.label}</span>`;
+                elem.onmouseenter = null;
+                elem.onmouseleave = null;
+                elem.onclick = null;
+            }
+        })
+    },
 
     renderQuestsTab() {
         const listEl = document.getElementById('journal-quests-list') || document.getElementById('quest-list-container');
@@ -1213,6 +1214,341 @@ const documentViewer = {
 // Globalne zmienne pozycji myszy na ekranie
 let mouseScreenX = 0;
 let mouseScreenY = 0;
+//6.7 POtwory
+
+
+class EnemyManager {
+    constructor(game) {
+        this.game = game;
+        this.enemies = [];
+    }
+
+    // Uniwersalna metoda do spawnowania wrogów (questy, zdarzenia, obozy)
+    spawnGroup({ type, count, centerX, centerY, spawnRadius = 150, aggroRadius = 300 }) {
+        const spawnedEnemies = [];
+        for (let i = 0; i < count; i++) {
+            const angle = Math.random() * Math.PI * 2;
+            const dist = Math.random() * spawnRadius;
+            const x = centerX + Math.cos(angle) * dist;
+            const y = centerY + Math.sin(angle) * dist;
+
+            const enemy = new Enemy({
+                id: `enemy_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
+                type: type,
+                x: x,
+                y: y,
+                aggroRadius: aggroRadius,
+                homeX: x,
+                homeY: y
+            });
+
+            this.enemies.push(enemy);
+            spawnedEnemies.push(enemy);
+        }
+        return spawnedEnemies;
+    }
+
+    // Generowanie watahy wilków w lesie w przedziale 800-1100px od gracza
+    spawnForestPackAroundPlayer(playerX, playerY) {
+        const angle = Math.random() * Math.PI * 2;
+        const distance = 800 + Math.random() * 300; // 800px - 1100px
+        const packX = playerX + Math.cos(angle) * distance;
+        const packY = playerY + Math.sin(angle) * distance;
+        const packSize = Math.floor(Math.random() * 3) + 4; // Losowo 4, 5 lub 6
+
+        return this.spawnGroup({
+            type: 'wolf',
+            count: packSize,
+            centerX: packX,
+            centerY: packY,
+            spawnRadius: 180,
+            aggroRadius: 320
+        });
+    }
+    checkPlayerAttack(player) {
+        if (!player.isAttacking) return;
+
+        this.enemies.forEach(enemy => {
+            if (!enemy.isAlive) return;
+
+            const dx = enemy.x - player.x;
+            const dy = enemy.y - player.y;
+            const dist = Math.hypot(dx, dy);
+
+            // Kąt między kierunkiem patrzenia gracza a pozycją wroga
+            const angleToEnemy = Math.atan2(dy, dx);
+            const angleDiff = Math.abs(player.rotation - angleToEnemy);
+
+            // Sprawdzenie: czy wróg jest w zasięgu miecza (np. 70px) i w stożku ataku (np. 60 stopni)
+            if (dist <= 70 && angleDiff < Math.PI / 3) {
+                enemy.takeDamage(player.damage, player.x, player.y);
+            }
+        });
+    }
+    update(deltaTime, player) {
+        const activePack = this.enemies.filter(e => e.state === 'CHASE' || e.state === 'ATTACK' || e.state === 'CIRCLE');
+
+        this.enemies.forEach(enemy => {
+            enemy.update(deltaTime, player, activePack);
+        });
+
+        // Despawn martwych lub zignorowanych wrogów (dystans > 1800px)
+        this.enemies = this.enemies.filter(enemy => {
+            const distToPlayer = Math.hypot(enemy.x - player.x, enemy.y - player.y);
+            return enemy.isAlive && distToPlayer < 1800;
+        });
+    }
+
+    draw(ctx) {
+        this.enemies.forEach(enemy => enemy.draw(ctx));
+    }
+}
+
+class Enemy {
+    constructor({ id, type, x, y, aggroRadius = 300, homeX, homeY }) {
+        this.id = id;
+        this.type = type;
+        this.x = x;
+        this.y = y;
+        this.homeX = homeX;
+        this.homeY = homeY;
+        this.speed = type === 'wolf' ? 190 : 120;
+        this.aggroRadius = aggroRadius;
+        this.deaggroRadius = aggroRadius * 2.2;
+        this.attackRadius = 45;
+        this.hp = 40;
+        this.maxHp = 40;
+        this.isAlive = true;
+
+        this.state = 'IDLE'; // IDLE, CHASE, CIRCLE, ATTACK, RETURNING
+        this.attackCooldown = 0;
+    }
+
+    update(dt, player, activePack) {
+        if (!this.isAlive) return;
+
+        const distToPlayer = Math.hypot(player.x - this.x, player.y - this.y);
+        if (this.attackCooldown > 0) this.attackCooldown -= dt;
+
+        // Przeliczanie obecnych atakujących w stadzie
+        const currentAttackers = activePack.filter(e => e.state === 'ATTACK').length;
+
+        switch (this.state) {
+            case 'IDLE':
+                if (distToPlayer <= this.aggroRadius && !player.inSafeZone) {
+                    this.state = 'CHASE';
+                }
+                break;
+
+            case 'CHASE':
+                if (distToPlayer > this.deaggroRadius || player.inSafeZone) {
+                    this.state = 'RETURNING';
+                    break;
+                }
+
+                if (distToPlayer <= this.attackRadius) {
+                    // Limit max 2 atakujących jednocześnie na gracza
+                    if (currentAttackers < 2 && this.attackCooldown <= 0) {
+                        this.state = 'ATTACK';
+                    } else {
+                        this.state = 'CIRCLE';
+                    }
+                } else {
+                    this.moveTowards(player.x, player.y, dt);
+                }
+                break;
+
+            case 'CIRCLE':
+                // Krążenie po zewnętrznym pierścieniu (130px)
+                const angle = Math.atan2(this.y - player.y, this.x - player.x);
+                const targetX = player.x + Math.cos(angle + 0.4) * 130;
+                const targetY = player.y + Math.sin(angle + 0.4) * 130;
+                this.moveTowards(targetX, targetY, dt);
+
+                if (this.attackCooldown <= 0 && currentAttackers < 2) {
+                    this.state = 'CHASE';
+                } else if (distToPlayer > this.deaggroRadius || player.inSafeZone) {
+                    this.state = 'RETURNING';
+                }
+                break;
+
+            case 'ATTACK':
+                if (distToPlayer <= this.attackRadius && this.attackCooldown <= 0) {
+                    if (typeof player.takeDamage === 'function') {
+                        player.takeDamage(12);
+                    }
+                    this.attackCooldown = 2.5; // 2.5s przerwy przed kolejnym atakiem
+                }
+                this.state = 'CIRCLE'; // Po ataku oddala się na zewnętrzny pierścień
+                break;
+
+            case 'RETURNING':
+                this.moveTowards(this.homeX, this.homeY, dt);
+                const distToHome = Math.hypot(this.homeX - this.x, this.homeY - this.y);
+                if (distToHome < 15) {
+                    this.state = 'IDLE';
+                }
+                break;
+        }
+    }
+    takeDamage(amount, sourceX, sourceY) {
+        if (!this.isAlive || this.hitStun > 0) return; // Ochrona przed wielokrotnym trafieniem w 1 klatce
+
+        this.hp -= amount;
+        this.hitStun = 0.2; // 0.2 sekundy ogłuszenia
+        this.state = 'CHASE'; // Zaatakowany wróg od razu przechodzi w pościg
+
+        // Wyliczenie wektora odepchnięcia (knockback)
+        const angle = Math.atan2(this.y - sourceY, this.x - sourceX);
+        const knockbackDistance = 25;
+        this.x += Math.cos(angle) * knockbackDistance;
+        this.y += Math.sin(angle) * knockbackDistance;
+
+        if (this.hp <= 0) {
+            this.hp = 0;
+            this.isAlive = false;
+            this.onDeath();
+        }
+    }
+    moveTowards(tx, ty, dt) {
+        const dx = tx - this.x;
+        const dy = ty - this.y;
+        const dist = Math.hypot(dx, dy);
+        if (dist > 0) {
+            this.x += (dx / dist) * this.speed * dt;
+            this.y += (dy / dist) * this.speed * dt;
+        }
+    }
+    onDeath(lootManager) {
+        const lootTable = {
+            wolf: [
+                { id: 'wolf_pelt', name: 'Skóra wilka', value: 15, chance: 0.8 },
+                { id: 'wolf_tooth', name: 'Kieł wilka', value: 8, chance: 0.5 }
+            ],
+            bandit: [
+                { id: 'gold_coins', name: 'Mieszko monet', value: 25, chance: 0.9 },
+                { id: 'bread', name: 'Chleb', value: 5, chance: 0.4 }
+            ]
+        };
+
+        const possibleLoot = lootTable[this.type] || [];
+        possibleLoot.forEach(drop => {
+            if (Math.random() <= drop.chance) {
+                lootManager.spawnLoot(this.x, this.y, drop);
+            }
+        });
+    }
+    draw(ctx) {
+        if (!this.isAlive) return;
+
+        // Czerwone mignięcie ciała przy trafieniu
+        ctx.fillStyle = this.hitStun > 0 ? '#ffffff' : (this.type === 'wolf' ? '#7f8c8d' : '#e74c3c');
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, 14, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Rysowanie paska HP tylko, gdy wróg jest ranny
+        if (this.hp < this.maxHp) {
+            const barWidth = 32;
+            const barHeight = 4;
+            const barX = this.x - barWidth / 2;
+            const barY = this.y - 22;
+
+            // Tło paska (czarne)
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+            ctx.fillRect(barX, barY, barWidth, barHeight);
+
+            // Wypełnienie paska (zielone / czerwone)
+            const hpRatio = this.hp / this.maxHp;
+            ctx.fillStyle = hpRatio > 0.3 ? '#2ecc71' : '#e74c3c';
+            ctx.fillRect(barX, barY, barWidth * hpRatio, barHeight);
+        }
+    }
+
+}
+
+// ==========================================
+// SYSTEM LOOTU (LootItem + LootManager)
+// ==========================================
+class LootItem {
+    constructor(x, y, itemData) {
+        // Losowy niewielki rozrzut przedmiotu przy upuszczeniu
+        this.x = x + (Math.random() * 20 - 10);
+        this.y = y + (Math.random() * 20 - 10);
+        this.item = itemData;
+        this.pickupRadius = 35;
+        this.isPickedUp = false;
+    }
+
+    update(player) {
+        if (this.isPickedUp) return;
+
+        const dist = Math.hypot(player.x - this.x, player.y - this.y);
+        if (dist <= this.pickupRadius) {
+            // Naprawiony wydatek: używamy metody player.addItem zamiast nieistniejącej player.inventory.addItem
+            const added = player.addItem(
+                this.item.id,
+                this.item.name,
+                this.item.icon || '📦',
+                this.item.type || 'misc',
+                this.item.weight || 0.1,
+                this.item.stats || '',
+                1,
+                this.item.damage || 0,
+                this.item.armor || 0
+            );
+
+            if (added) {
+                this.isPickedUp = true;
+            }
+        }
+    }
+
+    draw(ctx) {
+        if (this.isPickedUp) return;
+
+        // Lekka poświata na ziemi
+        ctx.fillStyle = 'rgba(241, 196, 15, 0.3)';
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, 10, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Punkt/Ikona podniesienia
+        ctx.fillStyle = '#f1c40f';
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, 4, 0, Math.PI * 2);
+        ctx.fill();
+    }
+}
+
+class LootManager {
+    constructor() {
+        this.items = [];
+    }
+
+    spawnLoot(x, y, itemData) {
+        this.items.push(new LootItem(x, y, itemData));
+    }
+
+    update(player) {
+        for (let i = this.items.length - 1; i >= 0; i--) {
+            const loot = this.items[i];
+            loot.update(player);
+            if (loot.isPickedUp) {
+                this.items.splice(i, 1);
+            }
+        }
+    }
+
+    draw(ctx) {
+        this.items.forEach(loot => loot.draw(ctx));
+    }
+}
+
+// Instancje menedżerów
+const lootManager = new LootManager();
+const enemyManager = new EnemyManager();
+
 
 window.addEventListener('mousemove', (e) => {
     mouseScreenX = e.clientX;
@@ -1850,27 +2186,42 @@ function getPlayerAimAngle() {
     return Math.atan2(worldMouseY - player.y, worldMouseX - player.x);
 }
 
+let lastFrameTime = performance.now();
+
 function gameLoop() {
+    const now = performance.now();
+    // Przeliczenie deltaTime w sekundach dla płynności przy różnych FPS
+    const dt = Math.min((now - lastFrameTime) / 1000, 0.1); 
+    lastFrameTime = now;
+
+    // 1. Aktualizacja logiki gry (gdy nie ma pauzy/menu/dialogu)
     if (!dialogueManager.isActive && !player.isSleeping && !menuSystem.isOpen) {
         player.update(keys, stateText);
         gameMap.updateNPCs();
+        enemyManager.update(dt, player);
+        enemyManager.checkPlayerAttack(player);
+        lootManager.update(player);
     }
 
+    // 2. Pozycjonowanie kamery
     const currentLoc = gameMap.getCurrentData();
     camera.follow(player, currentLoc.width, currentLoc.height);
 
+    // 3. Czyszczenie ekranu
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+    // 4. Renderowanie świata gry wewnątrz kamery i zoomu
     ctx.save();
     ctx.scale(CONFIG.ZOOM, CONFIG.ZOOM);
     ctx.translate(-camera.x, -camera.y);
 
     gameMap.draw(ctx);
+    lootManager.draw(ctx);
+    enemyManager.draw(ctx);
     player.draw(ctx);
-
-    // === RYSOWANIE CYFR OBRAŻEŃ W ŚWIECIE GRY ===
     damageNumbers.updateAndDraw(ctx);
 
+    // Filtr nocy (jeśli dotyczy)
     if (gameMap.currentLocation === 'kruczy_dol' && timeSystem.isNight) {
         ctx.fillStyle = CONFIG.COLOR_NIGHT_FILTER;
         ctx.fillRect(0, 0, currentLoc.width, currentLoc.height);
@@ -1878,6 +2229,7 @@ function gameLoop() {
 
     ctx.restore();
 
+    // 5. Renderowanie HUD oraz mapy
     gameMap.drawMinimap();
 
     if (menuSystem.isOpen && menuSystem.activeTab === 'map') {
@@ -1886,4 +2238,6 @@ function gameLoop() {
 
     requestAnimationFrame(gameLoop);
 }
+
+// Uruchomienie pętli
 gameLoop();
