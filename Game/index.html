@@ -81,7 +81,7 @@
             </div>
           </div>
 
-          <!-- TOOLTIP -->
+          <!-- OSOBNY GLOBALNY TOOLTIP -->
           <div id="item-tooltip" class="item-tooltip hidden">
             <div class="tooltip-header">
               <span id="tooltip-icon" class="tooltip-icon">📦</span>
@@ -149,6 +149,18 @@
               ondrop="shopSystem.onDropToMerchant(event)"></div>
           </div>
         </div>
+        <div id="shop-tooltip" class="shop-tooltip hidden">
+          <div class="tooltip-header">
+            <span id="shop-tooltip-icon" class="tooltip-icon">📦</span>
+            <div>
+              <div id="shop-tooltip-name" class="tooltip-title">---</div>
+              <div id="shop-tooltip-type" class="tooltip-type">---</div>
+            </div>
+          </div>
+          <div class="tooltip-divider"></div>
+          <div class="tooltip-info-row">Cena: <span id="shop-tooltip-price">-</span></div>
+          <div id="shop-tooltip-stats" class="tooltip-stats-box">---</div>
+        </div>
       </div>
     </div>
     <div id="toast-message" class="hidden"></div>
@@ -190,8 +202,10 @@
     <div id="subtitle-box" class="subtitle-box hidden">
       <span id="subtitle-text"></span>
     </div>
-    
-  </div> <!-- /#game-container -->
+
+  </div>
+
+  </div>
   <script src="stats.js"></script>
   <script src="dialogues.js"></script>
   <script src="quests.js"></script>

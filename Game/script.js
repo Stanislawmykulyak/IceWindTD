@@ -289,6 +289,45 @@ const dialogueManager = {
 // ==========================================
 // 4. MENU PEŁNOEKRANOWE I PODPOWIEDZI (TOOLTIP)
 // ==========================================
+
+function showShopTooltip(item, event, mode = 'buy') {
+    const tooltip = document.getElementById('shop-tooltip');
+    if (!item || !tooltip) {
+        if (tooltip) tooltip.classList.add('hidden');
+        return;
+    }
+
+    // Wyliczanie ceny w zależności czy kupujesz czy sprzedajesz
+    const price = mode === 'sell'
+        ? Math.floor((item.value || 2) * 0.6)
+        : (item.value || 0);
+
+    const priceLabel = mode === 'sell' ? 'Cena sprzedaży' : 'Cena zakupu';
+
+    document.getElementById('shop-tooltip-icon').textContent = item.icon || '📦';
+    document.getElementById('shop-tooltip-name').textContent = item.name || 'Przedmiot';
+    document.getElementById('shop-tooltip-type').textContent = item.type || 'Różne';
+    document.getElementById('shop-tooltip-price').textContent = `${price} 🪙 (${priceLabel})`;
+    document.getElementById('shop-tooltip-stats').textContent = item.stats || '';
+
+    tooltip.style.left = `${event.clientX + 15}px`;
+    tooltip.style.top = `${event.clientY + 15}px`;
+    tooltip.classList.remove('hidden');
+}
+
+function moveShopTooltip(event) {
+    const tooltip = document.getElementById('shop-tooltip');
+    if (tooltip && !tooltip.classList.contains('hidden')) {
+        tooltip.style.left = `${event.clientX + 15}px`;
+        tooltip.style.top = `${event.clientY + 15}px`;
+    }
+}
+
+function hideShopTooltip() {
+    const tooltip = document.getElementById('shop-tooltip');
+    if (tooltip) tooltip.classList.add('hidden');
+}
+
 function showTooltip(item, event) {
     const tooltip = document.getElementById('item-tooltip');
     if (!tooltip) return;
@@ -1098,11 +1137,10 @@ const shopSystem = {
     },
 
     closeShop() {
-        this.isOpen = false;
         this.currentShopId = null;
+        hideShopTooltip(); // <-- DODAJE TO
         const modal = document.getElementById('shop-modal');
         if (modal) modal.classList.add('hidden');
-        if (typeof showTooltip === 'function') showTooltip(null);
     },
     close() { this.closeShop(); },
     buyItem(itemIndex) {
@@ -1250,10 +1288,10 @@ const shopSystem = {
 
                     slot.ondragstart = (e) => this.onDragStart(e, 'player', i);
                     slot.onclick = (e) => this.onItemClick(e, 'player', i);
-                    slot.ondblclick = () => { showTooltip(null); this.onItemDblClick('player', i); };
-                    slot.onmouseenter = (e) => showTooltip(item, e, 'sell');
-                    slot.onmousemove = (e) => showTooltip(item, e, 'sell');
-                    slot.onmouseleave = () => showTooltip(null);
+                    slot.ondblclick = () => { hideShopTooltip(); this.onItemDblClick('player', i); };
+                    slot.onmouseenter = (e) => showShopTooltip(item, e, 'sell');
+                    slot.onmousemove = (e) => moveShopTooltip(e);
+                    slot.onmouseleave = () => hideShopTooltip();
                 } else {
                     slot.className = 'grid-slot empty';
                 }
@@ -1279,10 +1317,10 @@ const shopSystem = {
 
                     slot.ondragstart = (e) => this.onDragStart(e, 'shop', i);
                     slot.onclick = (e) => this.onItemClick(e, 'shop', i);
-                    slot.ondblclick = () => { showTooltip(null); this.onItemDblClick('shop', i); };
-                    slot.onmouseenter = (e) => showTooltip(item, e, 'buy');
-                    slot.onmousemove = (e) => showTooltip(item, e, 'buy');
-                    slot.onmouseleave = () => showTooltip(null);
+                    slot.ondblclick = () => { hideShopTooltip(); this.onItemDblClick('shop', i); };
+                    slot.onmouseenter = (e) => showShopTooltip(item, e, 'buy');
+                    slot.onmousemove = (e) => moveShopTooltip(e);
+                    slot.onmouseleave = () => hideShopTooltip()
                 } else {
                     slot.className = 'grid-slot empty';
                 }
