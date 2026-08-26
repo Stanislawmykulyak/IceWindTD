@@ -5,7 +5,7 @@ const QUEST_DATABASE = {
         category: "Główne",
         completed: false,
         currentStep: 0,
-        description: "Dotarłeś do wioski Kruczy Dół. Poszukaj schronienia i dowiedz się czegoś o okolicy.",
+        description: "Dostałeś od przyjaciela nie pokający list ",
         objectives: [
             { 
                 text: "Przeczytaj list", 

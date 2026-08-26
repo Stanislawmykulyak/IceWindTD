@@ -416,6 +416,10 @@ body {
     box-shadow: 0 4px 8px rgba(0,0,0,0.5);
 }
 
+.shop-container, .grid-container, .inventory-section {
+  overflow: visible !important;
+}
+
 .npc-name {
     font-family: 'MedievalSharp', cursive;
     color: #ffd700;
@@ -1264,6 +1268,11 @@ body {
     margin-right: 0; /* Wyśrodkowanie ikony w tym layoucie */
     border-color: #a855f7;
     box-shadow: 0 0 10px rgba(168, 85, 247, 0.4);
+}
+#item-tooltip {
+    position: fixed !important;
+    z-index: 9999 !important; /* Wyżej niż z-index sklepu (1100) */
+    pointer-events: none !important; /* Myszka ignoruje tooltip i nie wywołuje mouseleave */
 }
 
 .item-info {

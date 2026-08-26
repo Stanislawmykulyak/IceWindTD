@@ -907,37 +907,126 @@ canvas#gameCanvas {
 }
 
 /* ==========================================
-   WIEDŹMIŃSKI KROJONY EKWIPUNEK (GRID SHOP UI)
+   WIEDŹMIŃSKIE OKNO HANDLU (10x6 GRID)
    ========================================== */
-#shop-overlay {
-    background: rgba(8, 8, 12, 0.85);
-    backdrop-filter: blur(10px);
+.shop-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(6, 5, 8, 0.92);
+    backdrop-filter: blur(8px);
     display: flex;
     justify-content: center;
     align-items: center;
+    z-index: 1100;
 }
 
 .shop-container {
-    width: 920px;
-    background: linear-gradient(145deg, #140f0c, #0a0705);
-    border: 2px solid #735432;
-    box-shadow: 0 0 35px rgba(0, 0, 0, 0.95), inset 0 0 20px rgba(115, 84, 50, 0.25);
-    border-radius: 8px;
-    color: #e0d0b8;
+    width: 1150px;
+    background: rgba(14, 11, 18, 0.98);
+    border: 2px solid #5a4529;
+    border-radius: 6px;
     padding: 24px;
-    font-family: 'Georgia', serif;
+    box-shadow: 0 0 40px rgba(0, 0, 0, 0.95);
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
 }
 
 .shop-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-bottom: 2px solid rgba(115, 84, 50, 0.4);
+    border-bottom: 2px solid #3c3022;
     padding-bottom: 12px;
 }
 
-.shop-header h2 { margin: 0; font-size: 22px; color: #f1c40f; letter-spacing: 1.5px; }
+.shop-header h2 {
+    color: #f1c40f;
+    font-size: 22px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+}
 
+.shop-gold-box {
+    font-size: 16px;
+    color: #f1c40f;
+    font-weight: bold;
+    background: rgba(0, 0, 0, 0.5);
+    padding: 6px 16px;
+    border: 1px solid #4a3825;
+    border-radius: 4px;
+}
+
+.shop-close-btn {
+    background: #5c3412;
+    color: #e0d5c1;
+    border: 1px solid #7a461b;
+    padding: 8px 14px;
+    cursor: pointer;
+    font-weight: bold;
+    border-radius: 4px;
+    transition: all 0.2s;
+}
+
+.shop-close-btn:hover {
+    background: #e74c3c;
+    color: #fff;
+}
+
+.shop-body {
+    display: flex;
+    justify-content: space-between;
+    gap: 25px;
+}
+
+.shop-side {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.shop-side h3 {
+    color: #d4af37;
+    font-size: 15px;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* KRATKA 10 KOLUMN x 6 WIERSZY */
+.shop-grid {
+    display: grid;
+    grid-template-columns: repeat(10, 48px);
+    grid-auto-rows: 48px;
+    gap: 6px;
+    height: 328px; /* Dokładnie 6 wierszy + dół na przewijanie */
+    overflow-y: auto;
+    background: rgba(8, 6, 10, 0.85);
+    padding: 8px;
+    border: 1px solid #3c3022;
+    border-radius: 4px;
+}
+
+.shop-grid .grid-slot {
+    width: 48px;
+    height: 48px;
+    font-size: 22px;
+    position: relative;
+}
+
+.slot-count {
+    position: absolute;
+    bottom: 2px;
+    right: 4px;
+    font-size: 11px;
+    color: #ffffff;
+    font-weight: bold;
+    text-shadow: 1px 1px 2px #000;
+}
 .gold-badge {
     background: #1c130b;
     border: 1px solid #f1c40f;

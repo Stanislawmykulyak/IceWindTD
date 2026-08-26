@@ -124,7 +124,33 @@
         <div id="hud-quest-obj" class="quest-hud-objective">• Porozmawiaj z Karczmarzem Barnabą</div>
       </div>
     </div>
+    <!-- WIEDŹMIŃSKIE OKNO HANDLU (SKLEP) -->
+    <div id="shop-modal" class="shop-modal hidden">
+      <div class="shop-container">
+        <div class="shop-header">
+          <div class="shop-gold-box">Twoje złoto: 🪙 <span id="shop-player-gold">0</span></div>
+          <h2>Handel</h2>
+          <div class="shop-gold-box">Złoto kupca: 🪙 <span id="shop-merchant-gold">500</span></div>
+          <button class="shop-close-btn" onclick="shopSystem.closeShop()">✕ Zamknij [ESC]</button>
+        </div>
 
+        <div class="shop-body">
+          <!-- LEWA STRONA: Ekwipunek Gracza (10 kolumn) -->
+          <div class="shop-side">
+            <h3>Twój Ekwipunek</h3>
+            <div id="shop-player-grid" class="shop-grid" ondragover="event.preventDefault()"
+              ondrop="shopSystem.onDropToPlayer(event)"></div>
+          </div>
+
+          <!-- PRAWA STRONA: Ekwipunek Kupca (10 kolumn) -->
+          <div class="shop-side">
+            <h3 id="shop-merchant-name">Karczmarz</h3>
+            <div id="shop-merchant-grid" class="shop-grid" ondragover="event.preventDefault()"
+              ondrop="shopSystem.onDropToMerchant(event)"></div>
+          </div>
+        </div>
+      </div>
+    </div>
     <div id="toast-message" class="hidden"></div>
 
     <div id="dialogue-box" class="hidden">
@@ -164,7 +190,7 @@
     <div id="subtitle-box" class="subtitle-box hidden">
       <span id="subtitle-text"></span>
     </div>
-
+    
   </div> <!-- /#game-container -->
   <script src="stats.js"></script>
   <script src="dialogues.js"></script>

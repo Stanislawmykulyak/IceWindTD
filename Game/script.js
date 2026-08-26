@@ -199,14 +199,17 @@ const dialogueManager = {
                 },
                 nicolas_info: {
                     text: "Nicolas? A tak, kojarzę go. Mieszka wzdłuż głównej drogi",
-                    onSelect: () => {
-                        questManager.completeObjective('Q1', 0);
-                    },
-                    choices: [{ text: "A i jeszcze chciałbym się zapytać czy znajduje się tutaj jakiś młyn ?", next: "mlyn" }]
+
+                    choices: [{ text: "A i jeszcze chciałbym się zapytać czy znajduje się tutaj jakiś młyn ?", next: "mlyn" }],
+                    choices: [{ text: "Dzięki Wielkie", next: "exit" }],
                 },
                 mlyn: {
+
                     text: "Tak, jest na skraju wioski od strony lasu ,ale od wielu lat jest nieczynny",
-                    choices: { text: "Dzięki Wielkie", next: "exit" }
+                    choices: [{ text: "Dzięki Wielkie", next: "exit" }],
+                    onSelect: () => {
+                        questManager.completeObjective('Q1', 2);
+                    },
                 },
                 rent_room: {
                     text: () => player.gold >= 10
@@ -235,24 +238,7 @@ const dialogueManager = {
                 }
             }
         },
-        nicolas_intro: {
-            speaker: "Nicolas",
-            nodes: {
-                start: {
-                    text: "Arkelas! Dobrze cię widzieć po tylu latach. Cieszę się, że udało ci się do mnie dotrzeć.",
-                    onSelect: () => {
-                        questManager.completeObjective('Q1', 2);
-                    },
-                    choices: [{ text: "Witaj Nicolas. Dobrze cię znowu widzieć. O czym chciałeś porozmawiać?", next: "quest_info" }]
-                },
-                quest_info: {
-                    text: "Mam dla ciebie powierzone pewne zadanie, ale usiądź najpierw i wytłumaczę ci wszystko po kolei.",
-                    choices: [{ text: "Słucham cię uważnie.", next: "exit" }]
-                }
-            }
-        }
     },
-
     start(treeId) {
         if (!this.trees[treeId]) return;
         this.isActive = true;
@@ -340,8 +326,9 @@ function showTooltip(item, event) {
 window.addEventListener('mousemove', (e) => {
     const tooltip = document.getElementById('item-tooltip');
     if (tooltip && !tooltip.classList.contains('hidden')) {
-        tooltip.style.left = `${e.clientX + 15}px`;
-        tooltip.style.top = `${e.clientY + 15}px`;
+        tooltip.style.left = e.clientX + 15 + 'px';
+        tooltip.style.top = e.clientY + 15 + 'px';
+        tooltip.classList.remove('hidden');
     }
 });
 
@@ -422,6 +409,13 @@ const menuSystem = {
         this.isOpen = true;
         const menuElem = document.getElementById('menu-overlay');
         if (menuElem) menuElem.classList.remove('hidden');
+
+        // Ukryj HUD i dialog na czas otwartego menu
+        const hud = document.getElementById('hud-top-right');
+        if (hud) hud.classList.add('hidden');
+        const dialogue = document.getElementById('dialogue-box');
+        if (dialogue) dialogue.classList.add('hidden');
+
         this.openTab(tabName);
     },
 
@@ -429,6 +423,14 @@ const menuSystem = {
         this.isOpen = false;
         const menuElem = document.getElementById('menu-overlay');
         if (menuElem) menuElem.classList.add('hidden');
+
+        // Przywróć HUD i ewentualny dialog po zamknięciu menu
+        const hud = document.getElementById('hud-top-right');
+        if (hud) hud.classList.remove('hidden');
+        if (typeof dialogueManager !== 'undefined' && dialogueManager.isActive) {
+            const dialogue = document.getElementById('dialogue-box');
+            if (dialogue) dialogue.classList.remove('hidden');
+        }
     },
 
     openTab(tabName) {
@@ -1071,11 +1073,13 @@ const documentViewer = {
 // 5.5 SYSTEM HANDLU (SKLEP)
 // ==========================================
 const shopSystem = {
+    isOpen: false,
     currentShopId: null,
-
+    get isOpen() { return this.currentShopId !== null; },
     shops: {
         karczmarz_shop: {
-            name: "Karczmarz Bławat",
+            name: "Karczmarz Barnaba",
+            gold: 500,
             items: [
                 { id: 'chleb', name: 'Świeży Chleb', icon: '🍞', type: 'misc', weight: 0.5, value: 5, stats: '+10 Posiłek', count: 5, maxCount: 5, restock: true },
                 { id: 'piwo', name: 'Kufel Piwa', icon: '🍺', type: 'misc', weight: 0.8, value: 3, stats: '+5 Pragnienie', count: 8, maxCount: 8, restock: true },
@@ -1087,17 +1091,20 @@ const shopSystem = {
 
     openShop(shopId) {
         this.currentShopId = shopId;
+        this.isOpen = true;
         const modal = document.getElementById('shop-modal');
         if (modal) modal.classList.remove('hidden');
         this.render();
     },
 
     closeShop() {
+        this.isOpen = false;
         this.currentShopId = null;
         const modal = document.getElementById('shop-modal');
         if (modal) modal.classList.add('hidden');
+        if (typeof showTooltip === 'function') showTooltip(null);
     },
-
+    close() { this.closeShop(); },
     buyItem(itemIndex) {
         const shop = this.shops[this.currentShopId];
         if (!shop) return;
@@ -1121,16 +1128,16 @@ const shopSystem = {
         }
 
         player.gold -= item.value;
+        if (shop.gold !== undefined) shop.gold += item.value;
         item.count--;
 
-        // Dodanie przedmiotu do ekwipunku gracza
         player.addItem(item.id, item.name, item.icon, item.type, item.weight, item.stats, 1);
 
-        // Usuwamy z półki unikalne przedmioty po wyprzedaniu
         if (item.count <= 0 && !item.restock) {
             shop.items.splice(itemIndex, 1);
         }
 
+        showToast(`Kupiono: ${item.name} (-${item.value} 🪙)`);
         this.render();
     },
 
@@ -1144,7 +1151,30 @@ const shopSystem = {
         }
 
         const sellPrice = Math.floor((item.value || 2) * 0.6);
+        const shop = this.shops[this.currentShopId];
+
         player.gold += sellPrice;
+        if (shop && shop.gold !== undefined) shop.gold = Math.max(0, shop.gold - sellPrice);
+
+        // Dodanie przedmiotu do listy sklepu
+        if (shop) {
+            const existingShopItem = shop.items.find(i => i.id === item.id);
+            if (existingShopItem) {
+                existingShopItem.count = (existingShopItem.count || 1) + 1;
+            } else {
+                shop.items.push({
+                    id: item.id,
+                    name: item.name,
+                    icon: item.icon,
+                    type: item.type,
+                    weight: item.weight,
+                    value: item.value || 2,
+                    stats: item.stats,
+                    count: 1,
+                    restock: false
+                });
+            }
+        }
 
         if (item.count && item.count > 1) {
             item.count--;
@@ -1156,46 +1186,108 @@ const shopSystem = {
         this.render();
     },
 
-    restockShops() {
-        Object.values(this.shops).forEach(shop => {
-            shop.items.forEach(item => {
-                if (item.restock) {
-                    item.count = item.maxCount;
-                }
-            });
-        });
-    },
-
     onDragStart(event, source, index) {
         event.dataTransfer.setData('text/plain', JSON.stringify({ source, index }));
+    },
+
+    onDropToPlayer(event) {
+        event.preventDefault();
+        try {
+            const data = JSON.parse(event.dataTransfer.getData('text/plain'));
+            if (data.source === 'shop') this.buyItem(data.index);
+        } catch (e) { }
+    },
+
+    onDropToMerchant(event) {
+        event.preventDefault();
+        try {
+            const data = JSON.parse(event.dataTransfer.getData('text/plain'));
+            if (data.source === 'player') this.sellItem(data.index);
+        } catch (e) { }
+    },
+
+    onItemClick(event, source, index) {
+        if (event.shiftKey) {
+            if (source === 'player') this.sellItem(index);
+            if (source === 'shop') this.buyItem(index);
+        }
+    },
+
+    onItemDblClick(source, index) {
+        if (source === 'player') this.sellItem(index);
+        if (source === 'shop') this.buyItem(index);
     },
 
     render() {
         const shop = this.shops[this.currentShopId];
         if (!shop) return;
 
-        const gridContainer = document.getElementById('shop-merchant-grid');
-        if (!gridContainer) return;
+        // Liczniki Złota na górze
+        const playerGoldEl = document.getElementById('shop-player-gold');
+        if (playerGoldEl) playerGoldEl.innerText = player.gold;
 
-        gridContainer.innerHTML = shop.items.map((item, index) => {
-            const tooltip = `${item.name} (Dostępne: ${item.count})\n${item.stats || ''}\nWaga: ${item.weight}kg\nCena: ${item.value} 🪙`;
-            const isOutOfStock = item.count <= 0;
+        const merchantGoldEl = document.getElementById('shop-merchant-gold');
+        if (merchantGoldEl) merchantGoldEl.innerText = shop.gold !== undefined ? shop.gold : '∞';
 
-            return `
-                <div class="grid-slot ${isOutOfStock ? 'out-of-stock' : 'occupied'}" 
-                     draggable="${!isOutOfStock}" 
-                     ondragstart="shopSystem.onDragStart(event, 'shop', ${index})"
-                     ondblclick="shopSystem.buyItem(${index})"
-                     data-tooltip="${tooltip}">
-                    <span class="grid-item-icon">${item.icon}</span>
-                    ${item.count > 1 ? `<span class="slot-count">${item.count}</span>` : ''}
-                </div>
-            `;
-        }).join('');
+        const merchantNameEl = document.getElementById('shop-merchant-name');
+        if (merchantNameEl) merchantNameEl.innerText = shop.name || 'Kupiec';
 
-        // Odświeżenie widoku ekwipunku gracza, żeby złoto i waga się zgadzały
-        if (typeof menuSystem !== 'undefined' && menuSystem.renderInventoryTab) {
-            menuSystem.renderInventoryTab();
+        // 1. EKWIPUNEK GRACZA (LEWA STRONA) - 10 KOLUMN, NIESKOŃCZONOŚĆ (MIN. 60 KRATEK)
+        const playerGrid = document.getElementById('shop-player-grid');
+        if (playerGrid) {
+            playerGrid.innerHTML = '';
+            const playerSlotsCount = Math.max(60, Math.ceil((player.inventory.length + 1) / 10) * 10);
+
+            for (let i = 0; i < playerSlotsCount; i++) {
+                const item = player.inventory[i];
+                const slot = document.createElement('div');
+
+                if (item) {
+                    const countBadge = (item.count && item.count > 1) ? `<span class="slot-count">${item.count}</span>` : '';
+                    slot.className = 'grid-slot occupied';
+                    slot.setAttribute('draggable', 'true');
+                    slot.innerHTML = `${item.icon || '📦'}${countBadge}`;
+
+                    slot.ondragstart = (e) => this.onDragStart(e, 'player', i);
+                    slot.onclick = (e) => this.onItemClick(e, 'player', i);
+                    slot.ondblclick = () => { showTooltip(null); this.onItemDblClick('player', i); };
+                    slot.onmouseenter = (e) => showTooltip(item, e, 'sell');
+                    slot.onmousemove = (e) => showTooltip(item, e, 'sell');
+                    slot.onmouseleave = () => showTooltip(null);
+                } else {
+                    slot.className = 'grid-slot empty';
+                }
+                playerGrid.appendChild(slot);
+            }
+        }
+
+        // 2. EKWIPUNEK KUPCA (PRAWA STRONA) - 10 KOLUMN (MIN. 60 KRATEK)
+        const merchantGrid = document.getElementById('shop-merchant-grid');
+        if (merchantGrid) {
+            merchantGrid.innerHTML = '';
+            const shopSlotsCount = Math.max(60, Math.ceil((shop.items.length + 1) / 10) * 10);
+
+            for (let i = 0; i < shopSlotsCount; i++) {
+                const item = shop.items[i];
+                const slot = document.createElement('div');
+
+                if (item) {
+                    const countBadge = (item.count && item.count > 1) ? `<span class="slot-count">${item.count}</span>` : '';
+                    slot.className = 'grid-slot occupied';
+                    slot.setAttribute('draggable', 'true');
+                    slot.innerHTML = `${item.icon || '📦'}${countBadge}`;
+
+                    slot.ondragstart = (e) => this.onDragStart(e, 'shop', i);
+                    slot.onclick = (e) => this.onItemClick(e, 'shop', i);
+                    slot.ondblclick = () => { showTooltip(null); this.onItemDblClick('shop', i); };
+                    slot.onmouseenter = (e) => showTooltip(item, e, 'buy');
+                    slot.onmousemove = (e) => showTooltip(item, e, 'buy');
+                    slot.onmouseleave = () => showTooltip(null);
+                } else {
+                    slot.className = 'grid-slot empty';
+                }
+                merchantGrid.appendChild(slot);
+            }
         }
     }
 };
@@ -1683,33 +1775,33 @@ class HumanEnemy {
     }
 
     attack(player) {
-    const now = Date.now();
-    if (this.isStaggered || this.isWindup) return;
-    if (now - this.lastAttackTime < this.attackCooldown) return;
+        const now = Date.now();
+        if (this.isStaggered || this.isWindup) return;
+        if (now - this.lastAttackTime < this.attackCooldown) return;
 
-    this.isWindup = true;
-    this.windupStart = now;
-    this.windupDuration = 650; // Dłuższy czas na reakcję gracza (zamiast 450ms)
+        this.isWindup = true;
+        this.windupStart = now;
+        this.windupDuration = 650; // Dłuższy czas na reakcję gracza (zamiast 450ms)
 
-    // ZABLOKOWANIE KĄTA: Zapamiętujemy gdzie gracz stoi W MOMENCIE rozpoczęcia zamachu
-    this.targetAngleAtWindup = Math.atan2(player.y - this.y, player.x - this.x);
+        // ZABLOKOWANIE KĄTA: Zapamiętujemy gdzie gracz stoi W MOMENCIE rozpoczęcia zamachu
+        this.targetAngleAtWindup = Math.atan2(player.y - this.y, player.x - this.x);
 
-    setTimeout(() => {
-        if (!this.isStaggered) {
-            // Skok w stronę zapamiętanego kąta – jeśli gracz zrobił krok w bok, wrak uderzy w próżnię
-            this.x += Math.cos(this.targetAngleAtWindup) * 30;
-            this.y += Math.sin(this.targetAngleAtWindup) * 30;
+        setTimeout(() => {
+            if (!this.isStaggered) {
+                // Skok w stronę zapamiętanego kąta – jeśli gracz zrobił krok w bok, wrak uderzy w próżnię
+                this.x += Math.cos(this.targetAngleAtWindup) * 30;
+                this.y += Math.sin(this.targetAngleAtWindup) * 30;
 
-            const dist = Math.hypot(player.x - this.x, player.y - this.y);
-            if (dist <= this.attackRange + 5) {
-                player.takeDamage(this.damage, this);
+                const dist = Math.hypot(player.x - this.x, player.y - this.y);
+                if (dist <= this.attackRange + 5) {
+                    player.takeDamage(this.damage, this);
+                }
             }
-        }
-        this.isWindup = false;
-        this.lastAttackTime = Date.now();
-        this.squad.releaseAttackToken(this);
-    }, this.windupDuration);
-}
+            this.isWindup = false;
+            this.lastAttackTime = Date.now();
+            this.squad.releaseAttackToken(this);
+        }, this.windupDuration);
+    }
 
     draw(ctx) {
         // Wizualny indykator ataku (strefa zagrożenia na ziemi)
