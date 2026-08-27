@@ -22,7 +22,7 @@ const player = {
             weight: 0.2,
             monologueId: 'read_nicolas_letter',
             questTrigger: { questId: 'Q1', step: 0 },
-            stats: 'Kliknij 2krotnie aby przeczytać',
+            stats: 'Kliknij Dwukrotnie aby przeczytać',
             content: "Arkelasie , mój Drogi przyjacielu Mam nadzieję ,że przeczytasz ten list a życie mija ci spokojnie, jak pewnie wiesz osiedliłem się miasteczku Kruczy Dół , ze względu na jego położenie na szlaku handlowym między Valengardem a Rendią jak i ze względu na powierzone mi zadanie . Niestety ostatnio zauważam coraz to bardziej niepokojące rzeczy , wczoraj zauważyłem dwóch ludzi obserwujących mnie ,których nigdy wcześniej nie widziałem a kilka dni temu ktoś włamał mi się do domu . Potrzebuję twojej pomocy Arkelasie bo czuje ,że wpadłem w niezłe gówno. Spotkajmy się tam gdzie czarodziejki chodzą z patelnią <br> Z poważaniem ,Nicolas "
         }
     ],
