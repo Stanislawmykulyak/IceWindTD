@@ -178,6 +178,49 @@
         <div class="spinner"></div>
       </div>
     </div>
+    <div id="alchemy-modal" class="alchemy-overlay hidden">
+      <div class="alchemy-window">
+
+        <!-- Przycisk zamknięcia (Pieczęć/Kwadrat) -->
+        <button class="alc-close-btn" onclick="alchemyUI.close()">✕</button>
+
+        <!-- Lewy panel: Lista receptur (generowana przez JS) -->
+        <div id="alc-recipe-list" class="alc-left-panel">
+          <!-- Przykładowy wygląd elementu po wyrenderowaniu przez JS:
+      <div class="alc-recipe-item active">
+        <div class="alc-slot" style="width:32px; height:32px; font-size:16px;">🧪</div>
+        <span>Mikstura Leczenia</span>
+      </div>
+      -->
+        </div>
+
+        <!-- Prawy panel: Szczegóły i crafting (generowany przez JS) -->
+        <div id="alc-details-panel" class="alc-right-panel">
+          <!-- Przykładowa zawartość dynamiczna generowana w JS:
+      <h3 style="color: var(--alc-gold); margin: 0;">Mikstura Leczenia</h3>
+
+      <div class="alc-ingredients-row">
+        <div class="alc-slot" title="Czerwony Grzyb">
+          🍄
+          <span class="alc-slot-count">2</span>
+        </div>
+        <div class="alc-slot" title="Fiolka z Wodą">
+          🧪
+          <span class="alc-slot-count">1</span>
+        </div>
+      </div>
+
+      <div class="alc-slot result-slot" title="Produkt">
+        🍷
+        <span class="alc-slot-count">1</span>
+      </div>
+
+      <button class="alc-craft-btn" onclick="alchemyUI.craft()">Warz Miksturę</button>
+      -->
+        </div>
+
+      </div>
+    </div>
     <!-- OKNO INTERFEJSU DO CZYTANIA DOKUMENTÓW -->
     <div id="reading-overlay" class="reading-modal hidden">
       <div class="reading-card">
@@ -208,6 +251,7 @@
   <script src="js/map.js"></script>
   <script src="js/enemies.js"></script>
   <script src="js/player.js"></script>
+  <script src="js/alchemy.js"></script>
   <script src="js/ui.js"></script>
   <script src="js/cutscenes.js"></script>
   <script src="js/script.js"></script>

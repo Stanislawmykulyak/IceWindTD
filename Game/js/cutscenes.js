@@ -97,7 +97,7 @@ const cutsceneManager = {
 
                 thugs.forEach(t => {
                     const dx = 200 - t.x;
-                    const dy = 0 - t.y;
+                    const dy = 450 - t.y;
                     const dist = Math.hypot(dx, dy);
 
                     if (dist > 15) {

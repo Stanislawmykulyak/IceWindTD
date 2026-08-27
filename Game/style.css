@@ -79,14 +79,12 @@ canvas {
     top: 80px;
     left: 50%;
     transform: translateX(-50%);
-    background: rgba(80, 80, 80, 0.171);
-    color: white; 
-    padding: 8px 18px;
+    color: rgba(255, 255, 255, 0.473); 
+    padding:rgba(255, 255, 255, 0.63) 18px;
     border-radius: 4px;
     font-weight: bold;
     font-size: 13px;
-    border: 1px solid #e74c3c;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+    border:none;
     z-index: 10;
 }
 
@@ -361,30 +359,6 @@ canvas {
 .sleep-content p {
     color: #a0a5b5;
     margin-bottom: 20px;
-}
-
-#interaction-prompt {
-    position: absolute;
-    bottom: 50px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: rgba(0, 0, 0, 0.8);
-    color: #fff;
-    padding: 8px 16px;
-    border-radius: 6px;
-    font-family: sans-serif;
-    font-size: 14px;
-    border: 1px solid #555;
-    z-index: 1000; /* Daje pewność, że nie schowa się pod mapą */
-    pointer-events: none;
-}
-
-#interaction-prompt.hidden { display: none; }
-#interaction-prompt kbd {
-    background: #e74c3c;
-    padding: 2px 6px;
-    border-radius: 3px;
-    font-weight: bold;
 }
 
 .spinner {
@@ -1309,3 +1283,336 @@ canvas#gameCanvas {
     color: #ffffff;
     text-shadow: 1px 1px 2px #000;
 }
+/* ==========================================
+   DARK MEDIEVAL ALCHEMY & MINECRAFT CRAFTING
+   ========================================== */
+:root {
+  --alc-wood-frame: #2a1a10;
+  --alc-wood-border: #140c07;
+  --alc-bg-dark: #12100e;
+  --alc-panel-bg: #1a1612;
+  --alc-slot-bg: #141619;
+  --alc-slot-border: #3d434d;
+  --alc-slot-border-hover: #636c7a;
+  --alc-gold: #d4a359;
+  --alc-text-light: #e6d5b8;
+  --alc-text-muted: #8a7a65;
+}
+
+/* 1. Nakładka (Kluczowa do tego, by nie rozwalało strony) */
+.alchemy-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(4, 3, 2, 0.88);
+  backdrop-filter: blur(6px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  overflow: hidden; /* Blokuje wychodzenie elementów poza ekran */
+}
+
+.alchemy-overlay.hidden {
+  display: none !important;
+}
+
+/* Główne okno */
+.alchemy-window {
+  position: relative;
+  width: 95vw;
+  max-width: 1100px; /* Powiększone z 920px */
+  height: 640px;     /* Powiększone z 580px */
+  max-height: 92vh;
+  background: var(--alc-bg-dark);
+  border: 5px solid var(--alc-wood-frame);
+  outline: 2px solid var(--alc-wood-border);
+  border-radius: 8px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.95), 0 0 15px rgba(212, 163, 89, 0.15);
+  display: flex;
+  gap: 20px;
+  padding: 24px;
+  color: var(--alc-text-light);
+  font-family: 'Georgia', serif;
+  box-sizing: border-box;
+}
+
+/* Proporcje paneli: lewy wąski (~30%), prawy szeroki (~70%) */
+.alc-left-panel {
+  flex: 0.7;
+  background: var(--alc-panel-bg);
+  border: 1px solid #33271d;
+  border-radius: 6px;
+  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.7);
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  overflow-y: auto;
+  box-sizing: border-box;
+}
+
+.alc-right-panel {
+  flex: 1.8;
+  background: var(--alc-panel-bg);
+  border: 1px solid #33271d;
+  border-radius: 6px;
+  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.7);
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  text-align: center;
+  box-sizing: border-box;
+}
+
+/* Lista mikstur po lewej */
+.alc-recipe-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid #33271d;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  color: var(--alc-text-light);
+}
+
+.alc-recipe-item:hover {
+  background: rgba(212, 163, 89, 0.1);
+  border-color: var(--alc-gold);
+}
+
+.alc-recipe-item.active {
+  background: rgba(212, 163, 89, 0.2);
+  border-color: var(--alc-gold);
+  box-shadow: inset 3px 0 0 var(--alc-gold);
+}
+
+/* KONTENER NA CRAFTING - poziomy układ */
+.alc-ingredients-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  margin: 25px 0;
+  flex-wrap: wrap;
+  max-width: 100%;
+}
+
+/* IDEALNIE KWADRATOWE SLOTY MINECRAFT */
+.alc-slot {
+  position: relative;
+  width: 58px;
+  height: 58px;
+  min-width: 58px;
+  min-height: 58px;
+  aspect-ratio: 1 / 1;
+  flex-shrink: 0;
+  background: var(--alc-slot-bg);
+  border: 2px solid var(--alc-slot-border);
+  border-radius: 6px;
+  box-shadow: inset 3px 3px 6px rgba(0, 0, 0, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  user-select: none;
+  box-sizing: border-box;
+}
+
+.alc-slot:hover {
+  border-color: var(--alc-slot-border-hover);
+}
+
+/* Mikstura wynikowa (najbardziej po lewej w rzędzie craftingu) */
+.alc-slot.result-slot {
+  width: 70px;
+  height: 70px;
+  min-width: 70px;
+  min-height: 70px;
+  border-color: var(--alc-gold);
+  box-shadow: inset 2px 2px 8px rgba(0,0,0,0.9), 0 0 15px rgba(212, 163, 89, 0.4);
+  margin-right: 15px;
+}
+
+/* Licznik w rogu slotu (np. x3) */
+.alc-slot-count {
+  position: absolute;
+  bottom: 2px;
+  right: 4px;
+  font-size: 11px;
+  font-weight: bold;
+  color: #ffffff;
+  text-shadow: 1px 1px 2px #000;
+  font-family: monospace;
+}
+
+/* Przycisk Craftingu */
+.alc-craft-btn {
+  width: 100%;
+  padding: 12px;
+  background: linear-gradient(180deg, #3d2b1a 0%, #1f140a 100%);
+  border: 1px solid var(--alc-gold);
+  border-radius: 4px;
+  color: var(--alc-gold);
+  font-weight: bold;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.alc-craft-btn:hover {
+  background: var(--alc-gold);
+  color: #12100e;
+  box-shadow: 0 0 10px rgba(212, 163, 89, 0.5);
+}
+
+/* Przycisk Wyjścia */
+.alc-close-btn {
+  position: absolute;
+  top: -12px;
+  right: -12px;
+  width: 32px;
+  height: 32px;
+  background: #141619;
+  border: 2px solid var(--alc-slot-border);
+  border-radius: 4px;
+  color: #ff5f56;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.alc-close-btn:hover {
+  border-color: #ff5f56;
+}
+/* Układ poziomy dla kontenera składników */
+.alc-ing-grid {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+    justify-content: center;
+    margin-top: 10px;
+}
+
+/* Formatowanie pojedynczego kafelka składnika */
+.alc-ing-slot {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 12px;
+    min-width: 70px;
+    background: var(--alc-slot-bg);
+    border: 2px solid var(--alc-slot-border);
+    border-radius: 6px;
+}
+.alc-effect-badge {
+    background: rgba(46, 204, 113, 0.1);
+    border: 1px solid #2ecc71;
+    color: #2ecc71;
+    padding: 8px 14px;
+    border-radius: 4px;
+    font-size: 13px;
+    margin: 10px 0;
+    text-align: center;
+}
+
+/* Układ craftingu: Składniki -> Strzałka -> Produkt */
+.alc-crafting-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    margin: 20px 0;
+    padding: 15px 25px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 6px;
+    border: 1px solid #2d2217;
+}
+
+.alc-group-title {
+    font-size: 11px;
+    text-transform: uppercase;
+    color: var(--alc-text-muted);
+    margin-bottom: 8px;
+}
+
+.alc-arrow {
+    font-size: 28px;
+    color: var(--alc-gold);
+    opacity: 0.6;
+}
+
+/* Czwarty kwadrat - produkt końcowy */
+.alc-result-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: pointer;
+}
+
+.alc-result-name {
+    font-size: 12px;
+    color: var(--alc-gold);
+    margin-top: 6px;
+    font-weight: bold;
+}
+
+.alc-slot-count.gold {
+    color: #f1c40f;
+    font-size: 10px;
+    white-space: nowrap;
+    bottom: -18px;
+    right: 50%;
+    transform: translateX(50%);
+}
+
+.text-green { color: #2ecc71; }
+.text-red { color: #e74c3c; }
+.alc-ing-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+}
+
+.alc-ing-name {
+    font-size: 11px;
+    color: var(--alc-text-light);
+    max-width: 80px;
+    text-align: center;
+    line-height: 1.2;
+}
+
+/* Licznik ilości wewnątrz kwadratu składnika */
+.alc-slot .alc-slot-count {
+    position: absolute;
+    bottom: 2px;
+    right: 4px;
+    font-size: 10px;
+    font-weight: bold;
+    font-family: monospace;
+    text-shadow: 1px 1px 2px #000;
+}
+
+/* Nowa, czytelna plakietka stanu w ekwipunku (pod nazwą produktu) */
+.alc-result-owned {
+    font-size: 11px;
+    color: var(--alc-gold);
+    margin-top: 6px;
+    background: rgba(0, 0, 0, 0.5);
+    padding: 3px 10px;
+    border-radius: 4px;
+    border: 1px solid rgba(212, 163, 89, 0.3);
+}
+
+.text-green { color: #2ecc71; }
+.text-red { color: #e74c3c; }

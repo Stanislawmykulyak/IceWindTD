@@ -365,16 +365,21 @@ const player = {
         const item = this.inventory[itemIndex];
         if (!item) return;
 
+        if (item.id === 'alembik') {
+            this.placeAlembic(itemIndex);
+            return;
+        }
+
         if (item.type === 'quest' || item.type === 'document' || item.content) {
             documentViewer.open(item.name, item.content, item.monologueId, item.questTrigger);
             return;
         }
+
         // Sprawdzamy, czy przedmiot można założyć
-        if (!item || !['weapon', 'head', 'chest', 'legs', 'boots'].includes(item.type)) {
+        if (!['weapon', 'head', 'chest', 'legs', 'boots'].includes(item.type)) {
             showToast("Tego przedmiotu nie można założyć.");
             return;
         }
-
         const slot = item.type;
 
         // Jeśli slot jest zajęty, zamień przedmioty
@@ -502,7 +507,23 @@ const player = {
             this.horse.y = this.y;
         }
     },
+    placeAlembic(invIndex) {
+        // Postawienie alembika na pozycji gracza
+        worldObjects.push(new PlacedAlembic(this.x, this.y));
 
+        // Usunięcie 1 sztuki z plecaka
+        const item = this.inventory[invIndex];
+        if (item.count && item.count > 1) {
+            item.count--;
+        } else {
+            this.inventory.splice(invIndex, 1);
+        }
+
+        if (typeof menuSystem !== 'undefined' && menuSystem.isOpen) {
+            menuSystem.renderInventoryTab();
+        }
+        showToast("Rozstawiono Alembik!");
+    },
     draw(ctx) {
         // Rysowanie konia (gdy gracz nie jedzie)
         if (gameMap.currentLocation === 'kruczy_dol' && !this.horse.isMounted) {
@@ -618,7 +639,7 @@ function callHorse() {
         return;
     }
 
-    showToast("Gwizdasz na konia... 🐴");
+    showToast("Gwizdasz na konia");
 
     // Szukamy bezpiecznego miejsca na spawn poza ekranem
     const spawnDistance = 100; // Odległość poza widokiem kamery

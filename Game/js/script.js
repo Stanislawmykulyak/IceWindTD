@@ -247,6 +247,10 @@ window.addEventListener('keydown', (e) => {
             documentViewer.close();
             return;
         }
+        if (alchemyUI.isOpen) { // <-- DODAJ
+            alchemyUI.close();
+            return;
+        }
         if (menuSystem.isOpen) {
             menuSystem.close();
             return;
@@ -259,6 +263,10 @@ window.addEventListener('keydown', (e) => {
         // 1. Zamknięcie okna czytania listu
         if (isReading) {
             documentViewer.close();
+            return;
+        }
+        if (alchemyUI.isOpen) { // <-- DODAJ (zamyka okno pod 'E')
+            alchemyUI.close();
             return;
         }
 
@@ -283,7 +291,21 @@ window.addEventListener('keydown', (e) => {
 
         // 3. Interakcja w świecie gry (rozmowa, drzwi, koń)
         if (!dialogueManager.isActive && !player.isSleeping && !menuSystem.isOpen) {
-            if (!gameMap.tryInteract()) player.toggleHorse();
+            let interacted = false;
+            for (let i = worldObjects.length - 1; i >= 0; i--) {
+                const res = worldObjects[i].handleInteraction('e');
+                if (res === 'REMOVE') worldObjects.splice(i, 1);
+                if (res) { interacted = true; break; }
+            }
+            if (!interacted && !gameMap.tryInteract()) player.toggleHorse();
+        }
+    } else if (key === 'f') {
+        for (let i = worldObjects.length - 1; i >= 0; i--) {
+            const res = worldObjects[i].handleInteraction('f');
+            if (res === 'REMOVE') {
+                worldObjects.splice(i, 1);
+                break;
+            }
         }
     }
 });
@@ -374,7 +396,7 @@ function gameLoop() {
     lastFrameTime = now;
 
     // 1. Aktualizacja logiki gry (gdy nie ma pauzy/menu/dialogu)
-    if (!dialogueManager.isActive && !player.isSleeping && !menuSystem.isOpen) {
+    if (!dialogueManager.isActive && !player.isSleeping && !menuSystem.isOpen && !alchemyUI.isOpen) {
         player.update(keys, stateText);
         gameMap.updateNPCs();
         enemyManager.update(dt, player);
@@ -398,6 +420,7 @@ function gameLoop() {
     LootManager.draw(ctx);
     enemyManager.draw(ctx);
     player.draw(ctx);
+    worldObjects.forEach(obj => obj.draw(ctx));
     damageNumbers.updateAndDraw(ctx);
 
     if (typeof encounterManager !== 'undefined') {

@@ -90,7 +90,7 @@ const gameMap = {
     locations: {
         kruczy_dol: {
             width: 5500, 
-            height: 2400, 
+            height: 3500, 
             bgColor: CONFIG.COLOR_GRASS,
             
             // Polany w lesie z jaśniejszym podłożem
@@ -194,10 +194,16 @@ const gameMap = {
             ],
             onEnter() {
                 const z1 = new Enemy({ id: 'z1', type: 'zbir_lekki', x: 500, y: 350, name: 'Zbir' });
-                Object.assign(z1, { hp: 300, maxHp: 300, armor: 2, color: '#e74c3c', nonLethal: true, isBasementThug: true, isHostile: false });
+                Object.assign(z1, {
+                    hp: 300, maxHp: 300, armor: 2,
+                    color: '#e74c3c', nonLethal: true, isBasementThug: true, isHostile: false
+                });
 
                 const z2 = new Enemy({ id: 'z2', type: 'zbir_ciezki', x: 580, y: 350, name: 'Zbir Ciężki' });
-                Object.assign(z2, { hp: 550, maxHp: 550, armor: 5, color: '#c0392b', nonLethal: true, isBasementThug: true, isHostile: false });
+                Object.assign(z2, {
+                    hp: 550, maxHp: 550, armor: 5,
+                    color: '#c0392b', nonLethal: true, isBasementThug: true, isHostile: false
+                });
 
                 enemyManager.enemies = [z1, z2];
                 cutsceneManager.startBasementIntro();
@@ -450,7 +456,7 @@ const gameMap = {
             const dy = player.y - (d.y + d.height / 2);
             if (Math.hypot(dx, dy) < 45) {
                 this.nearDoor = d;
-                if (d.isStair) {
+                if (d.label) {
                     ctx.fillStyle = '#f1c40f';
                     ctx.font = 'bold 12px sans-serif';
                     ctx.fillText(d.label, d.x - 15, d.y - 8);
@@ -716,6 +722,13 @@ const gameMap = {
                 this.currentLocation = door.targetLocation;
                 player.x = door.spawnX;
                 player.y = door.spawnY;
+
+                // Odpalenie logicznego hooka nowej lokacji (np. piwnicy)
+                const targetData = this.getCurrentData();
+                if (typeof targetData.onEnter === 'function') {
+                    targetData.onEnter();
+                }
+
                 return true;
             }
             return false;

@@ -132,7 +132,7 @@ const menuSystem = {
         ];
 
         slotsConfig.forEach(cfg => {
-            
+
             const elem = document.getElementById(cfg.id);
             if (!elem) return;
             const item = player.equipment[cfg.key];
@@ -258,6 +258,16 @@ const shopSystem = {
                     count: 1,
                     maxCount: 1,
                     restock: false
+                },
+                {
+                    id: 'alembik',
+                    name: 'Miedziany Alembik',
+                    icon: '⚗️',
+                    type: 'tool',
+                    weight: 3.5,
+                    value: 10,
+                    description: 'Przenośna aparatura alchemiczna. Postaw na ziemi, by warzyć mikstury.',
+                    stats:'Używane do warzenia mikstur'
                 },
                 {
                     id: 'skora_pancerz',
