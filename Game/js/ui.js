@@ -132,10 +132,15 @@ const menuSystem = {
         ];
 
         slotsConfig.forEach(cfg => {
+            
             const elem = document.getElementById(cfg.id);
             if (!elem) return;
             const item = player.equipment[cfg.key];
-
+            elem.onclick = () => {
+                showTooltip(null);
+                player.unequipItem(cfg.key);
+                menuSystem.renderInventoryTab(); // POPRAWKA: przerysuj po kliknięciu
+            };
             // Ustawienie zdarzeń Drag & Drop na każdym slocie uzbrojenia
             elem.setAttribute('ondragover', 'dragDropManager.allowDrop(event)');
             elem.setAttribute('ondrop', `dragDropManager.onDropToEquipment(event, '${cfg.key}')`);
@@ -241,19 +246,19 @@ const shopSystem = {
                 { id: 'chleb', name: 'Świeży Chleb', icon: '🍞', type: 'misc', weight: 0.5, value: 5, stats: '+10 Posiłek', count: 5, maxCount: 5, restock: true },
                 { id: 'piwo', name: 'Kufel Piwa', icon: '🍺', type: 'misc', weight: 0.8, value: 3, stats: '+5 Pragnienie', count: 8, maxCount: 8, restock: true },
                 {
-    id: 'sztylet',
-    name: 'Zardzewiały Sztylet',
-    icon: '🗡️',
-    type: 'weapon',
-    weight: 1.5,
-    value: 25,
-    lightDamage: 20,
-    heavyDamage: 38,
-    stats: 'Lekki: 20 | Ciężki: 38',
-    count: 1,
-    maxCount: 1,
-    restock: false
-},
+                    id: 'sztylet',
+                    name: 'Zardzewiały Sztylet',
+                    icon: '🗡️',
+                    type: 'weapon',
+                    weight: 1.5,
+                    value: 25,
+                    lightDamage: 20,
+                    heavyDamage: 38,
+                    stats: 'Lekki: 20 | Ciężki: 38',
+                    count: 1,
+                    maxCount: 1,
+                    restock: false
+                },
                 {
                     id: 'skora_pancerz',
                     name: 'Skórzana Kurtka',
@@ -345,7 +350,22 @@ const shopSystem = {
         if (shop.gold !== undefined) shop.gold += item.value;
         item.count--;
 
-        player.addItem(item.id, item.name, item.icon, item.type, item.weight, item.stats, 1);
+        // Wyciągnięcie obrażeń i pancerza z definicji przedmiotu sklepowego
+        const itemDamage = item.damage || item.lightDamage || 0;
+        const itemArmor = item.armor || 0;
+
+        // POPRAWKA: Przekazanie 8 i 9 argumentu (damage oraz armor)
+        player.addItem(
+            item.id,
+            item.name,
+            item.icon,
+            item.type,
+            item.weight,
+            item.stats,
+            1,          // count
+            itemDamage, // damage
+            itemArmor   // armor
+        );
 
         if (item.count <= 0 && !item.restock) {
             shop.items.splice(itemIndex, 1);
@@ -717,11 +737,11 @@ const dragDropManager = {
         event.preventDefault();
         if (!this.draggedData) return;
 
-        // Przeciąganie z plecaka do rynsztunku
         if (this.draggedData.type === 'inventory') {
             const item = player.inventory[this.draggedData.id];
             if (item && item.type === slotType) {
                 player.equipItem(this.draggedData.id);
+                menuSystem.renderInventoryTab(); // POPRAWKA: natychmiastowe przerysowanie EQ
             } else {
                 showToast("Ten przedmiot nie pasuje do tego slotu!");
             }
@@ -733,9 +753,9 @@ const dragDropManager = {
         event.preventDefault();
         if (!this.draggedData) return;
 
-        // Przeciąganie z rynsztunku do plecaka
         if (this.draggedData.type === 'equipment') {
             player.unequipItem(this.draggedData.id);
+            menuSystem.renderInventoryTab(); // POPRAWKA: natychmiastowe przerysowanie EQ
         }
         this.draggedData = null;
     }

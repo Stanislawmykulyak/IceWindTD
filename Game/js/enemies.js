@@ -170,7 +170,7 @@ class Enemy {
         this.x = config.x || 0;
         this.y = config.y || 0;
         this.type = type;
-        this.name = baseConfig.name;
+        this.name = config.name || baseConfig.name || 'Przeciwnik';
         this.lootTable = LOOT_TABLES[type] || [];
 
         // Statystyki z ENEMY_CONFIG
@@ -181,6 +181,7 @@ class Enemy {
         this.radius = baseConfig.radius || 14;
         this.color = baseConfig.color || '#e74c3c';
         this.attackWindup = 0;
+
         // Zasięgi zachowania AI
         this.aggroRadius = config.aggroRadius || 250;
         this.deaggroRadius = config.deaggroRadius || 450;
@@ -195,14 +196,10 @@ class Enemy {
         this.hitStun = 0;
     }
 
-    // Podmień całą metodę update() w klasie Enemy:
     update(dt, player, activePack, allies = [], manager = null) {
-        if (!this.isAlive) return;
+        if (this.isUnconscious || this.hp <= 0 || !this.isAlive) return;
 
-        // Pobieramy instancję EnemyManager (z argumentu lub z zakresu globalnego)
         const em = manager || (typeof enemyManager !== 'undefined' ? enemyManager : null);
-
-        // 1. Szukamy najbliższego celu (gracz lub sojusznik)
         const validTargets = [player, ...allies.filter(a => a && a.isAlive)];
         let target = player;
         let distToTarget = Infinity;
@@ -215,16 +212,12 @@ class Enemy {
             }
         });
 
-        // 2. Obsługa timerów
         if (this.attackCooldown > 0) this.attackCooldown -= dt;
         if (this.hitStun > 0) this.hitStun -= dt;
 
-        // 3. Maszyna stanów AI
         switch (this.state) {
             case 'IDLE':
-                if (distToTarget <= this.aggroRadius) {
-                    this.state = 'CHASE';
-                }
+                if (distToTarget <= this.aggroRadius) this.state = 'CHASE';
                 break;
 
             case 'CHASE':
@@ -233,12 +226,9 @@ class Enemy {
                     this.state = 'RETURNING';
                     break;
                 }
-
-                // Gdy wróg dopadnie cel, sprawdza czy ma token na cios
                 if (distToTarget <= this.attackRadius) {
-                    this.targetDist = distToTarget; // Zapisujemy aktualny dystans
+                    this.targetDist = distToTarget;
                     const hasToken = em ? em.requestAttackToken(this, distToTarget) : true;
-
                     if (hasToken && this.attackCooldown <= 0) {
                         this.state = 'ATTACK';
                         this.attackWindup = 0;
@@ -246,7 +236,7 @@ class Enemy {
                         this.state = 'CIRCLE';
                     }
                 } else {
-                    this.moveTowards(target.x, target.y, dt, 1.0); // Pełna prędkość dobiegu
+                    this.moveTowards(target.x, target.y, dt, 1.0);
                 }
                 break;
 
@@ -256,32 +246,23 @@ class Enemy {
                     this.state = 'RETURNING';
                     break;
                 }
-
-                // Pierścień oczekiwania: bezpieczna strefa 100px - 140px
                 const minDist = 100;
                 const maxDist = 140;
 
                 if (distToTarget < minDist) {
-                    // Za blisko gracza -> powolny krok w tył
                     const angle = Math.atan2(this.y - target.y, this.x - target.x);
                     const targetX = target.x + Math.cos(angle) * minDist;
                     const targetY = target.y + Math.sin(angle) * minDist;
                     this.moveTowards(targetX, targetY, dt, 0.4);
                 } else if (distToTarget > maxDist) {
-                    // Za daleko od pierścienia -> podbiegnij bliżej
                     this.moveTowards(target.x, target.y, dt, 0.7);
                 }
-                // Jeśli jest w przedziale 100-140px -> stoi w miejscu i czeka (fizyka sama go rozstawi)
 
-                // Cooldown minął -> wraca do szarży po token
-                if (this.attackCooldown <= 0) {
-                    this.state = 'CHASE';
-                }
+                if (this.attackCooldown <= 0) this.state = 'CHASE';
                 break;
 
             case 'ATTACK':
                 this.attackWindup += dt;
-
                 if (this.attackWindup >= 0.4) {
                     const isTargetDodging = target.isInvulnerable || target.isDodging;
                     if (distToTarget <= this.attackRadius + 15 && !isTargetDodging) {
@@ -291,8 +272,6 @@ class Enemy {
                     }
                     this.attackCooldown = this.baseConfig?.attackCooldown || 3.0;
                     this.attackWindup = 0;
-
-                    // PO ATAKU: Koniecznie oddaj token i przejdź w krążenie!
                     if (em) em.releaseAttackToken(this);
                     this.state = 'CIRCLE';
                 }
@@ -308,7 +287,6 @@ class Enemy {
         }
     }
 
-    // Zaktualizuj też metodę moveTowards w klasie Enemy (dopisany parametr speedMultiplier):
     moveTowards(tx, ty, dt, speedMultiplier = 1.0) {
         const dx = tx - this.x;
         const dy = ty - this.y;
@@ -319,6 +297,7 @@ class Enemy {
             this.y += (dy / dist) * currentSpeed * dt;
         }
     }
+
     takeDamage(amount, sourceX, sourceY) {
         if (!this.isAlive || this.hitStun > 0) return;
 
@@ -333,9 +312,10 @@ class Enemy {
 
         if (this.hp <= 1 && this.nonLethal) {
             this.hp = 1;
+            this.canAttack = false;
             this.isUnconscious = true;
             this.isHostile = false;
-            this.color = '#7f8c8d'; // Szary odcień dla nieprzytomnego
+            this.color = '#7f8c8d';
 
             showToast(`${this.name} został powalony!`);
             cutsceneManager.checkBasementFightEnd();
@@ -347,9 +327,11 @@ class Enemy {
             this.onDeath();
         }
     }
-    onDeath(lootManager) {
+
+    onDeath() {
         this.dropLoot();
     }
+
     dropLoot() {
         if (!this.lootTable) return;
         const bagItems = [];
@@ -371,6 +353,7 @@ class Enemy {
             LootManager.spawnBag(this.x, this.y, bagItems, bagGold);
         }
     }
+
     draw(ctx) {
         if (!this.isAlive) return;
 
@@ -381,15 +364,8 @@ class Enemy {
             ctx.save();
             ctx.beginPath();
             ctx.moveTo(this.x, this.y);
-            ctx.arc(
-                this.x,
-                this.y,
-                this.attackRadius,
-                angleToPlayer - arcAngle / 2,
-                angleToPlayer + arcAngle / 2
-            );
+            ctx.arc(this.x, this.y, this.attackRadius, angleToPlayer - arcAngle / 2, angleToPlayer + arcAngle / 2);
             ctx.closePath();
-
             ctx.fillStyle = 'rgba(231, 76, 60, 0.40)';
             ctx.strokeStyle = '#e74c3c';
             ctx.lineWidth = 2;
@@ -398,7 +374,7 @@ class Enemy {
             ctx.restore();
         }
 
-        // 2. Ciało wroga (białe błyśnięcie przy otrzymaniu obrażeń)
+        // Ciało wroga
         ctx.fillStyle = this.hitStun > 0 ? '#ffffff' : (this.type === 'wolf' ? '#7f8c8d' : this.color);
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
@@ -407,7 +383,9 @@ class Enemy {
         ctx.lineWidth = 1.5;
         ctx.stroke();
 
-        // 3. Pasek HP (widoczny w walce lub gdy wróg jest ranny)
+        let nameOffsetY = 12;
+
+        // Pasek HP
         if (this.hp < this.maxHp || this.state !== 'IDLE') {
             const barWidth = 46;
             const barHeight = 6;
@@ -425,14 +403,26 @@ class Enemy {
             ctx.lineWidth = 0.8;
             ctx.strokeRect(barX, barY, barWidth, barHeight);
 
-            // Wyświetlanie dokładnej liczby HP
             ctx.fillStyle = '#ffffff';
             ctx.font = 'bold 9px sans-serif';
             ctx.textAlign = 'center';
             ctx.fillText(`${Math.ceil(this.hp)} / ${this.maxHp}`, this.x, barY - 3);
+
+            nameOffsetY = 28;
+        }
+
+        // LABEL Z IMIENIEM PRZECIWNIKA
+        if (this.name) {
+            ctx.save();
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 11px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.shadowColor = '#000000';
+            ctx.shadowBlur = 3;
+            ctx.fillText(this.name, this.x, this.y - this.radius - nameOffsetY);
+            ctx.restore();
         }
     }
-
 }
 class LootBag {
     constructor(id, x, y, items = [], gold = 0) {

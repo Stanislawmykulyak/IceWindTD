@@ -19,6 +19,7 @@ const gameMap = {
             doors: [
                 { x: 810, y: 580, width: 40, height: 20, targetLocation: 'karczma_wnetrze', spawnX: 400, spawnY: 480, label: 'Wejdź [E]' },
                 { x: 1940, y: 580, width: 40, height: 20, targetLocation: 'nicolas_wnetrze', spawnX: 400, spawnY: 480, label: 'Wejdź [E]' },
+                // NOWE DRZWI: Przejście z wioski do obszaru Młyna
                 { x: 1750, y: 440, width: 40, height: 20, targetLocation: 'wioska_mlyn', spawnX: 1220, spawnY: 1900, label: 'Stary Młyn [E]' }
             ],
             npcs: []
@@ -85,7 +86,9 @@ const gameMap = {
                 { id: 'mlyn_bldg', name: 'Młyn', x: 1100, y: 1750, width: 250, height: 200, color: '#4a3525' }
             ],
             doors: [
-                { x: 1220, y: 1850, width: 40, height: 20, targetLocation: 'mlyn_piwnica', spawnX: 200, spawnY: 400, label: 'Piwnica [E]' }
+                { x: 1220, y: 1850, width: 40, height: 20, targetLocation: 'mlyn_piwnica', spawnX: 200, spawnY: 400, label: 'Piwnica [E]' },
+                // NOWE DRZWI: Powrót z Młyna do głównej wioski Kruczy Dół
+                { x: 1220, y: 1980, width: 40, height: 20, targetLocation: 'kruczy_dol', spawnX: 1770, spawnY: 480, label: 'Powrót do Wioski [E]' }
             ]
         },
 
@@ -100,19 +103,21 @@ const gameMap = {
             ],
             onEnter() {
                 // Spawn zbirów jako instancji klasy Enemy
-                const z1 = new Enemy({
-                    id: 'z1', type: 'zbir_lekki', x: 380, y: 180, aggroRadius: 250
-                });
+                const z1 = new Enemy({ id: 'z1', type: 'zbir_lekki', x: 380, y: 220 });
+                z1.isBasementThug = true;
+                z1.nonLethal = true;
+
+
                 Object.assign(z1, {
-                    name: 'Zbir', hp: 60, maxHp: 60, armor: 2,
+                    name: 'Zbir', hp: 300, maxHp: 300, armor: 2,
                     color: '#e74c3c', nonLethal: true, isBasementThug: true, isHostile: false
                 });
 
-                const z2 = new Enemy({
-                    id: 'z2', type: 'zbir_ciezki', x: 430, y: 220, aggroRadius: 250
-                });
+                const z2 = new Enemy({ id: 'z2', type: 'zbir_ciezki', x: 420, y: 220 });
+                z2.isBasementThug = true;
+                z2.nonLethal = true;
                 Object.assign(z2, {
-                    name: 'Zbir Ciężki', hp: 90, maxHp: 90, armor: 5,
+                    name: 'Zbir Ciężki', hp: 550, maxHp: 550, armor: 5,
                     color: '#c0392b', nonLethal: true, isBasementThug: true, isHostile: false
                 });
 

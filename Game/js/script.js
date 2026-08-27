@@ -247,18 +247,26 @@ window.addEventListener('keydown', (e) => {
             return;
         }
     } else if (key === 'e') {
-        // 1. Zamknięcie czytania listu
+        // 1. Zamknięcie okna czytania listu
         if (isReading) {
             documentViewer.close();
             return;
         }
 
-        // 2. Otwarcie wybranego dokumentu w ekwipunku
+        // 2. Otwarcie zaznaczonego dokumentu w ekwipunku
         if (menuSystem.isOpen && menuSystem.activeTab === 'inventory') {
             if (player.selectedItemIndex !== null) {
                 const selectedItem = player.inventory[player.selectedItemIndex];
-                if (selectedItem && (selectedItem.content || selectedItem.type === 'quest')) {
-                    documentViewer.open(selectedItem.name, selectedItem.content, selectedItem.monologueId, selectedItem.questTrigger);
+                if (selectedItem) {
+                    const dbItem = (typeof ITEMS_DB !== 'undefined' && ITEMS_DB[selectedItem.id]) ? ITEMS_DB[selectedItem.id] : {};
+                    const content = selectedItem.content || dbItem.content;
+                    const monologueId = selectedItem.monologueId || dbItem.monologueId;
+                    const questTrigger = selectedItem.questTrigger || dbItem.questTrigger;
+                    const isReadable = content || monologueId || selectedItem.type === 'quest' || selectedItem.type === 'readable' || dbItem.type === 'quest' || dbItem.type === 'readable';
+
+                    if (isReadable) {
+                        documentViewer.open(selectedItem.name, content || "<i>(Brak treści w liście)</i>", monologueId, questTrigger);
+                    }
                 }
             }
             return;
@@ -269,7 +277,7 @@ window.addEventListener('keydown', (e) => {
             if (!gameMap.tryInteract()) player.toggleHorse();
         }
     }
-    });
+});
 window.addEventListener('mousedown', (e) => {
     const readingModal = document.getElementById('reading-overlay');
     const isReading = readingModal && !readingModal.classList.contains('hidden');
@@ -346,6 +354,7 @@ function getPlayerAimAngle() {
     const worldMouseY = camera.y + mouse.y / CONFIG.ZOOM;
     return Math.atan2(worldMouseY - player.y, worldMouseX - player.x);
 }
+
 
 let lastFrameTime = performance.now();
 

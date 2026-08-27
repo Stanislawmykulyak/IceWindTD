@@ -101,37 +101,36 @@ const questManager = {
     },
 
     completeObjective(questId, stepIndex, amount = 1) {
-        const quest = this.quests[questId]; // Pobieramy quest po kluczu z obiektu
-        if (!quest || !quest.objectives) return;
+    const quest = this.quests[questId];
+    if (!quest || !quest.objectives) return;
 
-        const objective = quest.objectives[stepIndex];
-        if (!objective || objective.completed || objective.done) return;
+    const objective = quest.objectives[stepIndex];
+    if (!objective || objective.completed || objective.done) return;
 
-        // Cel bez targetu (np. czytanie listu / rozmowa)
-        if (objective.target === undefined || objective.target === null) {
+    // 1. Cel punktowy/lokacyjny (obiekt) lub cel bez parametru target
+    if (!objective.target || typeof objective.target === 'object') {
+        objective.completed = true;
+        objective.done = true;
+    } 
+    // 2. Cel licznikowy (np. zabij X wrogów)
+    else if (typeof objective.target === 'number') {
+        objective.current = (objective.current || 0) + amount;
+        if (objective.current >= objective.target) {
             objective.completed = true;
             objective.done = true;
-        } else {
-            // Cel licznikowy (np. zabij X wrogów)
-            objective.current = (objective.current || 0) + amount;
-            if (objective.current >= objective.target) {
-                objective.completed = true;
-                objective.done = true;
-            }
         }
-
-        // Jeśli to był bieżący krok, przejdź do następnego celu
-        if (quest.currentStep === stepIndex) {
-            quest.currentStep = (quest.currentStep || 0) + 1;
-        }
-
-        // Sprawdź czy cały quest jest skończony
-        const allDone = quest.objectives.every(o => o.completed || o.done);
-        if (allDone) {
-            quest.completed = true;
-            if (typeof showToast === 'function') showToast(`Zadanie ukończone: ${quest.title}`);
-        }
-
-        this.updateUI();
     }
+
+    if (quest.currentStep === stepIndex) {
+        quest.currentStep = (quest.currentStep || 0) + 1;
+    }
+
+    const allDone = quest.objectives.every(o => o.completed || o.done);
+    if (allDone) {
+        quest.completed = true;
+        if (typeof showToast === 'function') showToast(`Zadanie ukończone: ${quest.title}`);
+    }
+
+    this.updateUI();
+}
 };

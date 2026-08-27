@@ -39,26 +39,6 @@ const ENEMY_CONFIG = {
         attackCooldown: 4.0,   // 4 sekundy przerwy po ataku
         rewardGold: 35
     },
-    z1: {
-        name: "Zbir 1",
-        hp: 40,
-        maxHp: 40,
-        damage: 6,
-        speed: 1.8,
-        color: "#2e7d32", // zielony
-        radius: 14,
-        nonLethal: true
-    },
-    z2: {
-        name: "Zbir 2",
-        hp: 50,
-        maxHp: 50,
-        damage: 8,
-        speed: 1.5,
-        color: "#4e342e", // brunatny
-        radius: 15,
-        nonLethal: true
-    }
 };
 
 
