@@ -45,7 +45,7 @@ const player = {
     attackCooldown: false,
     parryWindow: false,
 
-    baseDamage: 75,
+    baseDamage: 40,
     baseArmor: 0,
     equippedWeapon: null,
     equippedArmor: null,
@@ -183,46 +183,49 @@ const player = {
 
     // Dynamiczny odczyt obrażeń z uwzględnieniem aktywnych buffów
     getDamage(isHeavy = false) {
-        const weapon = this.equipment.weapon;
-        const weaponDmg = !weapon ? 0 : (isHeavy
-            ? (weapon.heavyDamage || Math.round((weapon.damage || 0) * 1.6))
-            : (weapon.lightDamage || weapon.damage || 0));
+        // 1. Bazowe obrażenia + broń
+        const weapon = this.equipment?.weapon;
+        const weaponDmg = weapon ? (weapon.damage || 0) : 0;
+        let totalDmg = (this.baseDamage || 30) + (weaponDmg*1.4);
 
-        let baseDmgCalculated = weapon ? (this.baseDamage + weaponDmg) : (isHeavy ? Math.round(this.baseDamage * 1.8) : this.baseDamage);
+        // 2. SKALOWANIE Z POZIOMEM (np. +8% do całkowitych DMG za każdy level powyżej 1)
+        const levelMultiplier = 1 + ((this.level || 1) - 1) * 0.08;
+        totalDmg *= levelMultiplier;
 
-        // Sumowanie modyfikatorów z aktywnych efektów
+        // 3. Mnożnik ciężkiego ataku (2H)
+        if (isHeavy || this.combatStance === '2H') {
+            totalDmg *= 1.8;
+        }
+
+        // 4. Efekty z potek / buffów
         let bonusMultiplier = 0;
         let bonusFlatDamage = 0;
-
-        this.activeEffects.forEach(eff => {
-            if (eff.type === 'stat_buff') {
-                if (eff.stat === 'damageMultiplier') bonusMultiplier += eff.value;
-                if (eff.stat === 'baseDamage') bonusFlatDamage += eff.value;
-            }
-        });
+        if (this.activeEffects) {
+            this.activeEffects.forEach(eff => {
+                if (eff.type === 'stat_buff') {
+                    if (eff.stat === 'damageMultiplier') bonusMultiplier += eff.value;
+                    if (eff.stat === 'baseDamage') bonusFlatDamage += eff.value;
+                }
+            });
+        }
 
         const finalMultiplier = (this.damageMultiplier || 1.0) + bonusMultiplier;
-        return Math.round((baseDmgCalculated + bonusFlatDamage) * finalMultiplier);
-    },
 
+        // 5. Rozrzut ±10%
+        const variance = 0.9 + Math.random() * 0.2;
+
+        return Math.round((totalDmg + bonusFlatDamage) * finalMultiplier * variance);
+    },
     // Dynamiczny odczyt pancerza z uwzględnieniem aktywnych buffów
     getArmor() {
-        let totalArmor = this.baseArmor;
-        const slots = ['head', 'chest', 'legs', 'boots'];
-        slots.forEach(slot => {
-            if (this.equipment[slot] && this.equipment[slot].armor) {
-                totalArmor += this.equipment[slot].armor;
-            }
-        });
-
-        // Sumowanie premii do pancerza z efektów
-        this.activeEffects.forEach(eff => {
-            if (eff.type === 'stat_buff' && eff.stat === 'armor') {
-                totalArmor += eff.value;
-            }
-        });
-
-        return totalArmor;
+        let gearArmor = 0;
+        if (this.equipment) {
+            Object.values(this.equipment).forEach(item => {
+                if (item && item.armor) gearArmor += item.armor;
+            });
+        }
+        const levelArmor = ((this.level || 1) - 1) * 12;
+        return (this.baseArmor || 0) + gearArmor + levelArmor;
     },
 
     getCombatStats() {
@@ -320,22 +323,22 @@ const player = {
         setTimeout(() => { player.canAttack = true; }, cd);
     },
 
-    takeDamage(amount) {
-        if (this.isDodging) return;
+    takeDamage(rawDamage) {
+        // Pobieramy łączny pancerz (z pancerza + levelu)
+        const armor = typeof this.getArmor === 'function' ? this.getArmor() : (this.armor || 0);
 
-        if (this.isParrying && this.parryWindow) {
-            showToast("⚔️ Sparowano atak!");
-            return;
-        }
+        // Nasz przelicznik zredukowanych obrażeń
+        const reductionRatio = armor / (armor + 300);
+        let finalDamage = Math.round(rawDamage * (1 - reductionRatio));
 
-        const playerArmor = this.getArmor();
-        const actualDamage = calculateDamage(amount, playerArmor, 1.0);
+        // Zabezpieczenie minimalnego ciosu (min. 5% dmg)
+        const minDamage = Math.max(1, Math.round(rawDamage * 0.05));
+        finalDamage = Math.max(minDamage, finalDamage);
 
-        this.hp = Math.max(0, this.hp - actualDamage);
-        showToast(`Otrzymałeś -${actualDamage} HP!`);
-        this.updateHPUI();
+        this.hp -= finalDamage;
+        if (this.hp < 0) this.hp = 0;
 
-        if (this.hp <= 0) this.handleDeath();
+        return finalDamage;
     },
 
     heal(amount) {
@@ -561,7 +564,7 @@ const player = {
 
     toggleHorse() {
         if (gameMap.currentLocation !== 'kruczy_dol') return;
-        
+
         if (this.isMounted) {
             this.isMounted = false;
             this.horse.isMounted = false;
@@ -582,18 +585,22 @@ const player = {
         if (typeof setControlsHint !== 'function') return;
 
         const hints = [];
+        const inCombat = typeof gameState !== 'undefined' && gameState === 'COMBAT';
 
         // Poruszanie
         hints.push({ action: 'Ruch', key: 'W A S D' });
 
-        // Sterowanie koniem / Pieszo
+        // Sterowanie koniem / Unik
         if (this.isMounted) {
             hints.push({ action: 'Galop', key: 'Shift' });
             hints.push({ action: 'Zsiądź z konia', key: 'E' });
         } else {
             hints.push({ action: 'Bieg', key: 'Shift' });
 
-            if (typeof gameMap !== 'undefined' && gameMap.currentLocation === 'kruczy_dol' && this.horse && !this.horse.isMounted) {
+            if (inCombat) {
+                // W walce zamiast konia pokazywany jest Unik
+                hints.push({ action: 'Unik', key: 'Spacja' });
+            } else if (typeof gameMap !== 'undefined' && gameMap.currentLocation === 'kruczy_dol' && this.horse && !this.horse.isMounted) {
                 const distToHorse = Math.hypot(this.x - this.horse.x, this.y - this.horse.y);
                 if (distToHorse < 40) {
                     hints.push({ action: 'Dosiądź konia', key: 'E' });
@@ -606,9 +613,15 @@ const player = {
         // Walka i interfejs
         hints.push({ action: 'Atak', key: 'LPM' });
         hints.push({ action: 'Zmiana chwytu', key: 'Ctrl' });
-        hints.push({ action: 'Ekwipunek', key: ' I' });
 
-        // Kesowanie, żeby nie męczyć DOMu przerysowywaniem w każdej klatce (60 FPS)
+        // W walce zamiast ekwipunku pokazywane jest Parowanie
+        if (inCombat) {
+            hints.push({ action: 'Paruj', key: 'PPM' });
+        } else {
+            hints.push({ action: 'Ekwipunek', key: 'I' });
+        }
+
+        // Kesowanie przerysu w DOM
         const hintString = JSON.stringify(hints);
         if (this._lastHintCache !== hintString) {
             this._lastHintCache = hintString;
@@ -631,15 +644,15 @@ const player = {
         if (this.isMounted) {
             if (keys['shift']) {
                 currentSpeed = CONFIG.horse_run_speed || (CONFIG.horse_speed * 1.55);
-                if (stateTextUI) { 
-                    stateTextUI.innerText = "Na koniu (Galop [Shift])"; 
-                    stateTextUI.style.color = "#e74c3c"; 
+                if (stateTextUI) {
+                    stateTextUI.innerText = "Na koniu (Galop [Shift])";
+                    stateTextUI.style.color = "#e74c3c";
                 }
             } else {
                 currentSpeed = CONFIG.horse_speed;
-                if (stateTextUI) { 
-                    stateTextUI.innerText = "Na koniu (Kłus)"; 
-                    stateTextUI.style.color = "#9b59b6"; 
+                if (stateTextUI) {
+                    stateTextUI.innerText = "Na koniu (Kłus)";
+                    stateTextUI.style.color = "#9b59b6";
                 }
             }
         } else if (keys['shift']) {

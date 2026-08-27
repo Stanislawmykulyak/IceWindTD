@@ -294,10 +294,11 @@ function updateCombatUI() {
     const hud = document.getElementById('combat-hud');
     if (!hud) return;
 
-    if (typeof gameState !== 'undefined' && gameState === 'COMBAT') {
-        hud.classList.remove('combat-hidden');
-    } else {
+    // HUD Quick Slotów jest widoczny ZAWSZE, chyba że otwarte jest menu
+    if (typeof menuSystem !== 'undefined' && menuSystem.isOpen) {
         hud.classList.add('combat-hidden');
+    } else {
+        hud.classList.remove('combat-hidden');
     }
 }
 
@@ -553,7 +554,7 @@ const shopSystem = {
 
         const merchantNameEl = document.getElementById('shop-merchant-name');
         if (merchantNameEl) merchantNameEl.innerText = shop.name || 'Kupiec';
-        if (gameState === 'COMBAT') {
+        if (typeof menuSystem !== 'undefined' && !menuSystem.isOpen) {
             drawCombatHUD(ctx);
             drawActiveEffectsHUD(ctx);
         }
@@ -816,11 +817,10 @@ const subtitleManager = {
 function drawCombatHUD(ctx) {
     ctx.save();
 
-    // Pozycja w lewym dolnym rogu
     const startX = 40;
     const startY = canvas.height - 180;
 
-    // Subtelny, głęboki cień pod tekstem dla czytelności
+    // Cień pod tekstem
     ctx.shadowColor = 'rgba(0, 0, 0, 0.9)';
     ctx.shadowBlur = 6;
     ctx.shadowOffsetX = 2;
@@ -828,32 +828,35 @@ function drawCombatHUD(ctx) {
 
     ctx.font = 'bold 22px "Georgia", serif';
 
-    // --- SLOTY 1, 2, 3 ---
+    // --- QUICK SLOTY 1, 2, 3 (WIDOCZNE ZAWSZE) ---
     for (let i = 0; i < 3; i++) {
         const itemId = player.quickSlots[i];
         const item = itemId ? (player.inventory.find(inv => inv.id === itemId) || (typeof ITEMS_DB !== 'undefined' ? ITEMS_DB[itemId] : null)) : null;
-        const itemText = item ? `${item.icon || ''} ${item.name}`.trim() : 'Puste';
+        const itemText = item ? `${item.icon || ''} ${item.name}`.trim() : '';
         const lineY = startY + (i * 36);
 
-        // Numer slotu – stonowane, ciemne złoto
+        // Numeracja slotu
         ctx.fillStyle = '#b8975a';
         ctx.fillText(`${i + 1}.`, startX, lineY);
 
-        // Nazwa przedmiotu – złamana, ciepła biel (lub przyciemniona gdy pusto)
-        ctx.fillStyle = item ? '#e6dfd3' : 'rgba(230, 223, 211, 0.35)';
-        ctx.fillText(itemText, startX + 30, lineY);
+        // Nazwa przedmiotu (tylko jak coś w nim jest)
+        if (itemText) {
+            ctx.fillStyle = '#e6dfd3';
+            ctx.fillText(itemText, startX + 30, lineY);
+        }
     }
 
-    // --- STYL BRONI ---
-    const stanceY = startY + (3 * 36) + 8;
+    // --- STYL BRONI (WIDOCZNY TYLKO W WALCE) ---
+    if (typeof gameState !== 'undefined' && gameState === 'COMBAT') {
+        const stanceY = startY + (3 * 36) + 8;
 
-    ctx.fillStyle = '#b8975a';
-    ctx.fillText('STYL:', startX, stanceY);
+        ctx.fillStyle = '#b8975a';
+        ctx.fillText('STYL:', startX, stanceY);
 
-    // Normalny, elegancki napis w kolorze perłowym/stalowym
-    ctx.fillStyle = '#e6dfd3';
-    const stanceText = player.combatStance === '1H' ? 'Jednoręczny' : 'Dwuręczny';
-    ctx.fillText(stanceText, startX + 90, stanceY);
+        ctx.fillStyle = '#e6dfd3';
+        const stanceText = player.combatStance === '1H' ? 'Jednoręczny' : 'Dwuręczny';
+        ctx.fillText(stanceText, startX + 90, stanceY);
+    }
 
     ctx.restore();
 }
@@ -862,7 +865,7 @@ function drawActiveEffectsHUD(ctx) {
     if (!player.activeEffects || player.activeEffects.length === 0) return;
 
     ctx.save();
-    
+
     // Pozycja w prawym górnym rogu
     const startX = canvas.width - 30;
     const startY = 25;
@@ -893,7 +896,7 @@ function drawActiveEffectsHUD(ctx) {
 
         // Ikona mikstury (emotka z możliwością zamiany na Image w przyszłości)
         // Jeśli masz własną grafikę, podmień poniższą zmienną np. na obiekt Image()
-        const potionIcon = eff.icon || '🧪'; 
+        const potionIcon = eff.icon || '🧪';
 
         ctx.font = '16px "Georgia", serif';
         ctx.fillText(potionIcon, x + 8, startY + 22);

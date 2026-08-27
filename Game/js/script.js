@@ -397,7 +397,6 @@ function gameLoop() {
         player.update(keys, stateText);
         gameMap.updateNPCs();
         enemyManager.update(dt, player);
-        enemyManager.checkPlayerAttack(player);
         LootManager.update(player, keys);
     }
 
@@ -432,10 +431,10 @@ function gameLoop() {
     ctx.restore(); // <-- KONIEC KAMERY
 
     // 5. RENDEROWANIE INTERFEJSU NA EKRANIE (STALE WSPÓŁRZĘDNE EKRANU)
-    if (gameState === 'COMBAT') {
-        if (typeof drawCombatHUD === 'function') drawCombatHUD(ctx);
-        if (typeof drawActiveEffectsHUD === 'function') drawActiveEffectsHUD(ctx);
-    }
+    if (typeof menuSystem !== 'undefined' && !menuSystem.isOpen) {
+    drawCombatHUD(ctx);
+    drawActiveEffectsHUD(ctx);
+}
 
     gameMap.drawMinimap();
 

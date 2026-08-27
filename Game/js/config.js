@@ -26,7 +26,7 @@ const start_items = {
         name: 'Prosty Miecz',
         type: 'weapon',
         icon: '⚔️',
-        damage: 15,
+        damage: 75,
         weight: 2.5,
         value: 35,
         stats: 'Obrażenia: 15',
@@ -81,7 +81,8 @@ const start_items = {
 const ENEMY_CONFIG = {
     zbir_lekki: {
         name: 'Zbir',
-        maxHp: 950,
+        maxHp: 1150,
+        armor: 15,
         speed: 45,
         damage: 12,
         radius: 12,
@@ -92,7 +93,8 @@ const ENEMY_CONFIG = {
     },
     zbir_ciezki: {
         name: 'Osiłek',
-        maxHp: 1500,
+        maxHp: 2300,
+        armor: 40,
         speed: 30,
         damage: 20,
         radius: 16,

@@ -165,7 +165,7 @@ class Enemy {
         const type = config.type || 'zbir_lekki';
         const baseConfig = (typeof ENEMY_CONFIG !== 'undefined' && ENEMY_CONFIG[type]) ? ENEMY_CONFIG[type] : {};
         this.baseConfig = baseConfig;
-
+        this.armor = baseConfig.armor || config.armor || 0;
         this.id = config.id || `enemy_${Date.now()}`;
         this.x = config.x || 0;
         this.y = config.y || 0;
@@ -376,7 +376,7 @@ class Enemy {
         if (!this.isAlive) return;
 
         if (this.state === 'ATTACK') {
-            const angleToPlayer = Math.atan2(this.targetDist ? this.y : player.y - this.y, player.x - this.x);
+            const angleToPlayer = Math.atan2(player.y - this.y, player.x - this.x);
             const arcAngle = Math.PI / 2.2;
 
             ctx.save();
