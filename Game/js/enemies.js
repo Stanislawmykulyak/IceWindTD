@@ -331,19 +331,20 @@ class Enemy {
         this.x += Math.cos(angle) * knockbackDistance;
         this.y += Math.sin(angle) * knockbackDistance;
 
-        if (this.hp <= 0) {
-            this.hp = 0;
+        if (this.hp <= 1 && this.nonLethal) {
+            this.hp = 1;
+            this.isUnconscious = true;
+            this.isHostile = false;
+            this.color = '#7f8c8d'; // Szary odcień dla nieprzytomnego
+
+            showToast(`${this.name} został powalony!`);
+            cutsceneManager.checkBasementFightEnd();
+            return;
+        }
+
+        if (this.hp <= 0 && !this.nonLethal) {
             this.isAlive = false;
             this.onDeath();
-        }
-        if (this.hp - damageAmount <= 0 && this.config.nonLethal) {
-            this.hp = 1;
-            this.status = 'unconscious';
-            this.isAggressive = false;
-            this.canAttack = false;
-        } else {
-            this.hp -= damageAmount;
-            if (this.hp <= 0) this.isDead = true;
         }
     }
     onDeath(lootManager) {

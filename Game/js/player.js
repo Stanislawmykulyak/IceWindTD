@@ -5,6 +5,7 @@ const player = {
     radius: 12,
     gold: 100,
     color: '#3498db',
+    canMove: true,
     angle: 0,
     iFrames: false,
     isMounted: false,
@@ -438,7 +439,7 @@ const player = {
     },
 
     update(keys, stateTextUI) {
-        if (this.isSleeping) return;
+        if (this.isSleeping || !this.canMove) return;
 
         let moveX = 0, moveY = 0;
         if (keys['w'] || keys['arrowup']) moveY -= 1;

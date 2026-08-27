@@ -18,7 +18,8 @@ const gameMap = {
             ],
             doors: [
                 { x: 810, y: 580, width: 40, height: 20, targetLocation: 'karczma_wnetrze', spawnX: 400, spawnY: 480, label: 'Wejdź [E]' },
-                { x: 1940, y: 580, width: 40, height: 20, targetLocation: 'nicolas_wnetrze', spawnX: 400, spawnY: 480, label: 'Wejdź [E]' }
+                { x: 1940, y: 580, width: 40, height: 20, targetLocation: 'nicolas_wnetrze', spawnX: 400, spawnY: 480, label: 'Wejdź [E]' },
+                { x: 1750, y: 440, width: 40, height: 20, targetLocation: 'wioska_mlyn', spawnX: 1220, spawnY: 1900, label: 'Stary Młyn [E]' }
             ],
             npcs: []
         },
@@ -76,23 +77,50 @@ const gameMap = {
             npcs: []
         },
         wioska_mlyn: {
+            width: 2400,
+            height: 2400,
             name: "Stary Młyn",
-            width: 1200,
-            height: 800,
-            doors: [
-                { x: 50, y: 400, w: 40, h: 60, targetMap: 'kruczy_dol', targetX: 1800, targetY: 500 },
-                { x: 600, y: 300, w: 50, h: 50, targetMap: 'piwnica_mlyna', targetX: 250, targetY: 450 }
+            bgColor: '#2e3d29',
+            buildings: [
+                { id: 'mlyn_bldg', name: 'Młyn', x: 1100, y: 1750, width: 250, height: 200, color: '#4a3525' }
             ],
-            npcs: []
+            doors: [
+                { x: 1220, y: 1850, width: 40, height: 20, targetLocation: 'mlyn_piwnica', spawnX: 200, spawnY: 400, label: 'Piwnica [E]' }
+            ]
         },
-        piwnica_mlyna: {
-            name: "Piwnica Młyna",
+
+        mlyn_piwnica: {
             width: 600,
             height: 500,
+            name: "Piwnica Młyna",
+            bgColor: '#120d0a',
+            buildings: [],
             doors: [
-                { x: 250, y: 480, w: 60, h: 20, targetMap: 'wioska_mlyn', targetX: 600, targetY: 360 }
+                { x: 200, y: 440, width: 40, height: 20, targetLocation: 'wioska_mlyn', spawnX: 1220, spawnY: 1880, label: 'Wyjście [E]' }
             ],
-            npcs: []
+            onEnter() {
+                // Spawn zbirów jako instancji klasy Enemy
+                const z1 = new Enemy({
+                    id: 'z1', type: 'zbir_lekki', x: 380, y: 180, aggroRadius: 250
+                });
+                Object.assign(z1, {
+                    name: 'Zbir', hp: 60, maxHp: 60, armor: 2,
+                    color: '#e74c3c', nonLethal: true, isBasementThug: true, isHostile: false
+                });
+
+                const z2 = new Enemy({
+                    id: 'z2', type: 'zbir_ciezki', x: 430, y: 220, aggroRadius: 250
+                });
+                Object.assign(z2, {
+                    name: 'Zbir Ciężki', hp: 90, maxHp: 90, armor: 5,
+                    color: '#c0392b', nonLethal: true, isBasementThug: true, isHostile: false
+                });
+
+                enemyManager.enemies = [z1, z2];
+
+                // Uruchomienie cutscenki wejściowej
+                cutsceneManager.startBasementIntro();
+            }
         }
     },
 
@@ -424,7 +452,6 @@ const gameMap = {
             }
 
             if (door.targetLocation) {
-                // Odpięcie konia przed zmianą lokacji
                 if (player.isMounted) {
                     player.isMounted = false;
                     player.horse.isMounted = false;
@@ -434,6 +461,12 @@ const gameMap = {
                 this.currentLocation = door.targetLocation;
                 player.x = door.spawnX;
                 player.y = door.spawnY;
+
+                // NAPRAWA: Wywołanie hooka onEnter dla nowej lokacji (aktywacja spawnu i cutscenki)
+                const currentData = this.getCurrentData();
+                if (currentData && typeof currentData.onEnter === 'function') {
+                    currentData.onEnter();
+                }
                 return true;
             }
         }

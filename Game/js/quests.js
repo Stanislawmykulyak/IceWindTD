@@ -47,6 +47,14 @@ const MONOLOGUE_DATABASE = {
         { text: "Arkelas: Tylko gdzie ja tu znajdę młyn ,no trudno trzeba będzie się zapytać w karczmie a na razie przydałoby się przespać po podróży", duration: 7000 },
         
         
+    ],
+    zbiry_piwnica_intro: [
+        { text: "Zbir 1: Mówiłem ci, że tu nikogo nie ma! Nicolas uciekł!", duration: 3500 },
+        { text: "Zbir 2: Cicho! Ktoś właśnie zszedł po schodach...", duration: 3000 }
+    ],
+    zbiry_piwnica_outro: [
+        { text: "Zbir 1: Ała! Dobra, poddajemy się! Nie zabijaj nas!", duration: 3500 },
+        { text: "Zbir 2: Zbieramy się stąd, zanim połamie nam resztę kości!", duration: 3500 }
     ]
 };
 
