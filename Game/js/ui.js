@@ -289,6 +289,18 @@ const menuSystem = {
         }
     }
 };
+
+function updateCombatUI() {
+    const hud = document.getElementById('combat-hud');
+    if (!hud) return;
+
+    if (typeof gameState !== 'undefined' && gameState === 'COMBAT') {
+        hud.classList.remove('combat-hidden');
+    } else {
+        hud.classList.add('combat-hidden');
+    }
+}
+
 const shopSystem = {
     isOpen: false,
     currentShopId: null,
@@ -541,7 +553,10 @@ const shopSystem = {
 
         const merchantNameEl = document.getElementById('shop-merchant-name');
         if (merchantNameEl) merchantNameEl.innerText = shop.name || 'Kupiec';
-
+        if (gameState === 'COMBAT') {
+            drawCombatHUD(ctx);
+            drawActiveEffectsHUD(ctx);
+        }
         // 1. EKWIPUNEK GRACZA (LEWA STRONA) - 10 KOLUMN, NIESKOŃCZONOŚĆ (MIN. 60 KRATEK)
         const playerGrid = document.getElementById('shop-player-grid');
         if (playerGrid) {
@@ -797,6 +812,101 @@ const subtitleManager = {
         if (box) box.classList.add('hidden');
     }
 };
+
+function drawCombatHUD(ctx) {
+    ctx.save();
+
+    // Pozycja w lewym dolnym rogu
+    const startX = 40;
+    const startY = canvas.height - 180;
+
+    // Subtelny, głęboki cień pod tekstem dla czytelności
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.9)';
+    ctx.shadowBlur = 6;
+    ctx.shadowOffsetX = 2;
+    ctx.shadowOffsetY = 2;
+
+    ctx.font = 'bold 22px "Georgia", serif';
+
+    // --- SLOTY 1, 2, 3 ---
+    for (let i = 0; i < 3; i++) {
+        const itemId = player.quickSlots[i];
+        const item = itemId ? (player.inventory.find(inv => inv.id === itemId) || (typeof ITEMS_DB !== 'undefined' ? ITEMS_DB[itemId] : null)) : null;
+        const itemText = item ? `${item.icon || ''} ${item.name}`.trim() : 'Puste';
+        const lineY = startY + (i * 36);
+
+        // Numer slotu – stonowane, ciemne złoto
+        ctx.fillStyle = '#b8975a';
+        ctx.fillText(`${i + 1}.`, startX, lineY);
+
+        // Nazwa przedmiotu – złamana, ciepła biel (lub przyciemniona gdy pusto)
+        ctx.fillStyle = item ? '#e6dfd3' : 'rgba(230, 223, 211, 0.35)';
+        ctx.fillText(itemText, startX + 30, lineY);
+    }
+
+    // --- STYL BRONI ---
+    const stanceY = startY + (3 * 36) + 8;
+
+    ctx.fillStyle = '#b8975a';
+    ctx.fillText('STYL:', startX, stanceY);
+
+    // Normalny, elegancki napis w kolorze perłowym/stalowym
+    ctx.fillStyle = '#e6dfd3';
+    const stanceText = player.combatStance === '1H' ? 'Jednoręczny' : 'Dwuręczny';
+    ctx.fillText(stanceText, startX + 90, stanceY);
+
+    ctx.restore();
+}
+
+function drawActiveEffectsHUD(ctx) {
+    if (!player.activeEffects || player.activeEffects.length === 0) return;
+
+    ctx.save();
+    
+    // Pozycja w prawym górnym rogu
+    const startX = canvas.width - 30;
+    const startY = 25;
+    const cardWidth = 80;
+    const cardHeight = 32;
+    const gap = 10;
+
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
+    ctx.shadowBlur = 5;
+
+    player.activeEffects.forEach((eff, index) => {
+        // Efekty układają się od prawej do lewej
+        const x = startX - ((index + 1) * (cardWidth + gap));
+
+        // Tło kafelka efektu
+        ctx.fillStyle = 'rgba(20, 15, 10, 0.85)';
+        ctx.strokeStyle = '#8a6f37';
+        ctx.lineWidth = 1.5;
+
+        ctx.beginPath();
+        if (typeof ctx.roundRect === 'function') {
+            ctx.roundRect(x, startY, cardWidth, cardHeight, 4);
+        } else {
+            ctx.fillRect(x, startY, cardWidth, cardHeight);
+        }
+        ctx.fill();
+        ctx.stroke();
+
+        // Ikona mikstury (emotka z możliwością zamiany na Image w przyszłości)
+        // Jeśli masz własną grafikę, podmień poniższą zmienną np. na obiekt Image()
+        const potionIcon = eff.icon || '🧪'; 
+
+        ctx.font = '16px "Georgia", serif';
+        ctx.fillText(potionIcon, x + 8, startY + 22);
+
+        // Czas trwania
+        ctx.fillStyle = '#f1c40f';
+        ctx.font = 'bold 13px "Georgia", serif';
+        ctx.fillText(`${Math.ceil(eff.remainingTime)}s`, x + 34, startY + 21);
+    });
+
+    ctx.restore();
+}
+
 const dragDropManager = {
     draggedData: null,
 
@@ -912,4 +1022,22 @@ function showTooltip(item, event) {
     }
 
     tooltip.classList.remove('hidden');
+}
+
+function setControlsHint(hints = []) {
+    const container = document.getElementById('controls-hint');
+    if (!container) return;
+
+    if (hints.length === 0) {
+        container.innerHTML = '';
+        return;
+    }
+
+    container.innerHTML = hints.map(h => `
+        <div class="hint-row">
+            <span class="hint-action">${h.action}</span>
+            ${h.mode ? `<span class="hint-mode">[${h.mode}]</span>` : ''}
+            <span class="hint-key">${h.key}</span>
+        </div>
+    `).join('');
 }

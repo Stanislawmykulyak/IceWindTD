@@ -131,18 +131,34 @@ canvas {
     color: #4a3b2c;
 }
 
-/* KRATKA PLECAKA */
+/* ROZSZERZONE MENU EKWIPUNKU */
+.inventory-wrapper {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 30px;
+    padding: 30px;
+    background: rgba(14, 11, 18, 0.96);
+    border: 2px solid #5a4529;
+    border-radius: 8px;
+    width: 100%;
+    max-width: 1100px; /* Rozszerzono z 900px */
+    margin: 0 auto;
+    box-shadow: inset 0 0 50px rgba(0, 0, 0, 0.9), 0 0 25px rgba(0, 0, 0, 0.8);
+}
+
+/* POWIĘKSZONA SIATKA PLECAKA (6 KOLUMN x ZWIĘKSZONA WYSOKOŚĆ) */
 .scrollable-grid {
     display: grid;
-    grid-template-columns: repeat(5, 56px);
-    grid-auto-rows: 56px;
-    max-height: 340px;
+    grid-template-columns: repeat(6, 60px); /* Powiększone z 5 kolumn do 6 */
+    grid-auto-rows: 60px;
+    max-height: 400px; /* Zwiększona wysokość */
     overflow-y: auto;
     gap: 8px;
-    background: rgba(8, 6, 10, 0.8);
-    padding: 10px;
+    background: rgba(8, 6, 10, 0.85);
+    padding: 12px;
     border: 1px solid #3c3022;
-    border-radius: 4px;
+    border-radius: 6px;
 }
 
 .grid-slot {
@@ -1614,5 +1630,268 @@ canvas#gameCanvas {
     border: 1px solid rgba(212, 163, 89, 0.3);
 }
 
+.combat-hidden {
+    display: none !important;
+}
+
+#combat-hud {
+    position: absolute;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(20, 20, 20, 0.9);
+    border: 2px solid #b8860b;
+    padding: 15px 25px;
+    border-radius: 8px;
+    z-index: 100;
+    color: #fff;
+    text-align: center;
+    font-family: sans-serif;
+}
+
+.combat-buttons {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.combat-buttons button {
+    background: #4a0e0e;
+    color: #fff;
+    border: 1px solid #ff4500;
+    padding: 8px 16px;
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+.combat-buttons button:hover {
+    background: #8b0000;
+}
+
 .text-green { color: #2ecc71; }
 .text-red { color: #e74c3c; }
+
+/* SEKCIJA QUICK SLOTS W EKWIPUNKU */
+.quickslots-container {
+    margin-top: 15px;
+    padding: 10px;
+    background: rgba(8, 6, 10, 0.6);
+    border: 1px solid #3c3022;
+    border-radius: 4px;
+}
+
+.quickslots-title {
+    font-size: 11px;
+    color: #d4af37;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    letter-spacing: 1px;
+}
+
+.quickslots-grid {
+    display: flex;
+    gap: 12px;
+}
+
+.quick-slot {
+    width: 52px;
+    height: 52px;
+    background: rgba(22, 17, 28, 0.9);
+    border: 1px solid #4a3825;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    position: relative;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.quick-slot:hover {
+    border-color: #f1c40f;
+    box-shadow: 0 0 8px rgba(241, 196, 15, 0.4);
+}
+
+.quick-slot-number {
+    position: absolute;
+    top: 2px;
+    left: 4px;
+    font-size: 10px;
+    font-weight: bold;
+    color: #b8975a;
+}
+
+/* ZAWSZE WIDOCZNY HUD QUICK SLOTÓW */
+#quick-slots-hud {
+    position: relative;
+    z-index: 999; /* Zawsze nad canvasem i większością warstw */
+    display: flex !important;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 10px;
+    pointer-events: auto;
+}
+
+/* SLOTY W WEWNĄTRZ OKNA EKWIPUNKU */
+.eq-quick-section {
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid #4a3b2c;
+    border-radius: 6px;
+    padding: 8px;
+    margin-bottom: 12px;
+}
+
+.eq-quick-title {
+    display: block;
+    font-size: 11px;
+    color: #a89f91;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.eq-quick-slots {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+}
+
+.eq-qslot {
+    position: relative;
+    background: #18120c;
+    border: 1px dashed #7a5c36;
+    border-radius: 4px;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+/* NOWY WYGLĄD QUICK SLOTÓW POD ARMOREM */
+.eq-quick-section {
+    background: rgba(18, 14, 22, 0.85);
+    border: 1px solid #5a4529;
+    border-radius: 6px;
+    padding: 12px;
+    margin-top: 16px;
+    box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.8);
+}
+
+.eq-quick-title {
+    display: block;
+    font-size: 11px;
+    color: #d4af37;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    text-align: center;
+    font-weight: bold;
+}
+
+.eq-quick-slots {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+}
+
+.eq-qslot {
+    position: relative;
+    background: rgba(10, 7, 12, 0.9);
+    border: 1px solid #4a3825;
+    border-radius: 6px;
+    padding: 10px 6px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    min-height: 64px;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.eq-qslot:hover {
+    border-color: #f1c40f;
+    background: rgba(241, 196, 15, 0.12);
+    box-shadow: 0 0 12px rgba(241, 196, 15, 0.35);
+    transform: translateY(-2px);
+}
+
+.qslot-badge {
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    font-size: 10px;
+    font-weight: bold;
+    color: #f1c40f;
+    background: #18111b;
+    border: 1px solid #5a4529;
+    padding: 1px 5px;
+    border-radius: 3px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.6);
+}
+
+.qslot-icon {
+    font-size: 24px;
+    margin-top: 2px;
+    line-height: 1;
+}
+
+.qslot-label {
+    font-size: 10px;
+    color: #c5b396;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 85px;
+    margin-top: 4px;
+    font-weight: 500;
+}
+.controls-hint {
+    position: fixed;
+    bottom: 25px;
+    right: 25px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 6px;
+    pointer-events: none; /* Nie blokuje kliknięć na grę */
+    z-index: 9999;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.hint-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(15, 15, 15, 0.75);
+    padding: 4px 10px;
+    color: #dcdcdc;
+    font-size: 12px;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(2px);
+}
+
+.hint-action {
+    color: #ffffff;
+    font-weight: 600;
+}
+
+.hint-mode {
+    color: #e67e22; /* Kolor dla np. [Przytrzymanie] */
+    font-size: 10px;
+    font-weight: bold;
+}
+
+.hint-key {
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: #ffffff;
+    padding: 2px 7px;
+    border-radius: 3px;
+    font-weight: bold;
+    font-size: 11px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+}

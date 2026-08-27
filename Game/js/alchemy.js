@@ -7,38 +7,73 @@ const RECIPE_CATEGORIES = {
 let worldObjects = [];
 
 const ALCHEMY_RECIPES_DB = {
-    recipe_hp_small: {
-        id: 'recipe_hp_small',
-        resultId: 'potion_hp_small',
-        name: 'Mała Mikstura Zdrowia',
+    potion_health: {
+        id: 'potion_health',
+        name: 'Mikstura Zdrowia',
         category: 'heals',
         icon: '🍷',
-        effect: 'Leczenie: +30 HP/s przez 15s',
         yieldCount: 3,
-        description: 'Odnawia 30 punktów życia po spożyciu.',
-        lore: 'Stary przepis leśnych pustelników z Doliny Młynów. Mówi się, że pierwszą wersję pędzono w kociołkach przy użyciu deszczówki i dzikich ziół, by leczyć rany po potyczkach z wilkami.',
+        description: 'Przywraca punkty życia w czasie.',
+        effect: '+45 HP w ciągu 15s',
+        lore: 'Podstawowy wywar każdego poszukiwacza przygód.',
         ingredients: [
-            { id: 'ziolo_czerwone', name: 'Czerwone Zioło', icon: '🌿', count: 3 },
-            { id: 'woda_butelka', name: 'Woda w Butelce', icon: '🧴', count: 1 },
+            { id: 'ziolo_czerwone', name: 'Czerwone Zioło', icon: '🌿', count: 2 },
+            { id: 'korzen_zycia', name: 'Korzeń Życia', icon: '🌱', count: 3 },
+            { id: 'woda_butelka', name: 'Woda w Butelce', icon: '🧴', count: 1 }
+        ],
+        result: 'potion_health'
+    },
+    potion_strength: {
+        id: 'potion_strength',
+        name: 'Mikstura Siły',
+        category: 'combat',
+        icon: '⚔️',
+        yieldCount: 3,
+        description: 'Zwiększa zadawane obrażenia.',
+        effect: '+20% do Obrażeń',
+        lore: 'Smakuje jak płynna miedź i gniew.',
+        ingredients: [
+            { id: 'ziolo_czerwone', name: 'Czerwone Zioło', icon: '🌿', count: 2 },
             { id: 'korzen_zycia', name: 'Korzeń Życia', icon: '🌱', count: 1 }
-        ]
+        ],
+        result: 'potion_strength'
+    },
+    potion_fortification: {
+        id: 'potion_fortification',
+        name: 'Mikstura Wzmocnienia',
+        category: 'utility',
+        icon: '🧪',
+        yieldCount: 3,
+        description: 'Zwiększa pancerz.',
+        effect: '+15 Pancerza',
+        lore: 'Twarda jak skała, gęsta jak smoła.',
+        ingredients: [
+            { id: 'herb_blue', name: 'Niebieskie Zioło', icon: '🍃', count: 2 },
+            { id: 'iron_ore', name: 'Ruda Żelaza', icon: '⛏️', count: 1 }
+        ],
+        result: 'potion_fortification'
     }
 };
 
+function getAvailableAlembicRecipes() {
+    return Object.values(ALCHEMY_RECIPES_DB).filter(recipe =>
+        player.unlockedRecipes.includes(recipe.id)
+    );
+}
+
 const alchemyUI = {
     isOpen: false, // <-- Dodana flaga stanu
-    selectedRecipeId: 'recipe_hp_small',
+    selectedRecipeId: 'potion_health',
     openCategories: new Set(['heals']),
 
     open() {
-        this.isOpen = true;
         const modal = document.getElementById('alchemy-modal');
-        if (modal) modal.classList.remove('hidden');
-        this.render();
+        if (modal) {
+            modal.classList.remove('hidden');
+            if (typeof this.render === 'function') this.render();
+        }
     },
-
     close() {
-        this.isOpen = false;
         const modal = document.getElementById('alchemy-modal');
         if (modal) modal.classList.add('hidden');
     },
@@ -88,14 +123,26 @@ const alchemyUI = {
             }
         });
 
-        // Dodanie mikstury do plecaka
-        player.addItem(recipe.resultId, recipe.name, recipe.icon, 'consumable', 0.4, recipe.description, recipe.yieldCount || 1, 0, 0);
-        showToast(`Uwarzono: ${recipe.name}!`);
+        // Dodanie mikstur do plecaka (uwzględnia yieldCount)
+        const amount = recipe.yieldCount || 1;
+        player.addItem(recipe.result, recipe.name, recipe.icon, 'consumable', 0.4, recipe.description, amount, 0, 0);
+
+        // Toast z informacją o wyprodukowanej ilości (np. x3)
+        // NOWY KOD:
+        showToast(`Uwarzono: ${recipe.name}${amount > 1 ? ` x${amount}` : ''}!`);
+
+        // 1. Re-render listy receptur
         this.render();
+
+
+        // 3. Odświeżenie głównego UI ekwipunku (jeśli masz osobny moduł)
+        if (window.inventoryUI && typeof inventoryUI.render === 'function') {
+            inventoryUI.render();
+        }
     },
 
     render() {
-        const known = player.knownRecipes || ['recipe_hp_small']; // Domyślnie gracz zna małe leczenie
+        const known = player.unlockedRecipes || ['potion_health']; // Domyślnie gracz zna małe leczenie
         const recipeListEl = document.getElementById('alc-recipe-list');
         const detailsEl = document.getElementById('alc-details-panel');
 
@@ -150,7 +197,7 @@ const alchemyUI = {
         }
 
         const isCraftable = this.canCraft(currentRecipe);
-        const resultOwned = this.getPlayerItemCount(currentRecipe.resultId);
+        const resultOwned = this.getPlayerItemCount(currentRecipe.result);
 
         // Składniki: Ikona + Licznik (w kwadracie) + Nazwa pod spodem
         const ingredientsHtml = currentRecipe.ingredients.map(ing => {
@@ -232,6 +279,7 @@ class PlacedAlembic {
             ctx.font = 'bold 11px sans-serif';
             ctx.fillText('[E] Użyj   [F] Zwiń', this.x, this.y - 25);
         }
+
         ctx.restore();
     }
 

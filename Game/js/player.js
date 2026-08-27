@@ -10,9 +10,12 @@ const player = {
     iFrames: false,
     isMounted: false,
     isSleeping: false,
-    // 4. Ekwipunek i Plecak
+
+    // Ekwipunek i Efekty
     maxWeight: 100.0,
     selectedItemIndex: null,
+    activeEffects: [], // Jednolity system dla WSZYSTKICH efektów
+
     inventory: [
         {
             id: 'list_nicolas',
@@ -33,8 +36,8 @@ const player = {
         legs: null,
         boots: null
     },
-    hp: 100,
-    maxHp: 100,
+    hp: 1250,
+    maxHp: 1250,
     damageMultiplier: 1.0,
     isParrying: false,
     isDodging: false,
@@ -42,18 +45,17 @@ const player = {
     attackCooldown: false,
     parryWindow: false,
 
-
-    baseDamage: 10,
+    baseDamage: 75,
     baseArmor: 0,
-    equippedWeapon: null, // Założona broń
+    equippedWeapon: null,
     equippedArmor: null,
+
     // === SYSTEM WALKI I WACHLARZA ===
     isAttacking: false,
     attackStartTime: 0,
-    attackDuration: 180, // czas trwania animacji wachlarza w ms
+    attackDuration: 180,
     attackAngle: 0,
-    attackCooldown: 500, // cooldown między atakami w ms
-    lastAttackTime: 0,    // Cooldown między atakami (ms)
+    lastAttackTime: 0,
 
     maxLightTargets: 2,
     maxHeavySlashTargets: 2,
@@ -61,32 +63,212 @@ const player = {
     lastLightAttackTime: 0,
     lastHeavyAttackTime: 0,
 
-    lightAttackCooldown: 400,   // Cooldown szybkiego ataku w ms (np. 0.4 s)
-    heavyAttackCooldown: 2000,
+    lightAttackCooldown: 700,
+    heavyAttackCooldown: 1200,
+    combatStance: '1H', // Domyślnie chwyt jednoręczny
+    quickSlots: [null, null, null],
+    unlockedRecipes: ['potion_health'], // Domyślnie gracz zna tylko podstawową miksturę
     updateHPUI() {
         const fill = document.getElementById('hp-bar-fill');
         const text = document.getElementById('hp-text');
         if (fill) fill.style.width = `${Math.max(0, (this.hp / this.maxHp) * 100)}%`;
-        if (text) text.innerText = `${Math.max(0, this.hp)} / ${this.maxHp}`;
+        if (text) text.innerText = `${Math.max(0, Math.ceil(this.hp))} / ${this.maxHp}`;
     },
 
-    // Dynamiczny odczyt pancerza i ataku
+    // ==========================================
+    // UNIWERSALNY SYSTEM EFEKTÓW (BUFFY / DEBUFFY / HOT / DOT)
+    // ==========================================
+    addEffect(effectConfig) {
+        // Przedłużenie efektu, jeśli unikalne id już istnieje
+        if (effectConfig.id) {
+            const existing = this.activeEffects.find(e => e.id === effectConfig.id);
+            if (existing) {
+                existing.remainingTime = effectConfig.duration;
+                showToast(`Odświeżono efekt: ${existing.name}`);
+                return;
+            }
+        }
+
+        const newEffect = {
+            id: effectConfig.id || `effect_${Date.now()}_${Math.random()}`,
+            name: effectConfig.name || 'Efekt',
+            icon: effectConfig.icon || '✨',
+            type: effectConfig.type, // 'heal', 'damage_over_time', 'stat_buff'
+            stat: effectConfig.stat || null, // 'damageMultiplier', 'armor', 'speed', 'baseDamage'
+            value: effectConfig.value || 0,
+            duration: effectConfig.duration || 1,
+            remainingTime: effectConfig.duration || 1,
+            ratePerSecond: (effectConfig.value || 0) / (effectConfig.duration || 1)
+        };
+
+        this.activeEffects.push(newEffect);
+        showToast(`${newEffect.icon} Nałożono: ${newEffect.name}`);
+    },
+
+    toggleStance() {
+        this.combatStance = this.combatStance === '1H' ? '2H' : '1H';
+        showToast(`Zmieniono chwyt na: ${this.combatStance === '1H' ? 'Jednoręczny' : 'Dwuręczny'}`);
+    },
+    useQuickSlot(slotIndex) {
+        const itemId = this.quickSlots[slotIndex];
+        if (!itemId) {
+            if (typeof showToast === 'function') showToast("Slot jest pusty!");
+            return;
+        }
+
+        const itemIndex = this.inventory.findIndex(i => i && i.id === itemId);
+        if (itemIndex === -1) {
+            if (typeof showToast === 'function') showToast("Brak przedmiotu w ekwipunku!");
+            return;
+        }
+
+        const item = this.inventory[itemIndex];
+        let used = false;
+
+        if (item.type === 'potion' || item.type === 'food' || item.id.startsWith('potion_')) {
+            const healAmount = item.heal || 30;
+            if (this.hp >= (this.maxHp || 100)) {
+                if (typeof showToast === 'function') showToast("Masz już pełne zdrowie!");
+                return;
+            }
+            this.hp = Math.min(this.maxHp || 100, this.hp + healAmount);
+            if (typeof showToast === 'function') showToast(`Użyto: ${item.name} (+${healAmount} HP)`);
+            used = true;
+        } else {
+            if (typeof showToast === 'function') showToast(`Użyto: ${item.name}`);
+            used = true;
+        }
+
+        if (used) {
+            if (item.count && item.count > 1) {
+                item.count--;
+            } else {
+                this.inventory.splice(itemIndex, 1);
+            }
+            if (typeof updateQuickSlotsHUD === 'function') updateQuickSlotsHUD();
+            if (typeof updateHUD === 'function') updateHUD();
+        }
+    },
+    unlockRecipe(recipeId) {
+        if (!this.unlockedRecipes.includes(recipeId)) {
+            this.unlockedRecipes.push(recipeId);
+            showToast(`📜 Odblokowano nową recepturę!`);
+        } else {
+            showToast(`Znasz już tę recepturę.`);
+        }
+    },
+    updateEffects(dt) {
+        if (this.activeEffects.length === 0) return;
+
+        this.activeEffects = this.activeEffects.filter(effect => {
+            effect.remainingTime -= dt;
+
+            // 1. Leczenie w czasie (HoT)
+            if (effect.type === 'heal') {
+                const healThisFrame = effect.ratePerSecond * dt;
+                this.hp = Math.min(this.maxHp, this.hp + healThisFrame);
+                this.updateHPUI();
+            }
+            // 2. Obrażenia w czasie (DoT - krwawienie/trucizna)
+            else if (effect.type === 'damage_over_time') {
+                const dmgThisFrame = effect.ratePerSecond * dt;
+                this.hp = Math.max(0, this.hp - dmgThisFrame);
+                this.updateHPUI();
+                if (this.hp <= 0) this.handleDeath();
+            }
+
+            return effect.remainingTime > 0;
+        });
+    },
+
+    // Dynamiczny odczyt obrażeń z uwzględnieniem aktywnych buffów
+    getDamage(isHeavy = false) {
+        const weapon = this.equipment.weapon;
+        const weaponDmg = !weapon ? 0 : (isHeavy
+            ? (weapon.heavyDamage || Math.round((weapon.damage || 0) * 1.6))
+            : (weapon.lightDamage || weapon.damage || 0));
+
+        let baseDmgCalculated = weapon ? (this.baseDamage + weaponDmg) : (isHeavy ? Math.round(this.baseDamage * 1.8) : this.baseDamage);
+
+        // Sumowanie modyfikatorów z aktywnych efektów
+        let bonusMultiplier = 0;
+        let bonusFlatDamage = 0;
+
+        this.activeEffects.forEach(eff => {
+            if (eff.type === 'stat_buff') {
+                if (eff.stat === 'damageMultiplier') bonusMultiplier += eff.value;
+                if (eff.stat === 'baseDamage') bonusFlatDamage += eff.value;
+            }
+        });
+
+        const finalMultiplier = (this.damageMultiplier || 1.0) + bonusMultiplier;
+        return Math.round((baseDmgCalculated + bonusFlatDamage) * finalMultiplier);
+    },
+
+    // Dynamiczny odczyt pancerza z uwzględnieniem aktywnych buffów
+    getArmor() {
+        let totalArmor = this.baseArmor;
+        const slots = ['head', 'chest', 'legs', 'boots'];
+        slots.forEach(slot => {
+            if (this.equipment[slot] && this.equipment[slot].armor) {
+                totalArmor += this.equipment[slot].armor;
+            }
+        });
+
+        // Sumowanie premii do pancerza z efektów
+        this.activeEffects.forEach(eff => {
+            if (eff.type === 'stat_buff' && eff.stat === 'armor') {
+                totalArmor += eff.value;
+            }
+        });
+
+        return totalArmor;
+    },
+
     getCombatStats() {
-        let weaponDmg = 5; // Domyślne obrażenia bez broni
-        let totalArmor = 0;
-
-        if (this.equipment?.weapon?.damage) {
-            weaponDmg = this.equipment.weapon.damage;
-        }
-
-        if (this.equipment) {
-            Object.values(this.equipment).forEach(item => {
-                if (item && item.armor) totalArmor += item.armor;
-            });
-        }
-
-        return { weaponDmg, totalArmor };
+        return {
+            weaponDmg: this.getDamage(false),
+            totalArmor: this.getArmor()
+        };
     },
+
+    useConsumable(index) {
+        const item = this.inventory[index];
+        if (!item) return;
+
+        if (item.type === 'consumable') {
+            // Wsparcie dla nowych przedmiotów mających tablicę `effects`
+            if (item.effects && Array.isArray(item.effects)) {
+                item.effects.forEach(eff => this.addEffect(eff));
+            }
+            // Awaryjne wsparcie dla starszych przedmiotów (kompatybilność wsteczna)
+            else {
+                const recipeStats = ALCHEMY_RECIPES_DB[item.id] || {};
+                const healAmount = item.heal || recipeStats.heal || 45;
+                const duration = item.duration || recipeStats.duration || 15;
+
+                this.addEffect({
+                    id: item.id || 'heal_potion',
+                    name: item.name || 'Mikstura Zdrowia',
+                    icon: item.icon || '🍷',
+                    type: 'heal',
+                    value: healAmount,
+                    duration: duration
+                });
+            }
+
+            if (item.count && item.count > 1) {
+                item.count--;
+            } else {
+                this.inventory.splice(index, 1);
+            }
+
+            if (typeof menuSystem !== 'undefined' && menuSystem.isOpen) {
+                menuSystem.renderInventoryTab();
+            }
+        }
+    },
+
     collectLoot(itemId, amount = 1) {
         if (itemId === 'gold_coins') {
             this.gold += amount;
@@ -96,53 +278,22 @@ const player = {
         const tpl = ITEMS_DB[itemId] || { name: itemId, icon: '📦', type: 'misc', weight: 1.0, stats: '' };
         return this.addItem(itemId, tpl.name, tpl.icon, tpl.type, tpl.weight, tpl.stats, amount, tpl.damage || 0, tpl.armor || 0);
     },
-    getDamage(isHeavy = false) {
-        const weapon = this.equipment.weapon;
-        if (!weapon) {
-            return isHeavy ? Math.round(this.baseDamage * 1.8) : this.baseDamage;
-        }
 
-        const weaponDmg = isHeavy
-            ? (weapon.heavyDamage || Math.round((weapon.damage || 0) * 1.6))
-            : (weapon.lightDamage || weapon.damage || 0);
+    attack() {
+        // Określenie typu ataku na podstawie obecnego chwytu
+        const isHeavy = this.combatStance === '2H';
 
-        return this.baseDamage + weaponDmg;
-    },
-    getArmor() {
-        let totalArmor = this.baseArmor;
-        const slots = ['head', 'chest', 'legs', 'boots'];
-        slots.forEach(slot => {
-            if (this.equipment[slot] && this.equipment[slot].armor) {
-                totalArmor += this.equipment[slot].armor;
-            }
-        });
-        return totalArmor;
-    },
-    // Wyprowadzenie ataku
-    attack(isHeavy) {
         const now = Date.now();
-
-        // 1. Sprawdzamy cooldown odpowiedniego ataku
         if (isHeavy) {
-            if (now - this.lastHeavyAttackTime < this.heavyAttackCooldown) {
-                console.log("Ciężki atak jeszcze się odnawia!");
-                return;
-            }
+            if (now - this.lastHeavyAttackTime < this.heavyAttackCooldown) return;
             this.lastHeavyAttackTime = now;
         } else {
-            if (now - this.lastLightAttackTime < this.lightAttackCooldown) {
-                console.log("Szybki atak jeszcze się odnawia!");
-                return;
-            }
+            if (now - this.lastLightAttackTime < this.lightAttackCooldown) return;
             this.lastLightAttackTime = now;
         }
 
-        // 2. Sprawdzamy czy gracz może zaatakować
-        if (!this.canAttack || this.isAttacking || this.isSleeping || menuSystem.isOpen || dialogueManager.isActive) {
-            return;
-        }
+        if (!this.canAttack || this.isAttacking || this.isSleeping || menuSystem.isOpen || dialogueManager.isActive) return;
 
-        // 3. Wspólna logika uruchamiająca atak dla OBU typów (lekkiego i ciężkiego)
         this.isAttacking = true;
         this.canAttack = false;
         this.isHeavyAttack = isHeavy;
@@ -153,11 +304,8 @@ const player = {
         this.attackDuration = isHeavy ? 260 : 180;
 
         const startTime = performance.now();
-
-        // Sprawdzenie trafień
         this.checkHitbox(isHeavy);
 
-        // Animacja zamachu
         const animInterval = requestAnimationFrame(function animate(now) {
             const elapsed = now - startTime;
             player.attackProgress = Math.min(1.0, elapsed / player.attackDuration);
@@ -169,19 +317,17 @@ const player = {
             }
         });
 
-        setTimeout(() => {
-            player.canAttack = true;
-        }, cd);
+        setTimeout(() => { player.canAttack = true; }, cd);
     },
+
     takeDamage(amount) {
-        if (this.isDodging) return; // Niewrażliwość w trakcie dasha/uniku
+        if (this.isDodging) return;
 
         if (this.isParrying && this.parryWindow) {
             showToast("⚔️ Sparowano atak!");
             return;
         }
 
-        // Skalowalne obliczenie obrażeń z uwzględnieniem założonego pancerza
         const playerArmor = this.getArmor();
         const actualDamage = calculateDamage(amount, playerArmor, 1.0);
 
@@ -189,9 +335,7 @@ const player = {
         showToast(`Otrzymałeś -${actualDamage} HP!`);
         this.updateHPUI();
 
-        if (this.hp <= 0) {
-            this.handleDeath();
-        }
+        if (this.hp <= 0) this.handleDeath();
     },
 
     heal(amount) {
@@ -199,21 +343,20 @@ const player = {
         this.updateHPUI();
         showToast(`Odzyskano +${amount} HP`);
     },
-    // Parowanie (PPM)
+
     parry() {
         if (this.isParrying) return;
         this.isParrying = true;
         this.parryWindow = true;
 
-        // Okienko sparowania trwa 300ms
         setTimeout(() => { this.parryWindow = false; }, 300);
         setTimeout(() => { this.isParrying = false; }, 800);
     },
+
     checkHitbox(isHeavy = false) {
         const facing = this.facingAngle !== undefined ? this.facingAngle : this.angle;
         const potentialEnemies = [];
 
-        // 1. Zbiór żywych wrogów w obszarze bliskim gracza
         if (typeof enemyManager !== 'undefined' && enemyManager.enemies) {
             enemyManager.enemies.forEach(enemy => {
                 if (!enemy.isAlive) return;
@@ -224,15 +367,13 @@ const player = {
 
         let attackType = 'LIGHT_SLASH';
         let attackRange = 75;
-        let arcAngle = Math.PI / 1.8; // ~100 stopni
+        let arcAngle = Math.PI / 1.8;
         let dmgMultiplier = 1.0;
         let maxTargets = this.maxLightTargets;
         let dmgColor = '#e74c3c';
 
         if (isHeavy) {
-            const enemiesInZone = potentialEnemies.filter(e =>
-                isEntityInArc(this, e, 85, Math.PI / 1.8, facing)
-            );
+            const enemiesInZone = potentialEnemies.filter(e => isEntityInArc(this, e, 85, Math.PI / 1.8, facing));
 
             if (enemiesInZone.length <= 1) {
                 attackType = 'THRUST';
@@ -251,13 +392,11 @@ const player = {
             }
         }
 
-        // 2. Filtrowanie trafionych celów i sortowanie od najbliższego
         const hitTargets = potentialEnemies
             .filter(enemy => isEntityInArc(this, enemy, attackRange, arcAngle, facing))
             .sort((a, b) => Math.hypot(a.x - this.x, a.y - this.y) - Math.hypot(b.x - this.x, b.y - this.y))
-            .slice(0, maxTargets); // Twardy limit trafień
+            .slice(0, maxTargets);
 
-        // 3. Zadawanie skalowalnych obrażeń z uwzględnieniem Pancerza celu
         const rawDamage = this.getDamage(false);
         hitTargets.forEach(enemy => {
             const enemyArmor = enemy.armor || 0;
@@ -269,7 +408,6 @@ const player = {
             damageNumbers.add(enemy.x, enemy.y - 15, `${prefix}-${finalDmg}`, dmgColor);
         });
 
-        // 4. Obsługa NPC (opcjonalna neutralna walka)
         const loc = gameMap.getCurrentData();
         if (loc && loc.npcs) {
             loc.npcs.forEach(npc => {
@@ -285,14 +423,13 @@ const player = {
             });
         }
     },
-    // Unik (Alt) - I-frame niewrażliwości
+
     dodge() {
         if (this.isDodging || this.dodgeCooldown) return;
 
         this.isDodging = true;
         this.dodgeCooldown = true;
 
-        // Impuls w stronę, w którą patrzy gracz
         const dashSpeed = 10;
         const facing = this.facingAngle !== undefined ? this.facingAngle : this.angle;
 
@@ -303,34 +440,30 @@ const player = {
             if (!gameMap.checkCollision(this.x, nextY, this.radius)) this.y = nextY;
         }, 16);
 
-        // Koniec niewrażliwości i dasha po 200ms
         setTimeout(() => {
             clearInterval(dashTimer);
             this.isDodging = false;
         }, 200);
 
-        // Cooldown na ponowny unik (800ms)
-        setTimeout(() => {
-            this.dodgeCooldown = false;
-        }, 800);
-
+        setTimeout(() => { this.dodgeCooldown = false; }, 800);
         showToast("⚡ Unik!");
     },
+
     handleDeath() {
         showToast("Zginąłeś! Budzisz się z połową złota...");
         this.gold = Math.floor(this.gold / 2);
         this.hp = this.maxHp;
+        this.activeEffects = [];
         this.updateHPUI();
 
-        // Czyszczenie wrogów po śmierci
         if (typeof enemyManager !== 'undefined') enemyManager.enemies = [];
         if (typeof gameState !== 'undefined') gameState = 'EXPLORATION';
 
-        // Przeniesienie do karczmy
-        gameMap.currentLocation = 'pokoj_gracza'; // Nazwa lokacji/mapy
-        this.x = 250; // Pozycja X
+        gameMap.currentLocation = 'pokoj_gracza';
+        this.x = 250;
         this.y = 180;
     },
+
     horse: { x: 100, y: 550, radius: 15, color: '#8e44ad', isMounted: false },
 
     getWeight() {
@@ -339,7 +472,7 @@ const player = {
         return parseFloat((invWeight + eqWeight).toFixed(1));
     },
 
-    addItem(id, name, icon = '📦', type = 'misc', weight = 1.0, stats = '', count = 1, damage = 0, armor = 0) {
+    addItem(id, name, icon = '📦', type = 'misc', weight = 1.0, stats = '', count = 1, damage = 0, armor = 0, effects = null) {
         if (this.getWeight() + (weight * count) > this.maxWeight) {
             showToast("Jesteś zbyt obciążony!");
             return false;
@@ -349,7 +482,7 @@ const player = {
         if (existingItem && type === 'misc') {
             existingItem.count = (existingItem.count || 1) + count;
         } else {
-            this.inventory.push({ id, name, icon, type, weight, stats, count, damage, armor });
+            this.inventory.push({ id, name, icon, type, weight, stats, count, damage, armor, effects });
         }
 
         showToast(`Otrzymano: ${name} ${count > 1 ? `x${count}` : ''}`);
@@ -364,6 +497,7 @@ const player = {
     equipItem(itemIndex) {
         const item = this.inventory[itemIndex];
         if (!item) return;
+
         if (item.type === 'consumable') {
             this.useConsumable(itemIndex);
             return;
@@ -374,55 +508,33 @@ const player = {
         }
 
         if (item.type === 'quest' || item.type === 'document' || item.content) {
+            // Jeśli przedmiot jest recepturą, odblokuj ją automatycznie po przeczytaniu
+            if (item.unlocksRecipe) {
+                this.unlockRecipe(item.unlocksRecipe);
+            }
             documentViewer.open(item.name, item.content, item.monologueId, item.questTrigger);
             return;
         }
 
-        // Sprawdzamy, czy przedmiot można założyć
         if (!['weapon', 'head', 'chest', 'legs', 'boots'].includes(item.type)) {
             showToast("Tego przedmiotu nie można założyć.");
             return;
         }
         const slot = item.type;
 
-        // Jeśli slot jest zajęty, zamień przedmioty
-        if (this.equipment[slot]) {
-            this.unequipItem(slot);
-        }
+        if (this.equipment[slot]) this.unequipItem(slot);
 
-        // Przenieś z plecaka do slotu sprzętu
         this.equipment[slot] = item;
         this.inventory.splice(itemIndex, 1);
-
         showToast(`Założono: ${item.name}`);
     },
-    useConsumable(index) {
-        const item = this.inventory[index];
-        if (!item) return;
 
-        if (item.id === 'potion_hp_small' || item.id === 'mikstura_zdrowia') {
-            // Leczenie HP
-            this.heal(30);
-
-            // Zmniejszenie ilości lub usunięcie z plecaka
-            if (item.count && item.count > 1) {
-                item.count--;
-            } else {
-                this.inventory.splice(index, 1);
-            }
-
-            // Odświeżenie widoku plecaka
-            if (menuSystem.isOpen) menuSystem.renderInventoryTab();
-        }
-    },
     unequipItem(slot) {
         const item = this.equipment[slot];
         if (!item) return;
 
-        // Dodanie do ekwipunku
         this.inventory.push(item);
         this.equipment[slot] = null;
-
         showToast(`Zdjęto: ${item.name}`);
     },
 
@@ -449,22 +561,63 @@ const player = {
 
     toggleHorse() {
         if (gameMap.currentLocation !== 'kruczy_dol') return;
+        
         if (this.isMounted) {
             this.isMounted = false;
             this.horse.isMounted = false;
             this.horse.x = this.x + 25;
             this.horse.y = this.y;
+            showToast("Zesiadłeś z konia");
         } else {
             const dx = this.x - this.horse.x;
             const dy = this.y - this.horse.y;
             if (Math.hypot(dx, dy) < 40) {
                 this.isMounted = true;
                 this.horse.isMounted = true;
+                showToast("Dosiadłeś konia! [Shift] = Galop, [E] = Zsiądź");
             }
         }
     },
+    updateControlsHint() {
+        if (typeof setControlsHint !== 'function') return;
 
-    update(keys, stateTextUI) {
+        const hints = [];
+
+        // Poruszanie
+        hints.push({ action: 'Ruch', key: 'W A S D' });
+
+        // Sterowanie koniem / Pieszo
+        if (this.isMounted) {
+            hints.push({ action: 'Galop', key: 'Shift' });
+            hints.push({ action: 'Zsiądź z konia', key: 'E' });
+        } else {
+            hints.push({ action: 'Bieg', key: 'Shift' });
+
+            if (typeof gameMap !== 'undefined' && gameMap.currentLocation === 'kruczy_dol' && this.horse && !this.horse.isMounted) {
+                const distToHorse = Math.hypot(this.x - this.horse.x, this.y - this.horse.y);
+                if (distToHorse < 40) {
+                    hints.push({ action: 'Dosiądź konia', key: 'E' });
+                } else {
+                    hints.push({ action: 'Zawołaj konia', key: 'H' });
+                }
+            }
+        }
+
+        // Walka i interfejs
+        hints.push({ action: 'Atak', key: 'LPM' });
+        hints.push({ action: 'Zmiana chwytu', key: 'Ctrl' });
+        hints.push({ action: 'Ekwipunek', key: ' I' });
+
+        // Kesowanie, żeby nie męczyć DOMu przerysowywaniem w każdej klatce (60 FPS)
+        const hintString = JSON.stringify(hints);
+        if (this._lastHintCache !== hintString) {
+            this._lastHintCache = hintString;
+            setControlsHint(hints);
+        }
+    },
+
+    // Aktualizacja z uwzględnieniem buffów prędkości oraz deltaTime (dt)
+    update(keys, stateTextUI, dt = 0.016) {
         if (this.isSleeping || !this.canMove) return;
 
         let moveX = 0, moveY = 0;
@@ -476,8 +629,19 @@ const player = {
         let currentSpeed = CONFIG.walk_speed;
 
         if (this.isMounted) {
-            currentSpeed = CONFIG.horse_speed;
-            if (stateTextUI) { stateTextUI.innerText = "Na koniu (Szybko)"; stateTextUI.style.color = "#9b59b6"; }
+            if (keys['shift']) {
+                currentSpeed = CONFIG.horse_run_speed || (CONFIG.horse_speed * 1.55);
+                if (stateTextUI) { 
+                    stateTextUI.innerText = "Na koniu (Galop [Shift])"; 
+                    stateTextUI.style.color = "#e74c3c"; 
+                }
+            } else {
+                currentSpeed = CONFIG.horse_speed;
+                if (stateTextUI) { 
+                    stateTextUI.innerText = "Na koniu (Kłus)"; 
+                    stateTextUI.style.color = "#9b59b6"; 
+                }
+            }
         } else if (keys['shift']) {
             currentSpeed = CONFIG.run_speed;
             if (stateTextUI) { stateTextUI.innerText = "Pieszo (Bieg)"; stateTextUI.style.color = "#e67e22"; }
@@ -485,33 +649,38 @@ const player = {
             if (stateTextUI) { stateTextUI.innerText = "Pieszo (Chód)"; stateTextUI.style.color = "#4cd137"; }
         }
 
+        // Dodanie premii do prędkości z aktywnych efektów
+        let speedMultiplier = 1.0;
+        this.activeEffects.forEach(eff => {
+            if (eff.type === 'stat_buff' && eff.stat === 'speed') {
+                speedMultiplier += eff.value;
+            }
+        });
+        currentSpeed *= speedMultiplier;
+
         if (player.horse && player.horse.isMovingToPlayer && !player.isMounted) {
-            // Dynamiczny cel — tuż obok gracza
             const targetX = player.x + 35;
             const targetY = player.y + 35;
-
             const dx = targetX - player.horse.x;
             const dy = targetY - player.horse.y;
             const dist = Math.hypot(dx, dy);
 
             if (dist > 30) {
-                const speed = 1.5; // Prędkość biegu konia
+                const speed = 1.5;
                 const nextX = player.horse.x + (dx / dist) * speed;
                 const nextY = player.horse.y + (dy / dist) * speed;
 
-                // Ruch tylko wtedy, gdy kolejna klatka nie powoduje kolizji ze ścianą/budynkiem
                 if (!gameMap.checkCollision(nextX, nextY, 15)) {
                     player.horse.x = nextX;
                     player.horse.y = nextY;
                 } else {
-                    // Jeśli trafi na przeszkodę, zatrzymuje się w bezpiecznym miejscu i czeka
                     player.horse.isMovingToPlayer = false;
                 }
             } else {
-                // Koń dobiegł na miejsce
                 player.horse.isMovingToPlayer = false;
             }
         }
+
         if (moveX !== 0 && moveY !== 0) {
             moveX *= 0.7071;
             moveY *= 0.7071;
@@ -527,12 +696,16 @@ const player = {
             this.horse.x = this.x;
             this.horse.y = this.y;
         }
+
+        // Aktualizacja stanu czasowego wszystkich efektów (dt w sekundach)
+        this.updateEffects(dt);
+
+        // Odświeżanie podpowiedzi sterowania w UI
+        this.updateControlsHint();
     },
     placeAlembic(invIndex) {
-        // Postawienie alembika na pozycji gracza
         worldObjects.push(new PlacedAlembic(this.x, this.y));
 
-        // Usunięcie 1 sztuki z plecaka
         const item = this.inventory[invIndex];
         if (item.count && item.count > 1) {
             item.count--;
@@ -545,8 +718,8 @@ const player = {
         }
         showToast("Rozstawiono Alembik!");
     },
+
     draw(ctx) {
-        // Rysowanie konia (gdy gracz nie jedzie)
         if (gameMap.currentLocation === 'kruczy_dol' && !this.horse.isMounted) {
             ctx.beginPath();
             ctx.arc(this.horse.x, this.horse.y, this.horse.radius, 0, Math.PI * 2);
@@ -555,12 +728,15 @@ const player = {
             ctx.strokeStyle = '#ffffff';
             ctx.stroke();
 
-            ctx.fillStyle = '#ffffff';
-            ctx.font = '10px sans-serif';
-            ctx.fillText('Koń [E]', this.horse.x - 18, this.horse.y - 20);
+            const distToHorse = Math.hypot(this.x - this.horse.x, this.y - this.horse.y);
+            ctx.save();
+            ctx.fillStyle = distToHorse < 40 ? '#f1c40f' : '#ffffff';
+            ctx.font = 'bold 11px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText(distToHorse < 40 ? 'Dosiądź konia [E]' : 'Koń', this.horse.x, this.horse.y - 22);
+            ctx.restore();
         }
 
-        // --- WACHLARZ ATAKU (POJAWIA SIĘ TYLKO PODCZAS KLIKNIĘCIA LPM) ---
         if (this.isAttacking) {
             const elapsed = Date.now() - this.attackStartTime;
 
@@ -595,7 +771,6 @@ const player = {
             }
         }
 
-        // Rysowanie postaci gracza
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
         ctx.fillStyle = this.isMounted ? '#9b59b6' : this.color;
@@ -604,7 +779,7 @@ const player = {
         ctx.lineWidth = 2;
         ctx.stroke();
     }
-}
+};
 function giveStartingEquipment(playerObj) {
     const startingItems = [
         start_items['simple_sword'],

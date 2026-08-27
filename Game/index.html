@@ -78,6 +78,28 @@
                   </div>
                 </div>
               </div>
+
+              <!-- QUICK SLOTY UMIESZCZONE POD ARMOREM -->
+              <div class="eq-quick-section">
+                <span class="eq-quick-title">Szybki Dostęp (Quick Slots)</span>
+                <div class="eq-quick-slots">
+                  <div class="eq-qslot" onclick="assignSelectedToQuickSlot(0)">
+                    <span class="qslot-badge">1</span>
+                    <div id="eq-qs-icon-0" class="qslot-icon">➖</div>
+                    <span id="eq-qs-name-0" class="qslot-label">Puste</span>
+                  </div>
+                  <div class="eq-qslot" onclick="assignSelectedToQuickSlot(1)">
+                    <span class="qslot-badge">2</span>
+                    <div id="eq-qs-icon-1" class="qslot-icon">➖</div>
+                    <span id="eq-qs-name-1" class="qslot-label">Puste</span>
+                  </div>
+                  <div class="eq-qslot" onclick="assignSelectedToQuickSlot(2)">
+                    <span class="qslot-badge">3</span>
+                    <div id="eq-qs-icon-2" class="qslot-icon">➖</div>
+                    <span id="eq-qs-name-2" class="qslot-label">Puste</span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -241,7 +263,19 @@
           <span id="hp-text" class="hp-text">100 / 100</span>
         </div>
       </div>
+
     </div>
+    <div id="combat-hud" class="combat-hidden">
+      <div class="combat-panel">
+        <p id="combat-status">TRWA WALKA!</p>
+        <div class="combat-buttons">
+          <button id="btn-attack">Atakuj</button>
+          <button id="btn-defend">Obrona</button>
+          <button id="btn-flee">Ucieczka</button>
+        </div>
+      </div>
+    </div>
+    <div id="controls-hint" class="controls-hint"></div>
   </div>
 
   </div>

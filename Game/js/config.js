@@ -5,8 +5,9 @@ const CONFIG = {
     WORLD_HEIGHT: 3000,
     ZOOM: 1.5,
     walk_speed: 1.5,
-    run_speed: 2.5,
-    horse_speed: 4,
+    run_speed: 3.2,
+    horse_speed: 3.5,       // Kłus (jazda standardowa)
+    horse_run_speed: 5.0,
     COLOR_GRASS: '#1b2e1b',
     COLOR_ROAD: '#3a3225',
     COLOR_INTERIOR: '#4a2e18',
@@ -28,7 +29,7 @@ const start_items = {
         damage: 15,
         weight: 2.5,
         value: 35,
-        stats: 'Obrażenia: +15',
+        stats: 'Obrażenia: 15',
         description: 'Zwykły, lekko wyświechtany miecz stalowy.'
     },
     'leather_helmet': {
@@ -80,7 +81,7 @@ const start_items = {
 const ENEMY_CONFIG = {
     zbir_lekki: {
         name: 'Zbir',
-        maxHp: 120,
+        maxHp: 950,
         speed: 45,
         damage: 12,
         radius: 12,
@@ -91,7 +92,7 @@ const ENEMY_CONFIG = {
     },
     zbir_ciezki: {
         name: 'Osiłek',
-        maxHp: 220,
+        maxHp: 1500,
         speed: 30,
         damage: 20,
         radius: 16,
@@ -102,7 +103,7 @@ const ENEMY_CONFIG = {
     },
     wilk: {
         name: 'Wilk',
-        maxHp: 80,
+        maxHp: 450,
         speed: 95,
         damage: 14,
         radius: 14,
@@ -136,7 +137,65 @@ const ITEMS_DB = {
     ziolo_czerwone: { name: 'Czerwone Zioło', icon: '🌿', type: 'misc', weight: 0.1, value: 4, stats: 'Składnik alchemiczny' },
     woda_butelka: { name: 'Woda w Butelce', icon: '🧴', type: 'misc', weight: 0.5, value: 2, stats: 'Czysta woda' },
     korzen_zycia: { name: 'Korzeń Życia', icon: '🌱', type: 'misc', weight: 0.2, value: 8, stats: 'Rzadki korzeń' },
-    potion_hp_small: { name: 'Mała Mikstura Zdrowia', icon: '🍷', type: 'consumable', weight: 0.4, value: 15, stats: '+30 HP' }
+    potion_hp_small: { name: 'Mała Mikstura Zdrowia', icon: '🍷', type: 'consumable', weight: 0.4, value: 15, stats: '+30 HP' },
+    // === MIKSTURY ===
+    potion_health: {
+        id: 'potion_health',
+        name: 'Mikstura Zdrowia',
+        icon: '🍷',
+        type: 'consumable',
+        weight: 0.3,
+        stats: 'Przywraca 45 HP w czasie 15s',
+        effects: [
+            { id: 'heal_potion', name: 'Regeneracja', icon: '💚', type: 'heal', value: 45, duration: 15 }
+        ]
+    },
+    potion_strength: {
+        id: 'potion_strength',
+        name: 'Mikstura Siły',
+        icon: '🧪',
+        type: 'consumable',
+        weight: 0.4,
+        stats: '+30% do Obrażeń na 30s',
+        effects: [
+            { id: 'buff_strength', name: 'Siła Tytana', icon: '⚔️', type: 'stat_buff', stat: 'damageMultiplier', value: 0.30, duration: 30 }
+        ]
+    },
+    potion_fortification: {
+        id: 'potion_fortification',
+        name: 'Mikstura Wzmocnienia',
+        icon: '🛡️',
+        type: 'consumable',
+        weight: 0.5,
+        stats: '+25 do Pancerza na 45s',
+        effects: [
+            { id: 'buff_armor', name: 'Żelazna Skóra', icon: '🛡️', type: 'stat_buff', stat: 'armor', value: 25, duration: 45 }
+        ]
+    },
+
+    // === ZWOJE RECEPTUR (PRZEDMIOTY) ===
+    recipe_potion_strength: {
+        id: 'recipe_potion_strength',
+        name: 'Receptura: Mikstura Siły',
+        icon: '📜',
+        type: 'document',
+        weight: 0.1,
+        stats: 'Użyj, aby nauczyć się receptury',
+        monologueId: 'read_recipe_str',
+        unlocksRecipe: 'potion_strength', // Łącznik z bazą alchemii
+        content: '<b>Receptura: Mikstura Siły</b><br><br>Połącz czerwone ziele z ekstraktem kła bestii, aby wyzwolić pierwotną siłę.'
+    },
+    recipe_potion_fortification: {
+        id: 'recipe_potion_fortification',
+        name: 'Receptura: Mikstura Wzmocnienia',
+        icon: '📜',
+        type: 'document',
+        weight: 0.1,
+        stats: 'Użyj, aby nauczyć się receptury',
+        monologueId: 'read_recipe_fort',
+        unlocksRecipe: 'potion_fortification',
+        content: '<b>Receptura: Mikstura Wzmocnienia</b><br><br>Sproszkowana ruda w połączeniu z niebieskim zielem utwardza skórę na ciosy.'
+    }
 };
 
 const LOOT_TABLES = {

@@ -236,6 +236,12 @@ window.addEventListener('keydown', (e) => {
     const readingModal = document.getElementById('reading-overlay');
     const isReading = readingModal && !readingModal.classList.contains('hidden');
 
+    if (e.key === 'Control') {
+        player.toggleStance();
+    }
+    if (['1', '2', '3'].includes(e.key)) {
+        player.useQuickSlot(parseInt(e.key) - 1);
+    }
     if (key === 'm') {
         menuSystem.toggle('map');
     } else if (key === 'i') {
@@ -383,11 +389,10 @@ let lastFrameTime = performance.now();
 
 function gameLoop() {
     const now = performance.now();
-    // Przeliczenie deltaTime w sekundach dla płynności przy różnych FPS
     const dt = Math.min((now - lastFrameTime) / 1000, 0.1);
     lastFrameTime = now;
 
-    // 1. Aktualizacja logiki gry (gdy nie ma pauzy/menu/dialogu)
+    // 1. Aktualizacja logiki gry
     if (!dialogueManager.isActive && !player.isSleeping && !menuSystem.isOpen && !alchemyUI.isOpen) {
         player.update(keys, stateText);
         gameMap.updateNPCs();
@@ -403,7 +408,7 @@ function gameLoop() {
     // 3. Czyszczenie ekranu
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // 4. Renderowanie świata gry wewnątrz kamery i zoomu
+    // 4. RENDEROWANIE ŚWIATA GRY (PODLEGA TRANSFORMATION KAMERY)
     ctx.save();
     ctx.scale(CONFIG.ZOOM, CONFIG.ZOOM);
     ctx.translate(-camera.x, -camera.y);
@@ -418,15 +423,20 @@ function gameLoop() {
     if (typeof encounterManager !== 'undefined') {
         encounterManager.update();
     }
-    // Filtr nocy (jeśli dotyczy)
+
     if (gameMap.currentLocation === 'kruczy_dol' && timeSystem.isNight) {
         ctx.fillStyle = CONFIG.COLOR_NIGHT_FILTER;
         ctx.fillRect(0, 0, currentLoc.width, currentLoc.height);
     }
 
-    ctx.restore();
+    ctx.restore(); // <-- KONIEC KAMERY
 
-    // 5. Renderowanie HUD oraz mapy
+    // 5. RENDEROWANIE INTERFEJSU NA EKRANIE (STALE WSPÓŁRZĘDNE EKRANU)
+    if (gameState === 'COMBAT') {
+        if (typeof drawCombatHUD === 'function') drawCombatHUD(ctx);
+        if (typeof drawActiveEffectsHUD === 'function') drawActiveEffectsHUD(ctx);
+    }
+
     gameMap.drawMinimap();
 
     if (menuSystem.isOpen && menuSystem.activeTab === 'map') {

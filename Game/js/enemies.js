@@ -5,6 +5,7 @@ class EnemyManager {
         this.maxAttackTokens = 2;
         this.activeTokenHolders = new Set();
     }
+
     requestAttackToken(enemy, distToTarget) {
         if (this.activeTokenHolders.has(enemy)) return true;
 
@@ -16,11 +17,11 @@ class EnemyManager {
         }
 
         // 2. KRADZIEŻ: Jeśli wróg jest tuż przy graczu, zabiera token komuś z daleka
-        if (distToTarget <= enemy.attackRadius) {
+        if (distToTarget <= enemy.attackRadius + 10) {
             for (let holder of this.activeTokenHolders) {
-                const holderDist = Math.hypot(holder.targetDist || 999);
-                // Jeśli trzymający token jest dalej niż 100px, trać token na rzecz bliższego!
-                if (holderDist > 100) {
+                // Naprawiono odczyt dystansu trzymającego token
+                const holderDist = holder.targetDist || 999;
+                if (holderDist > 90) {
                     this.activeTokenHolders.delete(holder);
                     this.activeTokenHolders.add(enemy);
                     enemy.tokenTimer = 0;
@@ -35,7 +36,7 @@ class EnemyManager {
     releaseAttackToken(enemy) {
         this.activeTokenHolders.delete(enemy);
     }
-    // Uniwersalna metoda do spawnowania wrogów (questy, zdarzenia, obozy)
+
     spawnGroup({ type, count, centerX, centerY, spawnRadius = 150, aggroRadius = 300 }) {
         const spawnedEnemies = [];
         for (let i = 0; i < count; i++) {
@@ -60,13 +61,12 @@ class EnemyManager {
         return spawnedEnemies;
     }
 
-    // Generowanie watahy wilków w lesie w przedziale 800-1100px od gracza
     spawnForestPackAroundPlayer(playerX, playerY) {
         const angle = Math.random() * Math.PI * 2;
-        const distance = 800 + Math.random() * 300; // 800px - 1100px
+        const distance = 800 + Math.random() * 300;
         const packX = playerX + Math.cos(angle) * distance;
         const packY = playerY + Math.sin(angle) * distance;
-        const packSize = Math.floor(Math.random() * 3) + 4; // Losowo 4, 5 lub 6
+        const packSize = Math.floor(Math.random() * 3) + 4;
 
         return this.spawnGroup({
             type: 'wolf',
@@ -77,15 +77,14 @@ class EnemyManager {
             aggroRadius: 320
         });
     }
-    checkPlayerAttack(player) {
-        if (!player.isAttacking) return;
 
+    checkPlayerAttack(player) {
+        if (!player.isAttacking || player.hasDealtDamage) return;
         const playerDmg = player.getDamage ? player.getDamage() : player.baseDamage;
         const facing = player.facingAngle !== undefined ? player.facingAngle : player.angle;
 
         const candidates = [];
 
-        // 1. Szukamy wszystkich w zasięgu ciosu
         this.enemies.forEach(enemy => {
             if (!enemy.isAlive) return;
 
@@ -101,24 +100,26 @@ class EnemyManager {
             }
         });
 
-        // 2. Sortujemy od najbliższego i wycinamy MAX 2 osoby!
         candidates.sort((a, b) => a.dist - b.dist);
         const targets = candidates.slice(0, 2);
 
         targets.forEach(item => {
             item.enemy.takeDamage(playerDmg, player.x, player.y);
         });
+        if (targets.length > 0) {
+            player.hasDealtDamage = true; // Oznacz jako wykonany atak
+        }
     }
+
     update(deltaTime, player) {
-        // 1. Fizyka separacji – wrogowie odpychają się od siebie i nie nakładają
         this.activeTokenHolders.forEach(enemy => {
             enemy.tokenTimer = (enemy.tokenTimer || 0) + deltaTime;
 
-            // Wygaśnięcie tokena po 1.5s lub gdy wróg stracił cel / zginął
-            if (enemy.tokenTimer > 1.5 || !enemy.isAlive || enemy.state === 'IDLE' || enemy.state === 'RETURNING') {
+            if (enemy.tokenTimer > 1.8 || !enemy.isAlive || enemy.state === 'IDLE' || enemy.state === 'RETURNING') {
                 this.activeTokenHolders.delete(enemy);
             }
         });
+
         for (let i = 0; i < this.enemies.length; i++) {
             for (let j = i + 1; j < this.enemies.length; j++) {
                 const e1 = this.enemies[i];
@@ -128,7 +129,7 @@ class EnemyManager {
                 const dx = e2.x - e1.x;
                 const dy = e2.y - e1.y;
                 const dist = Math.hypot(dx, dy);
-                const minDist = (e1.radius + e2.radius) * 1.3; // Dystans bezpieczny
+                const minDist = (e1.radius + e2.radius) * 1.3;
 
                 if (dist < minDist && dist > 0) {
                     const overlap = (minDist - dist) / 2;
@@ -144,26 +145,25 @@ class EnemyManager {
 
         const activePack = this.enemies.filter(e => e.state === 'CHASE' || e.state === 'ATTACK' || e.state === 'CIRCLE');
 
-        // --- PRZYWRÓCONA LOGIKA AI DLA KAŻDEGO WROGA ---
         this.enemies.forEach(enemy => {
-            enemy.update(deltaTime, player, activePack, this.allies || [], this); // przekazujesz tablicę sojuszników
+            enemy.update(deltaTime, player, activePack, this.allies || [], this);
         });
 
-        // Despawn martwych lub zignorowanych wrogów (dystans > 1800px)
         this.enemies = this.enemies.filter(enemy => {
             const distToPlayer = Math.hypot(enemy.x - player.x, enemy.y - player.y);
             return enemy.isAlive && distToPlayer < 1800;
         });
     }
+
     draw(ctx) {
         this.enemies.forEach(enemy => enemy.draw(ctx));
     }
-
 }
+
 class Enemy {
     constructor(config = {}) {
         const type = config.type || 'zbir_lekki';
-        const baseConfig = ENEMY_CONFIG[type] || ENEMY_CONFIG.zbir_lekki;
+        const baseConfig = (typeof ENEMY_CONFIG !== 'undefined' && ENEMY_CONFIG[type]) ? ENEMY_CONFIG[type] : {};
         this.baseConfig = baseConfig;
 
         this.id = config.id || `enemy_${Date.now()}`;
@@ -171,24 +171,23 @@ class Enemy {
         this.y = config.y || 0;
         this.type = type;
         this.name = config.name || baseConfig.name || 'Przeciwnik';
-        this.lootTable = LOOT_TABLES[type] || [];
+        this.lootTable = (typeof LOOT_TABLES !== 'undefined' && LOOT_TABLES[type]) ? LOOT_TABLES[type] : [];
 
-        // Statystyki z ENEMY_CONFIG
         this.maxHp = baseConfig.maxHp || 100;
         this.hp = this.maxHp;
-        this.speed = baseConfig.speed || 1.0;
-        this.damage = baseConfig.damage || 10;
+        this.speed = baseConfig.speed || 1.1;
+        this.damage = (baseConfig.damage * 10) || 75;
         this.radius = baseConfig.radius || 14;
         this.color = baseConfig.color || '#e74c3c';
         this.attackWindup = 0;
+        this.hasDealtDamage = false;
 
-        // Zasięgi zachowania AI
         this.aggroRadius = config.aggroRadius || 250;
         this.deaggroRadius = config.deaggroRadius || 450;
         this.attackRadius = baseConfig.attackRange || 40;
         this.attackCooldown = 0;
+        this.targetDist = 999;
 
-        // Stan i pozycje domowe
         this.homeX = config.homeX || this.x;
         this.homeY = config.homeY || this.y;
         this.state = 'IDLE';
@@ -212,8 +211,14 @@ class Enemy {
             }
         });
 
+        // Kluczowa zmiana: ZAWSZE aktualizujemy dystans do celu
+        this.targetDist = distToTarget;
+
         if (this.attackCooldown > 0) this.attackCooldown -= dt;
-        if (this.hitStun > 0) this.hitStun -= dt;
+        if (this.hitStun > 0) {
+            this.hitStun -= dt;
+            return;
+        }
 
         switch (this.state) {
             case 'IDLE':
@@ -227,7 +232,6 @@ class Enemy {
                     break;
                 }
                 if (distToTarget <= this.attackRadius) {
-                    this.targetDist = distToTarget;
                     const hasToken = em ? em.requestAttackToken(this, distToTarget) : true;
                     if (hasToken && this.attackCooldown <= 0) {
                         this.state = 'ATTACK';
@@ -246,31 +250,38 @@ class Enemy {
                     this.state = 'RETURNING';
                     break;
                 }
-                const minDist = 100;
-                const maxDist = 140;
+
+                // Ciasniejszy dystans i ciągły korygujący ruch
+                const minDist = 65;
+                const maxDist = 100;
 
                 if (distToTarget < minDist) {
                     const angle = Math.atan2(this.y - target.y, this.x - target.x);
                     const targetX = target.x + Math.cos(angle) * minDist;
                     const targetY = target.y + Math.sin(angle) * minDist;
-                    this.moveTowards(targetX, targetY, dt, 0.4);
-                } else if (distToTarget > maxDist) {
-                    this.moveTowards(target.x, target.y, dt, 0.7);
+                    this.moveTowards(targetX, targetY, dt, 0.5);
+                } else {
+                    // Lekki podjazd i presja na gracza
+                    this.moveTowards(target.x, target.y, dt, 0.65);
                 }
 
-                if (this.attackCooldown <= 0) this.state = 'CHASE';
+                if (this.attackCooldown <= 0) {
+                    this.state = 'CHASE';
+                }
                 break;
 
             case 'ATTACK':
                 this.attackWindup += dt;
-                if (this.attackWindup >= 0.4) {
+                // Szybszy wyprowadzany cios (0.28s zamiast 0.4s)
+                if (this.attackWindup >= 0.28) {
                     const isTargetDodging = target.isInvulnerable || target.isDodging;
                     if (distToTarget <= this.attackRadius + 15 && !isTargetDodging) {
                         if (typeof target.takeDamage === 'function') {
                             target.takeDamage(this.damage);
                         }
                     }
-                    this.attackCooldown = this.baseConfig?.attackCooldown || 3.0;
+                    // Krótszy, bardziej dynamiczny cooldown (1.2s - 1.8s)
+                    this.attackCooldown = 1.2 + Math.random() * 0.6;
                     this.attackWindup = 0;
                     if (em) em.releaseAttackToken(this);
                     this.state = 'CIRCLE';
@@ -301,8 +312,15 @@ class Enemy {
     takeDamage(amount, sourceX, sourceY) {
         if (!this.isAlive || this.hitStun > 0) return;
 
+        // Otrzymanie obrażeń wyrywa wroga z ataku
+        if (this.state === 'ATTACK') {
+            if (typeof enemyManager !== 'undefined') enemyManager.releaseAttackToken(this);
+            this.attackWindup = 0;
+            this.attackCooldown = 0.8;
+        }
+
         this.hp -= amount;
-        this.hitStun = 0.2;
+        this.hitStun = 0.15;
         this.state = 'CHASE';
 
         const angle = Math.atan2(this.y - sourceY, this.x - sourceX);
@@ -317,8 +335,8 @@ class Enemy {
             this.isHostile = false;
             this.color = '#7f8c8d';
 
-            showToast(`${this.name} został powalony!`);
-            cutsceneManager.checkBasementFightEnd();
+            if (typeof showToast === 'function') showToast(`${this.name} został powalony!`);
+            if (typeof cutsceneManager !== 'undefined') cutsceneManager.checkBasementFightEnd();
             return;
         }
 
@@ -343,7 +361,7 @@ class Enemy {
                 if (drop.id === 'gold_coins') {
                     bagGold += count;
                 } else {
-                    const tpl = ITEMS_DB[drop.id] || { name: drop.id, icon: '📦', type: 'misc', weight: 1.0, stats: '' };
+                    const tpl = (typeof ITEMS_DB !== 'undefined' && ITEMS_DB[drop.id]) ? ITEMS_DB[drop.id] : { name: drop.id, icon: '📦', type: 'misc', weight: 1.0, stats: '' };
                     bagItems.push({ ...tpl, id: drop.id, count });
                 }
             }
@@ -358,7 +376,7 @@ class Enemy {
         if (!this.isAlive) return;
 
         if (this.state === 'ATTACK') {
-            const angleToPlayer = Math.atan2(player.y - this.y, player.x - this.x);
+            const angleToPlayer = Math.atan2(this.targetDist ? this.y : player.y - this.y, player.x - this.x);
             const arcAngle = Math.PI / 2.2;
 
             ctx.save();
@@ -374,7 +392,6 @@ class Enemy {
             ctx.restore();
         }
 
-        // Ciało wroga
         ctx.fillStyle = this.hitStun > 0 ? '#ffffff' : (this.type === 'wolf' ? '#7f8c8d' : this.color);
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
@@ -385,7 +402,6 @@ class Enemy {
 
         let nameOffsetY = 12;
 
-        // Pasek HP
         if (this.hp < this.maxHp || this.state !== 'IDLE') {
             const barWidth = 46;
             const barHeight = 6;
@@ -411,7 +427,6 @@ class Enemy {
             nameOffsetY = 28;
         }
 
-        // LABEL Z IMIENIEM PRZECIWNIKA
         if (this.name) {
             ctx.save();
             ctx.fillStyle = '#ffffff';
@@ -424,6 +439,7 @@ class Enemy {
         }
     }
 }
+
 class LootBag {
     constructor(id, x, y, items = [], gold = 0) {
         this.id = id;
@@ -488,11 +504,9 @@ class LootManager {
     }
 }
 
-//Zaczecie walki
 function startBattle(config) {
     gameState = 'COMBAT';
 
-    // Spawnowanie wrogów wokół aktualnej pozycji gracza
     enemyManager.spawnGroup({
         type: config.type || 'zbir_lekki',
         count: config.count || 3,
@@ -510,11 +524,76 @@ function startBattle(config) {
 function updateCombat() {
     if (gameState !== 'COMBAT') return;
 
-    // Sprawdzamy czy wszyscy wrogowie leżą
     if (enemyManager.allEnemiesDead()) {
-        gameState = 'EXPLORATION';      // Wracamy do normalnej gry
-        uiManager.hideCombatUI();
-        showToast("Zwycięstwo!");
-        questManager.updateQuest('kill_bandits'); // Przy okazji zaliczamy questa!
+        gameState = 'EXPLORATION';
+        if (typeof uiManager !== 'undefined' && uiManager.hideCombatUI) uiManager.hideCombatUI();
+        if (typeof showToast === 'function') showToast("Zwycięstwo!");
+        if (typeof questManager !== 'undefined') questManager.updateQuest('kill_bandits');
     }
+}
+
+function updateQuickSlotsHUD() {
+    for (let i = 0; i < 3; i++) {
+        const itemId = player.quickSlots[i];
+        
+        // Elementy HUD (w grze)
+        const hudIcon = document.getElementById(`qs-icon-${i}`);
+        const hudName = document.getElementById(`qs-name-${i}`);
+        const hudCount = document.getElementById(`qs-count-${i}`);
+
+        // Elementy Ekwipunku (w okienku)
+        const eqIcon = document.getElementById(`eq-qs-icon-${i}`);
+        const eqName = document.getElementById(`eq-qs-name-${i}`);
+
+        if (!itemId) {
+            if (hudIcon) hudIcon.innerText = '➖';
+            if (hudName) hudName.innerText = 'Puste';
+            if (hudCount) hudCount.innerText = '';
+
+            if (eqIcon) eqIcon.innerText = '➖';
+            if (eqName) eqName.innerText = 'Puste';
+            continue;
+        }
+
+        const item = player.inventory.find(it => it && it.id === itemId);
+        if (item) {
+            const iconText = item.icon || '📦';
+            const countText = item.count ? `x${item.count}` : '';
+
+            if (hudIcon) hudIcon.innerText = iconText;
+            if (hudName) hudName.innerText = item.name;
+            if (hudCount) hudCount.innerText = countText;
+
+            if (eqIcon) eqIcon.innerText = iconText;
+            if (eqName) eqName.innerText = `${item.name} ${countText}`;
+        } else {
+            // Przedmiot został całkowicie zużyty
+            player.quickSlots[i] = null;
+            if (hudIcon) hudIcon.innerText = '➖';
+            if (hudName) hudName.innerText = 'Puste';
+            if (hudCount) hudCount.innerText = '';
+
+            if (eqIcon) eqIcon.innerText = '➖';
+            if (eqName) eqName.innerText = 'Puste';
+        }
+    }
+}
+
+function assignSelectedToQuickSlot(slotIndex) {
+    if (player.selectedItemIndex === null || player.selectedItemIndex === undefined) {
+        if (typeof showToast === 'function') showToast("Wybierz najpierw przedmiot z ekwipunku!");
+        return;
+    }
+
+    const item = player.inventory[player.selectedItemIndex];
+    if (!item) return;
+
+    // Jeśli ten sam przedmiot jest w innym slocie - czyścimy go tam
+    player.quickSlots = player.quickSlots.map(id => id === item.id ? null : id);
+
+    // Przypisujemy do wybranego slotu
+    player.quickSlots[slotIndex] = item.id;
+    if (typeof showToast === 'function') showToast(`Przypisano ${item.name} do Slotu [${slotIndex + 1}]`);
+
+    updateQuickSlotsHUD();
 }
