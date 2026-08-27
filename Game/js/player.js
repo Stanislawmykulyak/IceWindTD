@@ -536,3 +536,46 @@ const player = {
         ctx.stroke();
     }
 }
+function giveStartingEquipment(playerObj) {
+    const startingItems = [
+        start_items['simple_sword'],
+        start_items['leather_helmet'],
+        start_items['leather_chest'],
+        start_items['leather_pants'],
+        start_items['leather_boots']
+    ];
+
+    startingItems.forEach(item => {
+        if (!item) return;
+
+        const itemCopy = { ...item };
+        const slot = itemCopy.type; // 'weapon', 'head', 'chest', 'legs', 'boots'
+
+        // Założenie przedmiotu na odpowiedni slot gracza
+        if (playerObj.equipment && slot in playerObj.equipment) {
+            playerObj.equipment[slot] = itemCopy;
+        }
+    });
+}
+
+
+// Funkcja pomocnicza sumująca pancerz i obrażenia z założonych przedmiotów
+function recalculatePlayerStats(player) {
+    let totalArmor = 0;
+    let bonusDamage = 0;
+
+    if (player.equipment) {
+        Object.values(player.equipment).forEach(item => {
+            if (item) {
+                if (item.armor) totalArmor += item.armor;
+                if (item.damage) bonusDamage += item.damage;
+            }
+        });
+    }
+
+    // Przypisanie obliczonych statystyk
+    player.armor = totalArmor;
+    player.attackDamage = (player.baseDamage || 5) + bonusDamage;
+}
+
+giveStartingEquipment(player);

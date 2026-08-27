@@ -41,6 +41,64 @@ const ENEMY_CONFIG = {
     },
 };
 
+const start_items = {
+    'simple_sword': {
+        id: 'simple_sword',
+        name: 'Prosty Miecz',
+        type: 'weapon',
+        icon: '⚔️',
+        damage: 15,
+        weight: 2.5,
+        value: 35,
+        stats: 'Obrażenia: +15',
+        description: 'Zwykły, lekko wyświechtany miecz stalowy.'
+    },
+    'leather_helmet': {
+        id: 'leather_helmet',
+        name: 'Skórzany Czepiec',
+        type: 'head',
+        icon: '🪖',
+        armor: 2,
+        weight: 1.0,
+        value: 15,
+        stats: 'Pancerz: +2',
+        description: 'Prosta czapka z utwardzanej skóry.'
+    },
+    'leather_chest': {
+        id: 'leather_chest',
+        name: 'Skórzana Przeszywanica',
+        type: 'chest',
+        icon: '🥼',
+        armor: 5,
+        weight: 3.5,
+        value: 50,
+        stats: 'Pancerz: +5',
+        description: 'Solidna kurtka ze skóry chroniąca klatkę piersiową.'
+    },
+    'leather_pants': {
+        id: 'leather_pants',
+        name: 'Skórzane Spodnie',
+        type: 'legs',
+        icon: '👖',
+        armor: 3,
+        weight: 2.0,
+        value: 30,
+        stats: 'Pancerz: +3',
+        description: 'Wygodne spodnie z grubej skóry.'
+    },
+    'leather_boots': {
+        id: 'leather_boots',
+        name: 'Skórzane Buty',
+        type: 'boots',
+        icon: '🥾',
+        armor: 1,
+        weight: 1.2,
+        value: 20,
+        stats: 'Pancerz: +1',
+        description: 'Mocne, skórzane buty do podróży.'
+    }
+};
+
 
 
 function calculateDamage(attackerDmg, defenderArmor, multiplier = 1.0) {
