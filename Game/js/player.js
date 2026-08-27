@@ -460,16 +460,30 @@ const player = {
         }
 
         if (player.horse && player.horse.isMovingToPlayer && !player.isMounted) {
-            const dx = player.horse.targetX - player.horse.x;
-            const dy = player.horse.targetY - player.horse.y;
+            // Dynamiczny cel — tuż obok gracza
+            const targetX = player.x + 35;
+            const targetY = player.y + 35;
+
+            const dx = targetX - player.horse.x;
+            const dy = targetY - player.horse.y;
             const dist = Math.hypot(dx, dy);
 
-            if (dist > 15) {
-                const speed = 4.5; // Prędkość z jaką koń do nas biegnie
-                player.horse.x += (dx / dist) * speed;
-                player.horse.y += (dy / dist) * speed;
+            if (dist > 30) {
+                const speed = 1.5; // Prędkość biegu konia
+                const nextX = player.horse.x + (dx / dist) * speed;
+                const nextY = player.horse.y + (dy / dist) * speed;
+
+                // Ruch tylko wtedy, gdy kolejna klatka nie powoduje kolizji ze ścianą/budynkiem
+                if (!gameMap.checkCollision(nextX, nextY, 15)) {
+                    player.horse.x = nextX;
+                    player.horse.y = nextY;
+                } else {
+                    // Jeśli trafi na przeszkodę, zatrzymuje się w bezpiecznym miejscu i czeka
+                    player.horse.isMovingToPlayer = false;
+                }
             } else {
-                player.horse.isMovingToPlayer = false; // Koń dotarł na miejsce
+                // Koń dobiegł na miejsce
+                player.horse.isMovingToPlayer = false;
             }
         }
         if (moveX !== 0 && moveY !== 0) {
@@ -593,7 +607,7 @@ function recalculatePlayerStats(player) {
 
 
 function callHorse() {
-    // 1. Sprawdzamy czy gracz jest na otwartej mapie
+    // Przywoływanie działa tylko na zewnątrz
     if (gameMap.currentLocation !== 'kruczy_dol') {
         showToast("Twój koń nie wejdzie do budynku!");
         return;
@@ -606,21 +620,34 @@ function callHorse() {
 
     showToast("Gwizdasz na konia... 🐴");
 
-    // 2. Jeśli koń jest zbyt blisko, po prostu podchodzi
-    const currentDist = Math.hypot(player.x - player.horse.x, player.y - player.horse.y);
+    // Szukamy bezpiecznego miejsca na spawn poza ekranem
+    const spawnDistance = 100; // Odległość poza widokiem kamery
+    let validSpawnFound = false;
+    let spawnX = player.x;
+    let spawnY = player.y;
 
-    // 3. Jeśli koń jest daleko lub poza ekranem, respawnujemy go kawałek ZA krawędzią ekranu (700px od gracza)
-    if (currentDist > 500) {
-        const randomAngle = Math.random() * Math.PI * 2; // Losowy kierunek (360 stopni)
-        const spawnDistance = 700; // Bezpieczna odległość poza widokiem kamery
+    // Próbujemy do 20 losowych kątów, aż znajdziemy punkt bez kolizji
+    for (let attempts = 0; attempts < 20; attempts++) {
+        const randomAngle = Math.random() * Math.PI * 2;
+        const testX = player.x + Math.cos(randomAngle) * spawnDistance;
+        const testY = player.y + Math.sin(randomAngle) * spawnDistance;
 
-        player.horse.x = player.x + Math.cos(randomAngle) * spawnDistance;
-        player.horse.y = player.y + Math.sin(randomAngle) * spawnDistance;
+        // Sprawdzamy czy punkt mieści się na mapie i nie koliduje z budynkami
+        if (!gameMap.checkCollision(testX, testY, 15)) {
+            spawnX = testX;
+            spawnY = testY;
+            validSpawnFound = true;
+            break;
+        }
     }
 
-    // 4. Ustawiamy cel: ruch w stronę gracza (z lekkim przesunięciem o 30px, żeby nie stanął w graczowi w środku)
-    player.horse.targetX = player.x + 30;
-    player.horse.targetY = player.y + 30;
+    // Jeśli z jakiegoś powodu całe otoczenie było zablokowane, bierzemy pozycję gracza jako awaryjną
+    if (validSpawnFound) {
+        player.horse.x = spawnX;
+        player.horse.y = spawnY;
+    }
+
+    // Ustawiamy flagę biegu w stronę gracza
     player.horse.isMovingToPlayer = true;
 }
 
