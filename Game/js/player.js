@@ -364,7 +364,10 @@ const player = {
     equipItem(itemIndex) {
         const item = this.inventory[itemIndex];
         if (!item) return;
-
+        if (item.type === 'consumable') {
+            this.useConsumable(itemIndex);
+            return;
+        }
         if (item.id === 'alembik') {
             this.placeAlembic(itemIndex);
             return;
@@ -393,7 +396,30 @@ const player = {
 
         showToast(`Założono: ${item.name}`);
     },
+    useConsumable(itemIndex) {
+        const item = this.inventory[itemIndex];
+        if (!item) return;
 
+        // Przykład natychmiastowego leczenia (rozbudujesz pod buffy)
+        if (item.id === 'potion_hp_small') {
+            if (this.hp >= this.maxHp) {
+                showToast("Masz już pełne zdrowie!");
+                return;
+            }
+            this.heal(30);
+        }
+
+        // Usunięcie 1 sztuki z plecaka
+        if (item.count && item.count > 1) {
+            item.count--;
+        } else {
+            this.inventory.splice(itemIndex, 1);
+        }
+
+        if (typeof menuSystem !== 'undefined' && menuSystem.isOpen) {
+            menuSystem.renderInventoryTab();
+        }
+    },
     unequipItem(slot) {
         const item = this.equipment[slot];
         if (!item) return;

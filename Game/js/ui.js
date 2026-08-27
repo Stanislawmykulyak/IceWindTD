@@ -267,7 +267,7 @@ const shopSystem = {
                     weight: 3.5,
                     value: 10,
                     description: 'Przenośna aparatura alchemiczna. Postaw na ziemi, by warzyć mikstury.',
-                    stats:'Używane do warzenia mikstur'
+                    stats: 'Używane do warzenia mikstur'
                 },
                 {
                     id: 'skora_pancerz',
@@ -315,6 +315,17 @@ const shopSystem = {
                     stats: 'Pancerz: 1',
                     count: 1
                 },
+                {
+                    id: 'ziolo_czerwone',
+                    name: 'Czerwone Zioło',
+                    icon: '🌿', type: 'misc',
+                    weight: 0.1,
+                    value: 4,
+                    count: 10,
+                    restock: true
+                },
+                { id: 'woda_butelka', name: 'Woda w Butelce', icon: '🧴', type: 'misc', weight: 0.5, value: 2, count: 5, restock: true },
+                { id: 'korzen_zycia', name: 'Korzeń Życia', icon: '🌱', type: 'misc', weight: 0.2, value: 8, count: 3, restock: true }
             ]
         }
     },

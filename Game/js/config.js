@@ -132,7 +132,11 @@ const ITEMS_DB = {
     kiel_wilka: { name: 'Kieł Wilka', icon: '🦷', type: 'misc', weight: 0.2, stats: 'Trofeum' },
     lecznicze_ziele: { name: 'Lecznicze Ziele', icon: '🌿', type: 'misc', weight: 0.1, stats: 'Leczy 15 HP' },
     jagody: { name: 'Leśne Jagody', icon: '🫐', type: 'misc', weight: 0.1, stats: 'Leczy 10 HP' },
-    surowe_mieso: { name: 'Surowe Mięso', icon: '🥩', type: 'misc', weight: 1.0, stats: 'Jedzenie' }
+    surowe_mieso: { name: 'Surowe Mięso', icon: '🥩', type: 'misc', weight: 1.0, stats: 'Jedzenie' },
+    ziolo_czerwone: { name: 'Czerwone Zioło', icon: '🌿', type: 'misc', weight: 0.1, value: 4, stats: 'Składnik alchemiczny' },
+    woda_butelka: { name: 'Woda w Butelce', icon: '🧴', type: 'misc', weight: 0.5, value: 2, stats: 'Czysta woda' },
+    korzen_zycia: { name: 'Korzeń Życia', icon: '🌱', type: 'misc', weight: 0.2, value: 8, stats: 'Rzadki korzeń' },
+    potion_hp_small: { name: 'Mała Mikstura Zdrowia', icon: '🍷', type: 'consumable', weight: 0.4, value: 15, stats: '+30 HP' }
 };
 
 const LOOT_TABLES = {
