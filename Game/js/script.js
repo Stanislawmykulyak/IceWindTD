@@ -221,6 +221,15 @@ const stateText = document.getElementById('player-state');
 const keys = {};
 
 window.addEventListener('keydown', (e) => {
+    // Ignoruj jak gracz pisze na czacie/w oknie dialogowym
+    if (document.activeElement.tagName === 'INPUT') return;
+
+    if (e.key === 'h' || e.key === 'H') {
+        callHorse();
+    }
+});
+
+window.addEventListener('keydown', (e) => {
     const key = e.key.toLowerCase();
     keys[key] = true;
 

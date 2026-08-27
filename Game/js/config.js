@@ -1,8 +1,8 @@
 const CONFIG = {
     CANVAS_WIDTH: window.innerWidth,
     CANVAS_HEIGHT: window.innerHeight,
-    WORLD_WIDTH: 2400,
-    WORLD_HEIGHT: 1600,
+    WORLD_WIDTH: 5000,
+    WORLD_HEIGHT: 3000,
     ZOOM: 1.5,
     walk_speed: 1.5,
     run_speed: 2.5,
@@ -11,35 +11,13 @@ const CONFIG = {
     COLOR_ROAD: '#3a3225',
     COLOR_INTERIOR: '#4a2e18',
     COLOR_CORRIDOR: '#362213',
-    COLOR_NIGHT_FILTER: 'rgba(10, 15, 35, 0.60)'
+    COLOR_NIGHT_FILTER: 'rgba(10, 15, 35, 0.60)',
+    COLOR_WATER: '#2980b9',
+    COLOR_FOREST_GRASS: '#142314',
+    COLOR_GLADE: '#27ae60',
 };
 
 let gameState = 'EXPLORATION';
-
-const ENEMY_CONFIG = {
-    zbir_lekki: {
-        name: 'Zbir',
-        maxHp: 120,            // Zmniejszono z 1080 (pada na 3-4 ciosy)
-        speed: 45,             // Zmniejszono z 85 px/s (daje czas na odejście/pozyjonowanie)
-        damage: 12,
-        radius: 12,
-        color: '#e74c3c',
-        attackRange: 38,
-        attackCooldown: 3.0,   // 3 sekundy przerwy po ataku
-        rewardGold: 15
-    },
-    zbir_ciezki: {
-        name: 'Osiłek',
-        maxHp: 220,            // Zmniejszono z 1780
-        speed: 30,             // Zmniejszono z 55 px/s
-        damage: 20,
-        radius: 16,
-        color: '#c0392b',
-        attackRange: 45,
-        attackCooldown: 4.0,   // 4 sekundy przerwy po ataku
-        rewardGold: 35
-    },
-};
 
 const start_items = {
     'simple_sword': {
@@ -99,7 +77,84 @@ const start_items = {
     }
 };
 
+const ENEMY_CONFIG = {
+    zbir_lekki: {
+        name: 'Zbir',
+        maxHp: 120,
+        speed: 45,
+        damage: 12,
+        radius: 12,
+        color: '#e74c3c',
+        attackRange: 38,
+        attackCooldown: 3.0,
+        rewardGold: 15
+    },
+    zbir_ciezki: {
+        name: 'Osiłek',
+        maxHp: 220,
+        speed: 30,
+        damage: 20,
+        radius: 16,
+        color: '#c0392b',
+        attackRange: 45,
+        attackCooldown: 4.0,
+        rewardGold: 35
+    },
+    wilk: {
+        name: 'Wilk',
+        maxHp: 80,
+        speed: 95,
+        damage: 14,
+        radius: 14,
+        color: '#7f8c8d',
+        attackRange: 32,
+        attackCooldown: 1.5,
+        rewardGold: 0
+    },
+    jelen: {
+        name: 'Jeleń',
+        maxHp: 40,
+        speed: 110,
+        damage: 0,
+        radius: 16,
+        color: '#8e5b23',
+        isPassive: true,
+        rewardGold: 0
+    }
+};
 
+const ITEMS_DB = {
+    stary_sztylet: { name: 'Stary Sztylet', icon: '🗡️', type: 'weapon', weight: 1.2, damage: 15, lightDamage: 15, heavyDamage: 28, stats: 'Obrażenia: 15' },
+    zelazny_miecz: { name: 'Żelazny Miecz', icon: '⚔️', type: 'weapon', weight: 3.0, damage: 25, lightDamage: 25, heavyDamage: 45, stats: 'Obrażenia: 25' },
+    miedziana_moneta: { name: 'Miedziana Moneta', icon: '🪙', type: 'misc', weight: 0.05, stats: 'Warta parę miedziaków' },
+    mikstura_zdrowia: { name: 'Mikstura Zdrowia', icon: '🧪', type: 'misc', weight: 0.5, stats: 'Leczy HP' },
+    skora_wilka: { name: 'Skóra Wilka', icon: '🐺', type: 'misc', weight: 1.5, stats: 'Trofeum' },
+    kiel_wilka: { name: 'Kieł Wilka', icon: '🦷', type: 'misc', weight: 0.2, stats: 'Trofeum' },
+    lecznicze_ziele: { name: 'Lecznicze Ziele', icon: '🌿', type: 'misc', weight: 0.1, stats: 'Leczy 15 HP' },
+    jagody: { name: 'Leśne Jagody', icon: '🫐', type: 'misc', weight: 0.1, stats: 'Leczy 10 HP' },
+    surowe_mieso: { name: 'Surowe Mięso', icon: '🥩', type: 'misc', weight: 1.0, stats: 'Jedzenie' }
+};
+
+const LOOT_TABLES = {
+    zbir_lekki: [
+        { id: 'gold_coins', min: 5, max: 15, chance: 1.0 },
+        { id: 'stary_sztylet', min: 1, max: 1, chance: 0.2 },
+        { id: 'miedziana_moneta', min: 1, max: 3, chance: 0.5 }
+    ],
+    zbir_ciezki: [
+        { id: 'gold_coins', min: 20, max: 50, chance: 1.0 },
+        { id: 'zelazny_miecz', min: 1, max: 1, chance: 0.15 },
+        { id: 'mikstura_zdrowia', min: 1, max: 2, chance: 0.4 }
+    ],
+    wilk: [
+        { id: 'skora_wilka', min: 1, max: 1, chance: 0.8 },
+        { id: 'kiel_wilka', min: 1, max: 2, chance: 0.5 },
+        { id: 'surowe_mieso', min: 1, max: 2, chance: 0.7 }
+    ],
+    jelen: [
+        { id: 'surowe_mieso', min: 2, max: 4, chance: 1.0 }
+    ]
+};
 
 function calculateDamage(attackerDmg, defenderArmor, multiplier = 1.0) {
     const armorFactor = 100 / (100 + defenderArmor);
@@ -111,42 +166,12 @@ function isEntityInArc(attacker, target, range, arcAngle, facingAngle) {
     const dy = target.y - attacker.y;
     const dist = Math.hypot(dx, dy);
 
-    // 1. Sprawdzamy czy cel jest w zasięgu promienia (uwzględniamy gabaryt celu)
     const targetRadius = target.radius || 10;
     if (dist > range + targetRadius) return false;
 
-    // 2. Kąt od gracza do celu
     const angleToTarget = Math.atan2(dy, dx);
-
-    // 3. Najkrótsza różnica kątowa sprowadzona do zakresu [-PI, PI]
     let angleDiff = angleToTarget - facingAngle;
     angleDiff = Math.atan2(Math.sin(angleDiff), Math.cos(angleDiff));
 
-    // 4. Czy kąt mieści się w połowie szerokości wachlarza?
     return Math.abs(angleDiff) <= (arcAngle / 2);
 }
-const ITEMS_DB = {
-    stary_sztylet: { name: 'Stary Sztylet', icon: '🗡️', type: 'weapon', weight: 1.2, damage: 15, lightDamage: 15, heavyDamage: 28, stats: 'Obrażenia: 15' },
-    zelazny_miecz: { name: 'Żelazny Miecz', icon: '⚔️', type: 'weapon', weight: 3.0, damage: 25, lightDamage: 25, heavyDamage: 45, stats: 'Obrażenia: 25' },
-    miedziana_moneta: { name: 'Miedziana Moneta', icon: '🪙', type: 'misc', weight: 0.05, stats: 'Warta parę miedziaków' },
-    mikstura_zdrowia: { name: 'Mikstura Zdrowia', icon: '🧪', type: 'misc', weight: 0.5, stats: 'Leczy HP' },
-    skora_wilka: { name: 'Skóra Wilka', icon: '🐺', type: 'misc', weight: 1.5, stats: 'Trofeum' },
-    kiel_wilka: { name: 'Kieł Wilka', icon: '🦷', type: 'misc', weight: 0.2, stats: 'Trofeum' }
-};
-
-const LOOT_TABLES = {
-    zbir_lekki: [
-        { id: 'gold_coins', min: 5, max: 15, chance: 1.0 },
-        { id: 'stary_sztylet', min: 1, max: 1, chance: 0.2 }, // 20% szans
-        { id: 'miedziana_moneta', min: 1, max: 3, chance: 0.5 }
-    ],
-    zbir_ciezki: [
-        { id: 'gold_coins', min: 20, max: 50, chance: 1.0 },
-        { id: 'zelazny_miecz', min: 1, max: 1, chance: 0.15 },
-        { id: 'mikstura_zdrowia', min: 1, max: 2, chance: 0.4 }
-    ],
-    wilk: [
-        { id: 'skora_wilka', min: 1, max: 1, chance: 0.8 },
-        { id: 'kiel_wilka', min: 1, max: 2, chance: 0.5 }
-    ]
-};

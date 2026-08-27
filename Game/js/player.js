@@ -459,6 +459,19 @@ const player = {
             if (stateTextUI) { stateTextUI.innerText = "Pieszo (Chód)"; stateTextUI.style.color = "#4cd137"; }
         }
 
+        if (player.horse && player.horse.isMovingToPlayer && !player.isMounted) {
+            const dx = player.horse.targetX - player.horse.x;
+            const dy = player.horse.targetY - player.horse.y;
+            const dist = Math.hypot(dx, dy);
+
+            if (dist > 15) {
+                const speed = 4.5; // Prędkość z jaką koń do nas biegnie
+                player.horse.x += (dx / dist) * speed;
+                player.horse.y += (dy / dist) * speed;
+            } else {
+                player.horse.isMovingToPlayer = false; // Koń dotarł na miejsce
+            }
+        }
         if (moveX !== 0 && moveY !== 0) {
             moveX *= 0.7071;
             moveY *= 0.7071;
@@ -576,6 +589,39 @@ function recalculatePlayerStats(player) {
     // Przypisanie obliczonych statystyk
     player.armor = totalArmor;
     player.attackDamage = (player.baseDamage || 5) + bonusDamage;
+}
+
+
+function callHorse() {
+    // 1. Sprawdzamy czy gracz jest na otwartej mapie
+    if (gameMap.currentLocation !== 'kruczy_dol') {
+        showToast("Twój koń nie wejdzie do budynku!");
+        return;
+    }
+
+    if (player.isMounted) {
+        showToast("Już jedziesz na koniu!");
+        return;
+    }
+
+    showToast("Gwizdasz na konia... 🐴");
+
+    // 2. Jeśli koń jest zbyt blisko, po prostu podchodzi
+    const currentDist = Math.hypot(player.x - player.horse.x, player.y - player.horse.y);
+
+    // 3. Jeśli koń jest daleko lub poza ekranem, respawnujemy go kawałek ZA krawędzią ekranu (700px od gracza)
+    if (currentDist > 500) {
+        const randomAngle = Math.random() * Math.PI * 2; // Losowy kierunek (360 stopni)
+        const spawnDistance = 700; // Bezpieczna odległość poza widokiem kamery
+
+        player.horse.x = player.x + Math.cos(randomAngle) * spawnDistance;
+        player.horse.y = player.y + Math.sin(randomAngle) * spawnDistance;
+    }
+
+    // 4. Ustawiamy cel: ruch w stronę gracza (z lekkim przesunięciem o 30px, żeby nie stanął w graczowi w środku)
+    player.horse.targetX = player.x + 30;
+    player.horse.targetY = player.y + 30;
+    player.horse.isMovingToPlayer = true;
 }
 
 giveStartingEquipment(player);
