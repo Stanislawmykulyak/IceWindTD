@@ -80,50 +80,84 @@ const gameMap = {
         wioska_mlyn: {
             width: 2400,
             height: 2400,
-            name: "Stary Młyn",
+            name: "Obszar Starego Młyna",
             bgColor: '#2e3d29',
             buildings: [
-                { id: 'mlyn_bldg', name: 'Młyn', x: 1100, y: 1750, width: 250, height: 200, color: '#4a3525' }
+                { id: 'mlyn_bldg', name: 'Młyn', x: 1100, y: 1600, width: 300, height: 240, color: '#4a3525' }
             ],
             doors: [
-                { x: 1220, y: 1850, width: 40, height: 20, targetLocation: 'mlyn_piwnica', spawnX: 200, spawnY: 400, label: 'Piwnica [E]' },
-                // NOWE DRZWI: Powrót z Młyna do głównej wioski Kruczy Dół
-                { x: 1220, y: 1980, width: 40, height: 20, targetLocation: 'kruczy_dol', spawnX: 1770, spawnY: 480, label: 'Powrót do Wioski [E]' }
+                // Wejście do wnętrza Młyna
+                {
+                    x: 1230, y: 1840, width: 40, height: 20,
+                    targetLocation: 'mlyn_wnetrze', spawnX: 600, spawnY: 820,
+                    label: 'Wejdź do Młyna [E]'
+                },
+                // Powrót do wioski Kruczy Dół
+                {
+                    x: 1230, y: 1980, width: 40, height: 20,
+                    targetLocation: 'kruczy_dol', spawnX: 1770, spawnY: 480,
+                    label: 'Powrót do Wioski [E]'
+                }
+            ]
+        },
+
+        mlyn_wnetrze: {
+            width: 1200,
+            height: 900,
+            name: "Wnętrze Młyna",
+            bgColor: '#3a271d',
+            buildings: [
+                // Elementy wnętrza - koło młyńskie, worki z mąką, stoły warsztatowe
+                { id: 'mlyn_mecz', name: 'Mechanizm Młyński', x: 150, y: 100, width: 220, height: 220, color: '#271911' },
+                { id: 'worki_maka', name: 'Stos worków z mąką', x: 850, y: 120, width: 180, height: 100, color: '#8a7967' },
+                { id: 'stol_mlynarza', name: 'Stół Stolarski', x: 880, y: 600, width: 160, height: 90, color: '#573d2a' }
+            ],
+            doors: [
+                // Wyjście na zewnątrz przed Młyn
+                {
+                    x: 580, y: 870, width: 80, height: 20,
+                    targetLocation: 'wioska_mlyn', spawnX: 1250, spawnY: 1880,
+                    label: 'Wyjście na zewnątrz [E]'
+                },
+                // Zejście do piwnicy Młyna (znajduje się w lewym górnym rogu)
+                {
+                    x: 100, y: 400, width: 50, height: 30,
+                    targetLocation: 'mlyn_piwnica', spawnX: 150, spawnY: 700,
+                    label: 'Zejście do Piwnicy [E]'
+                }
             ]
         },
 
         mlyn_piwnica: {
-            width: 600,
-            height: 500,
+            width: 1000,
+            height: 800,
             name: "Piwnica Młyna",
             bgColor: '#120d0a',
-            buildings: [],
+            buildings: [
+                { id: 'stare_skrzynie', name: 'Rupiecie i Skrzynie', x: 700, y: 150, width: 180, height: 120, color: '#2b1f17' }
+            ],
             doors: [
-                { x: 200, y: 440, width: 40, height: 20, targetLocation: 'wioska_mlyn', spawnX: 1220, spawnY: 1880, label: 'Wyjście [E]' }
+                // Powrót z piwnicy do wnętrza Młyna
+                {
+                    x: 130, y: 750, width: 60, height: 20,
+                    targetLocation: 'mlyn_wnetrze', spawnX: 120, spawnY: 460,
+                    label: 'Wyjście na górę [E]'
+                }
             ],
             onEnter() {
-                // Spawn zbirów jako instancji klasy Enemy
-                const z1 = new Enemy({ id: 'z1', type: 'zbir_lekki', x: 380, y: 220 });
-                z1.isBasementThug = true;
-                z1.nonLethal = true;
-
-
+                const z1 = new Enemy({ id: 'z1', type: 'zbir_lekki', x: 500, y: 350, name: 'Zbir' });
                 Object.assign(z1, {
-                    name: 'Zbir', hp: 300, maxHp: 300, armor: 2,
+                    hp: 300, maxHp: 300, armor: 2,
                     color: '#e74c3c', nonLethal: true, isBasementThug: true, isHostile: false
                 });
 
-                const z2 = new Enemy({ id: 'z2', type: 'zbir_ciezki', x: 420, y: 220 });
-                z2.isBasementThug = true;
-                z2.nonLethal = true;
+                const z2 = new Enemy({ id: 'z2', type: 'zbir_ciezki', x: 580, y: 350, name: 'Zbir Ciężki' });
                 Object.assign(z2, {
-                    name: 'Zbir Ciężki', hp: 550, maxHp: 550, armor: 5,
+                    hp: 550, maxHp: 550, armor: 5,
                     color: '#c0392b', nonLethal: true, isBasementThug: true, isHostile: false
                 });
 
                 enemyManager.enemies = [z1, z2];
-
-                // Uruchomienie cutscenki wejściowej
                 cutsceneManager.startBasementIntro();
             }
         }
