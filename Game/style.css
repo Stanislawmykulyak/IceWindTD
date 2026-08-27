@@ -79,8 +79,8 @@ canvas {
     top: 80px;
     left: 50%;
     transform: translateX(-50%);
-    background: rgba(192, 57, 43, 0.9);
-    color: white;
+    background: rgba(80, 80, 80, 0.171);
+    color: white; 
     padding: 8px 18px;
     border-radius: 4px;
     font-weight: bold;
@@ -363,6 +363,30 @@ canvas {
     margin-bottom: 20px;
 }
 
+#interaction-prompt {
+    position: absolute;
+    bottom: 50px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.8);
+    color: #fff;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-family: sans-serif;
+    font-size: 14px;
+    border: 1px solid #555;
+    z-index: 1000; /* Daje pewność, że nie schowa się pod mapą */
+    pointer-events: none;
+}
+
+#interaction-prompt.hidden { display: none; }
+#interaction-prompt kbd {
+    background: #e74c3c;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-weight: bold;
+}
+
 .spinner {
     width: 36px;
     height: 36px;
@@ -417,6 +441,7 @@ canvas {
     line-height: 1.5;
     color: #e0e0e0;
     margin-bottom: 14px;
+    white-space: pre-wrap;
 }
 
 #dialogue-options {
