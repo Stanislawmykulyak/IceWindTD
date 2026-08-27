@@ -265,32 +265,24 @@ window.addEventListener('keydown', (e) => {
             documentViewer.close();
             return;
         }
-        if (alchemyUI.isOpen) { // <-- DODAJ (zamyka okno pod 'E')
+        if (typeof alchemyUI !== 'undefined' && alchemyUI.isOpen) {
             alchemyUI.close();
             return;
         }
-
-        // 2. Otwarcie zaznaczonego dokumentu w ekwipunku
-        if (menuSystem.isOpen && menuSystem.activeTab === 'inventory') {
-            if (player.selectedItemIndex !== null) {
-                const selectedItem = player.inventory[player.selectedItemIndex];
-                if (selectedItem) {
-                    const dbItem = (typeof ITEMS_DB !== 'undefined' && ITEMS_DB[selectedItem.id]) ? ITEMS_DB[selectedItem.id] : {};
-                    const content = selectedItem.content || dbItem.content;
-                    const monologueId = selectedItem.monologueId || dbItem.monologueId;
-                    const questTrigger = selectedItem.questTrigger || dbItem.questTrigger;
-                    const isReadable = content || monologueId || selectedItem.type === 'quest' || selectedItem.type === 'readable' || dbItem.type === 'quest' || dbItem.type === 'readable';
-
-                    if (isReadable) {
-                        documentViewer.open(selectedItem.name, content || "<i>(Brak treści w liście)</i>", monologueId, questTrigger);
-                    }
-                }
-            }
+        // 2. Jeśli menu (ekwipunek) jest otwarte -> wykonaj akcję na przedmiocie i ZAKOŃCZ (return)
+        if (menuSystem.isOpen) {
+            menuSystem.handleQuickAction();
             return;
         }
 
-        // 3. Interakcja w świecie gry (rozmowa, drzwi, koń)
-        if (!dialogueManager.isActive && !player.isSleeping && !menuSystem.isOpen) {
+        // 3. Interakcja w świecie gry (tylko gdy menu i czytnik są zamknięte)
+        if (!dialogueManager.isActive && !player.isSleeping) {
+            const nearBag = typeof LootManager !== 'undefined' ? LootManager.getNearBag(player) : null;
+            if (nearBag) {
+                lootBagSystem.open(nearBag);
+                return;
+            }
+
             let interacted = false;
             for (let i = worldObjects.length - 1; i >= 0; i--) {
                 const res = worldObjects[i].handleInteraction('e');

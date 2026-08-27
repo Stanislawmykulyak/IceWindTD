@@ -1,7 +1,7 @@
 const menuSystem = {
     isOpen: false,
     activeTab: 'quests',
-
+    hoveredSlot: null,
     toggle(tabName) {
         if (this.isOpen && this.activeTab === tabName) {
             this.close();
@@ -144,7 +144,8 @@ const menuSystem = {
             // Ustawienie zdarzeń Drag & Drop na każdym slocie uzbrojenia
             elem.setAttribute('ondragover', 'dragDropManager.allowDrop(event)');
             elem.setAttribute('ondrop', `dragDropManager.onDropToEquipment(event, '${cfg.key}')`);
-
+            elem.onmouseenter = (e) => { menuSystem.hoveredSlot = { type: 'equipment', key: cfg.key }; showTooltip(item, e); };
+            elem.onmouseleave = () => { menuSystem.hoveredSlot = null; showTooltip(null); };
             if (item) {
                 elem.className = 'eq-slot equipped';
                 elem.setAttribute('draggable', 'true');
@@ -170,7 +171,61 @@ const menuSystem = {
             }
         })
     },
+    handleQuickAction() {
+        if (this.activeTab !== 'inventory') return;
 
+        // 1. Priorytet ma slot pod kursorem, a jeśli brak - kliknięty/zaznaczony slot
+        let target = this.hoveredSlot;
+        if (!target && player.selectedItemIndex !== null && player.selectedItemIndex !== undefined) {
+            target = { type: 'inventory', index: player.selectedItemIndex };
+        }
+        if (!target) return;
+
+        if (target.type === 'inventory') {
+            const item = player.inventory[target.index];
+            if (!item) return;
+
+            // A. Zakładanie uzbrojenia i broni
+            if (['armor', 'weapon', 'head', 'chest', 'legs', 'boots', 'shield'].includes(item.type)) {
+                showTooltip(null);
+                player.equipItem(target.index);
+            }
+            else if (['book', 'readable', 'letter', 'note', 'document', 'paper'].includes(item.type) || item.text || item.content || item.description) {
+                if (typeof documentViewer !== 'undefined') {
+                    showTooltip(null);
+                    const dbItem = (typeof ITEMS_DB !== 'undefined' && ITEMS_DB[item.id]) ? ITEMS_DB[item.id] : {};
+                    const title = item.name || dbItem.name || 'Dokument';
+                    const content = item.content || item.text || item.description || dbItem.content || "<i>(Brak treści w liście)</i>";
+                    const monologueId = item.monologueId || dbItem.monologueId || null;
+                    const questTrigger = item.questTrigger || dbItem.questTrigger || null;
+
+                    documentViewer.open(title, content, monologueId, questTrigger);
+                }
+            }
+            // C. Używanie przedmiotów użytkowych / konsumpcyjnych
+            else if (item.type === 'consumable' || item.type === 'misc' || item.type === 'tool') {
+                if (typeof player.useItem === 'function') {
+                    player.useItem(target.index);
+                } else {
+                    showToast(`Użyto: ${item.name}`);
+                    if (item.count && item.count > 1) {
+                        item.count--;
+                    } else {
+                        player.inventory.splice(target.index, 1);
+                    }
+                }
+            }
+        } else if (target.type === 'equipment') {
+            // D. Ściąganie założonego pancerza z rynsztunku do plecaka
+            const item = player.equipment[target.key];
+            if (item) {
+                showTooltip(null);
+                player.unequipItem(target.key);
+            }
+        }
+
+        this.renderInventoryTab();
+    },
     renderQuestsTab() {
         const listEl = document.getElementById('journal-quests-list') || document.getElementById('quest-list-container');
         const detailsEl = document.getElementById('journal-quest-details') || document.getElementById('quest-details-content');

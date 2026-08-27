@@ -396,28 +396,23 @@ const player = {
 
         showToast(`Założono: ${item.name}`);
     },
-    useConsumable(itemIndex) {
-        const item = this.inventory[itemIndex];
+    useConsumable(index) {
+        const item = this.inventory[index];
         if (!item) return;
 
-        // Przykład natychmiastowego leczenia (rozbudujesz pod buffy)
-        if (item.id === 'potion_hp_small') {
-            if (this.hp >= this.maxHp) {
-                showToast("Masz już pełne zdrowie!");
-                return;
-            }
+        if (item.id === 'potion_hp_small' || item.id === 'mikstura_zdrowia') {
+            // Leczenie HP
             this.heal(30);
-        }
 
-        // Usunięcie 1 sztuki z plecaka
-        if (item.count && item.count > 1) {
-            item.count--;
-        } else {
-            this.inventory.splice(itemIndex, 1);
-        }
+            // Zmniejszenie ilości lub usunięcie z plecaka
+            if (item.count && item.count > 1) {
+                item.count--;
+            } else {
+                this.inventory.splice(index, 1);
+            }
 
-        if (typeof menuSystem !== 'undefined' && menuSystem.isOpen) {
-            menuSystem.renderInventoryTab();
+            // Odświeżenie widoku plecaka
+            if (menuSystem.isOpen) menuSystem.renderInventoryTab();
         }
     },
     unequipItem(slot) {
