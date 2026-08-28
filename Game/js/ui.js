@@ -169,7 +169,7 @@ const menuSystem = {
                 elem.onmouseleave = null;
                 elem.onclick = null;
             }
-            
+
         })
         if (typeof updateQuickSlotsHUD === 'function') updateQuickSlotsHUD()
     },
@@ -823,7 +823,7 @@ function drawCombatHUD(ctx) {
         const itemId = player.quickSlots[i];
         const item = itemId ? (player.inventory.find(inv => inv.id === itemId) || (typeof ITEMS_DB !== 'undefined' ? ITEMS_DB[itemId] : null)) : null;
         const countText = (item && item.count && item.count > 1) ? ` (x${item.count})` : '';
-const itemText = item ? `${item.icon || ''} ${item.name}${countText}`.trim() : '';
+        const itemText = item ? `${item.icon || ''} ${item.name}${countText}`.trim() : '';
         const lineY = startY + (i * 36);
 
         // Numeracja slotu
@@ -835,6 +835,7 @@ const itemText = item ? `${item.icon || ''} ${item.name}${countText}`.trim() : '
             ctx.fillStyle = '#e6dfd3';
             ctx.fillText(itemText, startX + 30, lineY);
         }
+
     }
 
     // --- STYL BRONI (WIDOCZNY TYLKO W WALCE) ---
@@ -848,8 +849,33 @@ const itemText = item ? `${item.icon || ''} ${item.name}${countText}`.trim() : '
         const stanceText = player.combatStance === '1H' ? 'Jednoręczny' : 'Dwuręczny';
         ctx.fillText(stanceText, startX + 90, stanceY);
     }
+    // --- PASEK COOLDOWNU ATAKU ---
+    if (typeof gameState !== 'undefined' && gameState === 'COMBAT' && player) {
+        const barY = startY + (3 * 36) + 25;
+        const barWidth = 140;
+        const barHeight = 10;
 
-    ctx.restore();
+        // Domyślny czas dla chwytu, jeśli brak ustawionego w obiekcie
+        const maxCd = player.attackCooldown || (player.combatStance === '1H' ? 0.6 : 1.2);
+        const currentTimer = Math.max(0, player.attackTimer || 0);
+
+        // Obliczenie płynnego postępu od 0 (tuż po ataku) do 1 (gotowy)
+        const progress = maxCd > 0 ? Math.min(1, Math.max(0, 1 - (currentTimer / maxCd))) : 1;
+        const isReady = progress >= 1;
+
+        // 1. Tło (ciemna baza)
+        ctx.fillStyle = 'rgba(20, 20, 20, 0.85)';
+        ctx.fillRect(startX, barY, barWidth, barHeight);
+
+        // 2. Pasek postępu (ładuje się na pomarańczowo, po pełnym naładowaniu staje się szary)
+        ctx.fillStyle = isReady ? '#5a6578' : '#d35400';
+        ctx.fillRect(startX, barY, barWidth * progress, barHeight);
+
+        // 3. Ramka
+        ctx.strokeStyle = '#000000';
+        ctx.lineWidth = 1.5;
+        ctx.strokeRect(startX, barY, barWidth, barHeight);
+    }
 }
 
 function drawActiveEffectsHUD(ctx) {
@@ -926,14 +952,14 @@ const dragDropManager = {
         if (this.draggedData.type === 'inventory') {
             // Pobieramy przedmiot po indeksie z tablicy lub po ID
             const item = player.inventory[this.draggedData.id] || player.inventory.find(i => i && i.id === this.draggedData.id);
-            
+
             if (item) {
                 // Zapisujemy unikalny ID przedmiotu lub jego nazwę/indeks
                 const targetId = item.id || item.name;
                 player.quickSlots[slotIndex] = targetId;
 
                 showToast(`Przypisano do slotu ${slotIndex + 1}: ${item.name}`);
-                
+
                 // Odświeżamy i HUD, i zakładkę ekwipunku
                 if (typeof updateQuickSlotsHUD === 'function') updateQuickSlotsHUD();
                 if (typeof menuSystem !== 'undefined' && menuSystem.isOpen) {

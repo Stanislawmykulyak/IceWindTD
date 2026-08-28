@@ -339,6 +339,12 @@ const player = {
         const isHeavy = this.combatStance === '2H';
         const HEAVY_STAMINA_COST = 35; // Koszt staminy dla mocnego ciosu
 
+        if (this.attackTimer > 0) return;
+
+        // Czas odnawiania w sekundach w zależności od chwytu (1H = 0.6s, 2H = 1.2s)
+        this.attackCooldown = this.combatStance === '1H' ? 0.6 : 1.2;
+        this.attackTimer = this.attackCooldown;
+
         // 1. Sprawdzenie staminy wyłącznie dla ciężkiego ataku
         if (isHeavy && this.stamina < HEAVY_STAMINA_COST) {
             if (typeof showToast === 'function') showToast("Brak staminy na mocny cios!");
@@ -789,7 +795,10 @@ const player = {
         } else {
             if (stateTextUI) { stateTextUI.innerText = "Pieszo (Chód)"; stateTextUI.style.color = "#4cd137"; }
         }
-
+        if (this.attackTimer > 0) {
+            this.attackTimer -= dt; // jeśli nie używasz dt, użyj np. 1/60 lub (16 / 1000)
+            if (this.attackTimer < 0) this.attackTimer = 0;
+        }
         // Dodanie premii do prędkości z aktywnych efektów
         let speedMultiplier = 1.0;
         this.activeEffects.forEach(eff => {

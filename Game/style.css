@@ -1687,6 +1687,62 @@ canvas#gameCanvas {
     display: flex;
 }
 
+.attack-cooldown-container {
+    width: 100%;
+    height: 6px;
+    background: #111;
+    border: 1px solid #333;
+    border-radius: 3px;
+    margin-top: 5px;
+    overflow: hidden;
+    box-sizing: border-box;
+}
+
+.attack-cooldown-bar {
+    height: 100%;
+    width: 100%;
+    background: linear-gradient(90deg, #d35400, #f39c12);
+    transition: width 0.05s linear;
+}
+
+#hud-top-left {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    z-index: 1000; /* ZMIENIONO Z 10 NA 1000 */
+    pointer-events: none;
+}
+
+#attack-cooldown-container {
+    width: 100%;
+    height: 14px;
+    background: rgba(0, 0, 0, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+    margin-top: 8px;
+    position: relative;
+    overflow: hidden;
+}
+
+#attack-cooldown-fill {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, #e74c3c 0%, #2ecc71 100%);
+    transition: width 0.05s linear;
+}
+
+#attack-cooldown-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 9px;
+    font-weight: 800;
+    color: #ffffff;
+    text-shadow: 1px 1px 2px #000;
+    pointer-events: none;
+}
+
 .combat-buttons button {
     background: #4a0e0e;
     color: #fff;
