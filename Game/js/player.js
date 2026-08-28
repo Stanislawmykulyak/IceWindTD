@@ -27,6 +27,18 @@ const player = {
             questTrigger: { questId: 'Q1', step: 0 },
             stats: 'Kliknij Dwukrotnie aby przeczytać',
             content: "Arkelasie , mój Drogi przyjacielu Mam nadzieję ,że przeczytasz ten list a życie mija ci spokojnie, jak pewnie wiesz osiedliłem się miasteczku Kruczy Dół , ze względu na jego położenie na szlaku handlowym między Valengardem a Rendią jak i ze względu na powierzone mi zadanie . Niestety ostatnio zauważam coraz to bardziej niepokojące rzeczy , wczoraj zauważyłem dwóch ludzi obserwujących mnie ,których nigdy wcześniej nie widziałem a kilka dni temu ktoś włamał mi się do domu . Potrzebuję twojej pomocy Arkelasie bo czuje ,że wpadłem w niezłe gówno. Spotkajmy się tam gdzie czarodziejki chodzą z patelnią <br> Z poważaniem ,Nicolas "
+        },
+        {
+            id: 'potion_health',
+            name: 'Mikstura Zdrowia',
+            icon: '🍷',
+            type: 'consumable',
+            weight: 0.3,
+            count: 3,
+            stats: 'Przywraca 45 HP w czasie 15s',
+            effects: [
+                { id: 'heal_potion', name: 'Regeneracja', icon: '💚', type: 'heal', value: 45, duration: 15 }
+            ]
         }
     ],
     equipment: {
@@ -65,8 +77,10 @@ const player = {
 
     lastLightAttackTime: 0,
     lastHeavyAttackTime: 0,
-    critChance: 0.05, // 15% podstawowej szansy na kryta
-    critMultiplier: 1.5,
+    lightCritChance: 0.03,      // Szansa dla lekkiego
+    heavyCritChance: 0.06,      // Szansa dla ciężkiego
+    lightCritMultiplier: 1.35,  // Mnożnik dla lekkiego
+    heavyCritMultiplier: 1.75,  // Mnożnik dla ciężkiego
     lightAttackCooldown: 700,
     heavyAttackCooldown: 1300,
     combatStance: '1H', // Domyślnie chwyt jednoręczny
@@ -118,27 +132,34 @@ const player = {
         this.combatStance = this.combatStance === '1H' ? '2H' : '1H';
         showToast(`Zmieniono chwyt na: ${this.combatStance === '1H' ? 'Jednoręczny' : 'Dwuręczny'}`);
     },
-    getCritStats() {
+    getCritStats(isHeavy = false) {
         let bonusChance = 0;
         let bonusMult = 0;
 
-        // Statystyki z broni i pancerza
-        if (this.weapon && this.weapon.critChance) bonusChance += this.weapon.critChance;
-        if (this.armor && this.armor.critChance) bonusChance += this.armor.critChance;
+        if (this.equipment?.weapon?.critChance) {
+            let c = this.equipment.weapon.critChance;
+            bonusChance += c > 1 ? c / 100 : c; // Konwersja z 5 na 0.05
+        }
+        if (this.equipment?.chest?.critChance) {
+            let c = this.equipment.chest.critChance;
+            bonusChance += c > 1 ? c / 100 : c;
+        }
 
-        // Buffowanie ze skilli/efektów
         if (this.activeEffects) {
             this.activeEffects.forEach(eff => {
                 if (eff.type === 'stat_buff') {
-                    if (eff.stat === 'critChance') bonusChance += eff.value;
+                    if (eff.stat === 'critChance') bonusChance += eff.value > 1 ? eff.value / 100 : eff.value;
                     if (eff.stat === 'critMultiplier') bonusMult += eff.value;
                 }
             });
         }
 
+        const baseChance = isHeavy ? (this.heavyCritChance || 0.06) : (this.lightCritChance || 0.03);
+        const baseMult = isHeavy ? (this.heavyCritMultiplier || 1.75) : (this.lightCritMultiplier || 1.35);
+
         return {
-            chance: (this.critChance || 0.05) + bonusChance,
-            multiplier: (this.critMultiplier || 1.5) + bonusMult
+            chance: baseChance + bonusChance,
+            multiplier: baseMult + bonusMult
         };
     },
     useQuickSlot(slotIndex) {
@@ -155,31 +176,29 @@ const player = {
         }
 
         const item = this.inventory[itemIndex];
-        let used = false;
 
-        if (item.type === 'potion' || item.type === 'food' || item.id.startsWith('potion_')) {
-            const healAmount = item.heal || 30;
-            if (this.hp >= (this.maxHp || 100)) {
-                if (typeof showToast === 'function') showToast("Masz już pełne zdrowie!");
-                return;
+        // 1. Mikstury / Jedzenie -> Użycie i skonsumowanie
+        if (item.type === 'consumable' || item.type === 'potion' || item.type === 'food' || item.id.startsWith('potion_')) {
+            this.useConsumable(itemIndex);
+        }
+        // 2. Dokumenty / Listy / Questy -> Przeczytanie BEZ usuwania z ekwipunku
+        else if (item.type === 'quest' || item.type === 'document' || item.content) {
+            if (item.unlocksRecipe) this.unlockRecipe(item.unlocksRecipe);
+            if (typeof documentViewer !== 'undefined') {
+                documentViewer.open(item.name, item.content, item.monologueId, item.questTrigger);
             }
-            this.hp = Math.min(this.maxHp || 100, this.hp + healAmount);
-            if (typeof showToast === 'function') showToast(`Użyto: ${item.name} (+${healAmount} HP)`);
-            used = true;
-        } else {
+        }
+        // 3. Uzbrojenie -> Założenie przedmiotu
+        else if (['weapon', 'head', 'chest', 'legs', 'boots'].includes(item.type)) {
+            this.equipItem(itemIndex);
+        }
+        // 4. Inne przedmioty
+        else {
             if (typeof showToast === 'function') showToast(`Użyto: ${item.name}`);
-            used = true;
         }
 
-        if (used) {
-            if (item.count && item.count > 1) {
-                item.count--;
-            } else {
-                this.inventory.splice(itemIndex, 1);
-            }
-            if (typeof updateQuickSlotsHUD === 'function') updateQuickSlotsHUD();
-            if (typeof updateHUD === 'function') updateHUD();
-        }
+        if (typeof updateQuickSlotsHUD === 'function') updateQuickSlotsHUD();
+        if (typeof updateHUD === 'function') updateHUD();
     },
     unlockRecipe(recipeId) {
         if (!this.unlockedRecipes.includes(recipeId)) {
@@ -218,7 +237,7 @@ const player = {
         // 1. Bazowe obrażenia + broń
         const weapon = this.equipment?.weapon;
         const weaponDmg = weapon ? (weapon.damage || 0) : 0;
-        let totalDmg = (this.baseDamage || 30) + (weaponDmg * 1.4);
+        let totalDmg = (this.baseDamage || 30) + weaponDmg;
 
         // 2. SKALOWANIE Z POZIOMEM (np. +8% do całkowitych DMG za każdy level powyżej 1)
         const levelMultiplier = 1 + ((this.level || 1) - 1) * 0.08;
@@ -301,6 +320,8 @@ const player = {
             if (typeof menuSystem !== 'undefined' && menuSystem.isOpen) {
                 menuSystem.renderInventoryTab();
             }
+            if (typeof updateQuickSlotsHUD === 'function') updateQuickSlotsHUD();
+            if (typeof updateHUD === 'function') updateHUD();
         }
     },
 
@@ -380,13 +401,41 @@ const player = {
         finalDamage = Math.max(minDamage, finalDamage);
 
         this.hp -= finalDamage;
-        if (this.hp < 0) this.hp = 0;
 
-        this.updateHPUI(); // <-- TU BYŁ BŁĄD! Teraz pasek HP od razu odpada po dostaniu strzała
+        // Sprawdzenie śmierci przy otrzymaniu obrażeń
+        if (this.hp <= 0) {
+            this.hp = 0;
+            this.updateHPUI();
+            this.handleDeath(); // TRIGGER ŚMIERCI!
+            return finalDamage;
+        }
 
+        this.updateHPUI();
         return finalDamage;
     },
+    healOverTime(totalAmount, durationSeconds) {
+        // Sanity check: kasujemy stary timer, jeśli gracz wypije drugi eliksir w trakcie trwania pierwszego
+        if (this.hotInterval) {
+            clearInterval(this.hotInterval);
+        }
 
+        const tickInterval = 1000; // 1 sekunda
+        const ticks = durationSeconds;
+        const healPerTick = totalAmount / ticks; // 30 / 15 = 2 HP na sekundę
+        let currentTick = 0;
+
+        this.hotInterval = setInterval(() => {
+            // Przerywamy, gdy gracz zginie lub minie 15 sekund
+            if (this.hp <= 0 || currentTick >= ticks) {
+                clearInterval(this.hotInterval);
+                this.hotInterval = null;
+                return;
+            }
+
+            this.hp = Math.min(this.maxHp, this.hp + healPerTick);
+            currentTick++;
+        }, tickInterval);
+    },
     heal(amount) {
         this.hp = Math.min(this.maxHp, this.hp + amount);
         this.updateHPUI();
@@ -448,25 +497,31 @@ const player = {
 
         const rawDamage = this.getDamage(false);
         hitTargets.forEach(enemy => {
-            const critStats = this.getCritStats();
+            // Przekazujemy czy to Heavy Attack do wyliczenia statystyk kryta
+            const critStats = this.getCritStats(isHeavy);
 
-            // 1. Sprawdzenie 100% krytyka na powalonym przeciwniku przy użyciu Heavy Attack
             let isCrit = Math.random() < critStats.chance;
             if (isHeavy && enemy.isKnockedDown) {
-                isCrit = true; // Gwarantowany krytyk na powalonym, ale wróg leży dalej aż wygaśnie timer!
+                isCrit = true;
             }
 
             const critMult = isCrit ? critStats.multiplier : 1.0;
-            const enemyArmor = enemy.armor || 0;
+            let enemyArmor = typeof enemy.getArmor === 'function' ? enemy.getArmor() : (enemy.armor || 0);
+
+            // HEAVY ATTACK IGNORUJE 70% PANCERZA (Przeciwnik zachowuje tylko 30% zbroi)
+            if (isHeavy) {
+                enemyArmor = Math.round(enemyArmor * 0.30);
+            }
+
             const baseDmg = calculateDamage(rawDamage, enemyArmor, dmgMultiplier);
-            const finalDmg = Math.round(baseDmg * critMult);
+            const finalDmg = isCrit ? Math.round(baseDmg * critStats.multiplier) : baseDmg;
 
             enemy.takeDamage(finalDmg, this.x, this.y);
 
             // 2. 10% szansy na powalenie celów przy ataku Heavy (jeśli cel jeszcze nie jest powalony)
             if (isHeavy && !enemy.isKnockedDown && Math.random() < 0.10) {
                 enemy.isKnockedDown = true;
-                enemy.knockDownTimer = 2.5; // Czas trwania powalenia w sekundach
+                enemy.knockDownTimer = 3; // Czas trwania powalenia w sekundach
                 if (typeof damageNumbers !== 'undefined') {
                     damageNumbers.add(enemy.x, enemy.y - 35, '💫 POWALENIE!', '#e67e22');
                 }
@@ -522,6 +577,10 @@ const player = {
     },
 
     handleDeath() {
+        if (this.hotInterval) {
+            clearInterval(this.hotInterval);
+            this.hotInterval = null;
+        }
         showToast("Zginąłeś! Budzisz się z połową złota...");
         this.gold = Math.floor(this.gold / 2);
         this.hp = this.maxHp;

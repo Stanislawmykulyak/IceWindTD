@@ -169,7 +169,9 @@ const menuSystem = {
                 elem.onmouseleave = null;
                 elem.onclick = null;
             }
+            
         })
+        if (typeof updateQuickSlotsHUD === 'function') updateQuickSlotsHUD()
     },
     handleQuickAction() {
         if (this.activeTab !== 'inventory') return;
@@ -937,7 +939,30 @@ const dragDropManager = {
         }
         this.draggedData = null;
     },
+    onDropToQuickSlot(event, slotIndex) {
+        event.preventDefault();
+        if (!this.draggedData) return;
 
+        if (this.draggedData.type === 'inventory') {
+            // Pobieramy przedmiot po indeksie z tablicy lub po ID
+            const item = player.inventory[this.draggedData.id] || player.inventory.find(i => i && i.id === this.draggedData.id);
+            
+            if (item) {
+                // Zapisujemy unikalny ID przedmiotu lub jego nazwę/indeks
+                const targetId = item.id || item.name;
+                player.quickSlots[slotIndex] = targetId;
+
+                showToast(`Przypisano do slotu ${slotIndex + 1}: ${item.name}`);
+                
+                // Odświeżamy i HUD, i zakładkę ekwipunku
+                if (typeof updateQuickSlotsHUD === 'function') updateQuickSlotsHUD();
+                if (typeof menuSystem !== 'undefined' && menuSystem.isOpen) {
+                    menuSystem.renderInventoryTab();
+                }
+            }
+        }
+        this.draggedData = null;
+    },
     onDropToInventory(event) {
         event.preventDefault();
         if (!this.draggedData) return;

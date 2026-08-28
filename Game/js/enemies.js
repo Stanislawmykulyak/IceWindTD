@@ -169,8 +169,10 @@ class Enemy {
         const type = config.type || 'zbir_lekki';
         const baseConfig = (typeof ENEMY_CONFIG !== 'undefined' && ENEMY_CONFIG[type]) ? ENEMY_CONFIG[type] : {};
         this.baseConfig = baseConfig;
-        this.armor = baseConfig.armor || config.armor || 0;
-        this.id = config.id || `enemy_${Date.now()}`;
+        this.weaponId = baseConfig.weaponId || config.weaponId || 'simple_sword';
+        this.equipment = baseConfig.equipment ? { ...baseConfig.equipment } : (config.equipment || {});
+        this.weaponDropChance = baseConfig.weaponDropChance || 0.15; // 15% szans na drop broni domyslnie
+        this.armorDropChance = baseConfig.armorDropChance || 0.10;
         this.x = config.x || 0;
         this.y = config.y || 0;
         this.type = type;
@@ -180,7 +182,7 @@ class Enemy {
         this.maxHp = baseConfig.maxHp || 100;
         this.hp = this.maxHp;
         this.speed = baseConfig.speed || 1.1;
-        this.damage = (baseConfig.damage * 10) || 75;
+        this.baseDamage = baseConfig.damage || 10;
         this.radius = baseConfig.radius || 14;
         this.color = baseConfig.color || '#e74c3c';
         this.attackWindup = 0;
@@ -200,7 +202,33 @@ class Enemy {
         this.isKnockedDown = false;
         this.knockDownTimer = 0;
     }
+    getDamage() {
+        // Pobieramy dane broni z ITEMS_DB lub start_items
+        const weaponTpl = (typeof ITEMS_DB !== 'undefined' && ITEMS_DB[this.weaponId])
+            ? ITEMS_DB[this.weaponId]
+            : ((typeof start_items !== 'undefined' && start_items[this.weaponId]) ? start_items[this.weaponId] : null);
 
+        const weaponDmg = weaponTpl ? (weaponTpl.damage || 0) : 0;
+
+        // Obrażenia = bazowa siła wroga + obrażenia trzymanej broni
+        return this.baseDamage + weaponDmg;
+    }
+    getArmor() {
+        let totalArmor = this.baseConfig.armor || 0;
+        if (this.equipment) {
+            Object.values(this.equipment).forEach(itemId => {
+                if (!itemId) return;
+                const itemTpl = (typeof ITEMS_DB !== 'undefined' && ITEMS_DB[itemId])
+                    ? ITEMS_DB[itemId]
+                    : ((typeof start_items !== 'undefined' && start_items[itemId]) ? start_items[itemId] : null);
+
+                if (itemTpl && itemTpl.armor) {
+                    totalArmor += itemTpl.armor;
+                }
+            });
+        }
+        return totalArmor;
+    }
     update(dt, player, activePack, allies = [], manager = null) {
         if (this.isUnconscious || this.hp <= 0 || !this.isAlive) return;
 
@@ -295,7 +323,7 @@ class Enemy {
                     const isTargetDodging = target.isInvulnerable || target.isDodging;
                     if (distToTarget <= this.attackRadius + 15 && !isTargetDodging) {
                         if (typeof target.takeDamage === 'function') {
-                            target.takeDamage(this.damage);
+                            target.takeDamage(this.getDamage());
                         }
                     }
                     // Krótszy, bardziej dynamiczny cooldown (1.2s - 1.8s)
@@ -362,6 +390,23 @@ class Enemy {
             this.isAlive = false;
             this.onDeath();
         }
+        if (this.hp <= 1 && this.nonLethal) {
+            this.hp = 1;
+            this.canAttack = false;
+            this.isUnconscious = true;
+            this.isHostile = false;
+            this.color = '#7f8c8d';
+
+            // DODAJ TE 4 LINII: Wyrzucenie sakwy przy powaleniu (tylko raz)
+            if (!this.hasDroppedLoot) {
+                this.hasDroppedLoot = true;
+                this.dropLoot();
+            }
+
+            if (typeof showToast === 'function') showToast(`${this.name} został powalony!`);
+            if (typeof cutsceneManager !== 'undefined') cutsceneManager.checkBasementFightEnd();
+            return;
+        }
     }
 
     onDeath() {
@@ -369,22 +414,48 @@ class Enemy {
     }
 
     dropLoot() {
-        if (!this.lootTable) return;
         const bagItems = [];
         let bagGold = 0;
 
-        this.lootTable.forEach(drop => {
-            if (Math.random() <= drop.chance) {
-                const count = Math.floor(Math.random() * (drop.max - drop.min + 1)) + drop.min;
-                if (drop.id === 'gold_coins') {
-                    bagGold += count;
-                } else {
-                    const tpl = (typeof ITEMS_DB !== 'undefined' && ITEMS_DB[drop.id]) ? ITEMS_DB[drop.id] : { name: drop.id, icon: '📦', type: 'misc', weight: 1.0, stats: '' };
-                    bagItems.push({ ...tpl, id: drop.id, count });
+        // 1. Drop ze stałej tabeli (surowce, alchemia, złoto)
+        if (this.lootTable) {
+            this.lootTable.forEach(drop => {
+                if (Math.random() <= drop.chance) {
+                    const count = Math.floor(Math.random() * (drop.max - drop.min + 1)) + drop.min;
+                    // Czyszczenie "monet" jako przedmiotu – złoto trafia wyłącznie do czystej puli bagGold
+                    if (drop.id === 'gold_coins' || drop.id === 'gold' || drop.id === 'monety') {
+                        bagGold += count;
+                    } else {
+                        const tpl = (typeof ITEMS_DB !== 'undefined' && ITEMS_DB[drop.id]) ? ITEMS_DB[drop.id] : null;
+                        if (tpl) bagItems.push({ ...tpl, id: drop.id, count });
+                    }
                 }
-            }
-        });
+            });
+        }
 
+        // 2. Rzut na drop używanej BRONI (realny przedmiot z ITEMS_DB)
+        if (this.weaponId && Math.random() <= this.weaponDropChance) {
+            const weaponTpl = (typeof ITEMS_DB !== 'undefined' && ITEMS_DB[this.weaponId]) ? ITEMS_DB[this.weaponId] : null;
+            if (weaponTpl) {
+                bagItems.push({ ...weaponTpl, id: this.weaponId, count: 1 });
+            }
+        }
+
+        // 3. Rzut na drop używanego PANCERZA (realny przedmiot z ITEMS_DB)
+        if (this.equipment) {
+            Object.values(this.equipment).forEach(armorId => {
+                if (armorId && Math.random() <= this.armorDropChance) {
+                    const armorTpl = (typeof ITEMS_DB !== 'undefined' && ITEMS_DB[armorId])
+                        ? ITEMS_DB[armorId]
+                        : ((typeof start_items !== 'undefined' && start_items[armorId]) ? start_items[armorId] : null);
+                    if (armorTpl) {
+                        bagItems.push({ ...armorTpl, id: armorId, count: 1 });
+                    }
+                }
+            });
+        }
+
+        // Tworzenie sakwy tylko jeśli coś wypadło
         if (bagItems.length > 0 || bagGold > 0) {
             LootManager.spawnBag(this.x, this.y, bagItems, bagGold);
         }
@@ -610,7 +681,7 @@ function assignSelectedToQuickSlot(slotIndex) {
         if (typeof showToast === 'function') showToast("Wybierz najpierw przedmiot z ekwipunku!");
         return;
     }
-
+    
     const item = player.inventory[player.selectedItemIndex];
     if (!item) return;
 
@@ -619,6 +690,7 @@ function assignSelectedToQuickSlot(slotIndex) {
 
     // Przypisujemy do wybranego slotu
     player.quickSlots[slotIndex] = item.id;
+    if (typeof updateQuickSlotsHUD === 'function') updateQuickSlotsHUD();
     if (typeof showToast === 'function') showToast(`Przypisano ${item.name} do Slotu [${slotIndex + 1}]`);
 
     updateQuickSlotsHUD();
