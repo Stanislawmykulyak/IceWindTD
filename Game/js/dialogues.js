@@ -27,10 +27,10 @@ const dialogueManager = {
                             next: "already_have_key",
                             condition: () => player.hasItem('room_key')
                         },
-                        { text: "Szukam pewnej osoby nazywa się Nicolas i podobno tutaj mieszka ", next: "nicolas_info" },
-                        { text: "[Zamknij rozmowę]", next: "exit" },
+                        
 
-                        { text: "Czy znajduje się tutaj jakiś młyn ?", next: "mlyn" }
+                        { text: "Czy znajduje się tutaj jakiś młyn ?", next: "mlyn" },
+                        { text: "[Zamknij rozmowę] ❌", next: "exit" },
                     ]
                 },
                 already_have_key: {

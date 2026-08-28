@@ -150,7 +150,7 @@ canvas {
 /* POWIĘKSZONA SIATKA PLECAKA (6 KOLUMN x ZWIĘKSZONA WYSOKOŚĆ) */
 .scrollable-grid {
     display: grid;
-    grid-template-columns: repeat(6, 60px); /* Powiększone z 5 kolumn do 6 */
+    grid-template-columns: repeat(10, 60px); /* Powiększone z 5 kolumn do 6 */
     grid-auto-rows: 60px;
     max-height: 400px; /* Zwiększona wysokość */
     overflow-y: auto;
@@ -1097,8 +1097,8 @@ canvas#gameCanvas {
 /* SIATKA KRATEK (6 kolumn x 5 wierszy) */
 .grid-container {
     display: grid;
-    grid-template-columns: repeat(6, 62px);
-    grid-template-rows: repeat(5, 62px);
+    grid-template-columns: repeat(8, 62px);
+    grid-template-rows: repeat(6, 62px);
     gap: 6px;
     background: #0d0805;
     padding: 10px;

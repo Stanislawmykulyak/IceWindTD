@@ -92,7 +92,7 @@ const menuSystem = {
         const maxWeightVal = document.getElementById('menu-max-weight-val');
         if (maxWeightVal) maxWeightVal.innerText = player.maxWeight;
 
-        const totalSlots = Math.max(25, player.inventory.length);
+        const totalSlots = Math.max(70, player.inventory.length);
         for (let i = 0; i < totalSlots; i++) {
             const slot = document.createElement('div');
             const item = player.inventory[i];
