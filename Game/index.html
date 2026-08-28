@@ -257,13 +257,23 @@
     </div>
     <div id="hud-top-left">
       <div class="hp-container">
-        <span class="hp-label">HP</span>
-        <div class="hp-bar-outer">
-          <div id="hp-bar-fill" class="hp-bar-inner" style="width: 100%;"></div>
-          <span id="hp-text" class="hp-text">100 / 100</span>
+        <!-- RZĄD HP -->
+        <div class="hud-bar-row">
+          <span class="hp-label">HP</span>
+          <div class="hp-bar-outer">
+            <div id="hp-bar-fill" class="hp-bar-inner" style="width: 100%;"></div>
+            <span id="hp-text" class="hp-text">1250 / 1250</span>
+          </div>
+        </div>
+        <!-- RZĄD STAMINY -->
+        <div class="hud-bar-row">
+          <span class="hp-label" style="color: #2ecc71;">ST</span>
+          <div id="stamina-bar-container">
+            <div id="stamina-bar-fill" style="width: 100%;"></div>
+            <span id="stamina-text">100 / 100</span>
+          </div>
         </div>
       </div>
-
     </div>
     <div id="combat-hud" class="combat-hidden">
       <div class="combat-panel">

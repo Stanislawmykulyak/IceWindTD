@@ -36,6 +36,9 @@ const player = {
         legs: null,
         boots: null
     },
+    stamina: 100,
+    maxStamina: 100,
+    staminaRegen: 10,
     hp: 1250,
     maxHp: 1250,
     damageMultiplier: 1.0,
@@ -62,9 +65,10 @@ const player = {
 
     lastLightAttackTime: 0,
     lastHeavyAttackTime: 0,
-
+    critChance: 0.05, // 15% podstawowej szansy na kryta
+    critMultiplier: 1.5,
     lightAttackCooldown: 700,
-    heavyAttackCooldown: 1200,
+    heavyAttackCooldown: 1300,
     combatStance: '1H', // Domyślnie chwyt jednoręczny
     quickSlots: [null, null, null],
     unlockedRecipes: ['potion_health'], // Domyślnie gracz zna tylko podstawową miksturę
@@ -74,7 +78,12 @@ const player = {
         if (fill) fill.style.width = `${Math.max(0, (this.hp / this.maxHp) * 100)}%`;
         if (text) text.innerText = `${Math.max(0, Math.ceil(this.hp))} / ${this.maxHp}`;
     },
-
+    updateStaminaUI() {
+        const fill = document.getElementById('stamina-bar-fill');
+        const text = document.getElementById('stamina-text');
+        if (fill) fill.style.width = `${Math.max(0, (this.stamina / this.maxStamina) * 100)}%`;
+        if (text) text.innerText = `${Math.max(0, Math.ceil(this.stamina))} / ${this.maxStamina}`;
+    },
     // ==========================================
     // UNIWERSALNY SYSTEM EFEKTÓW (BUFFY / DEBUFFY / HOT / DOT)
     // ==========================================
@@ -108,6 +117,29 @@ const player = {
     toggleStance() {
         this.combatStance = this.combatStance === '1H' ? '2H' : '1H';
         showToast(`Zmieniono chwyt na: ${this.combatStance === '1H' ? 'Jednoręczny' : 'Dwuręczny'}`);
+    },
+    getCritStats() {
+        let bonusChance = 0;
+        let bonusMult = 0;
+
+        // Statystyki z broni i pancerza
+        if (this.weapon && this.weapon.critChance) bonusChance += this.weapon.critChance;
+        if (this.armor && this.armor.critChance) bonusChance += this.armor.critChance;
+
+        // Buffowanie ze skilli/efektów
+        if (this.activeEffects) {
+            this.activeEffects.forEach(eff => {
+                if (eff.type === 'stat_buff') {
+                    if (eff.stat === 'critChance') bonusChance += eff.value;
+                    if (eff.stat === 'critMultiplier') bonusMult += eff.value;
+                }
+            });
+        }
+
+        return {
+            chance: (this.critChance || 0.05) + bonusChance,
+            multiplier: (this.critMultiplier || 1.5) + bonusMult
+        };
     },
     useQuickSlot(slotIndex) {
         const itemId = this.quickSlots[slotIndex];
@@ -186,7 +218,7 @@ const player = {
         // 1. Bazowe obrażenia + broń
         const weapon = this.equipment?.weapon;
         const weaponDmg = weapon ? (weapon.damage || 0) : 0;
-        let totalDmg = (this.baseDamage || 30) + (weaponDmg*1.4);
+        let totalDmg = (this.baseDamage || 30) + (weaponDmg * 1.4);
 
         // 2. SKALOWANIE Z POZIOMEM (np. +8% do całkowitych DMG za każdy level powyżej 1)
         const levelMultiplier = 1 + ((this.level || 1) - 1) * 0.08;
@@ -283,20 +315,35 @@ const player = {
     },
 
     attack() {
-        // Określenie typu ataku na podstawie obecnego chwytu
         const isHeavy = this.combatStance === '2H';
+        const HEAVY_STAMINA_COST = 37; // Koszt staminy dla mocnego ciosu
 
+        // 1. Sprawdzenie staminy wyłącznie dla ciężkiego ataku
+        if (isHeavy && this.stamina < HEAVY_STAMINA_COST) {
+            if (typeof showToast === 'function') showToast("Brak staminy na mocny cios!");
+            return;
+        }
+
+        // 2. Cooldowny dla lekkich i ciężkich ataków
         const now = Date.now();
         if (isHeavy) {
             if (now - this.lastHeavyAttackTime < this.heavyAttackCooldown) return;
-            this.lastHeavyAttackTime = now;
         } else {
             if (now - this.lastLightAttackTime < this.lightAttackCooldown) return;
+        }
+
+        // 3. Sprawdzenie statusu gracza i UI
+        if (!this.canAttack || this.isAttacking || this.isSleeping || menuSystem.isOpen || dialogueManager.isActive) return;
+
+        // 4. Pobieramy staminę TYLKO jeśli to heavy attack i przechodzimy do ciosu
+        if (isHeavy) {
+            this.stamina -= HEAVY_STAMINA_COST;
+            this.lastHeavyAttackTime = now;
+        } else {
             this.lastLightAttackTime = now;
         }
 
-        if (!this.canAttack || this.isAttacking || this.isSleeping || menuSystem.isOpen || dialogueManager.isActive) return;
-
+        // 5. Inicjalizacja ataku i animacji
         this.isAttacking = true;
         this.canAttack = false;
         this.isHeavyAttack = isHeavy;
@@ -324,19 +371,18 @@ const player = {
     },
 
     takeDamage(rawDamage) {
-        // Pobieramy łączny pancerz (z pancerza + levelu)
         const armor = typeof this.getArmor === 'function' ? this.getArmor() : (this.armor || 0);
 
-        // Nasz przelicznik zredukowanych obrażeń
         const reductionRatio = armor / (armor + 300);
         let finalDamage = Math.round(rawDamage * (1 - reductionRatio));
 
-        // Zabezpieczenie minimalnego ciosu (min. 5% dmg)
         const minDamage = Math.max(1, Math.round(rawDamage * 0.05));
         finalDamage = Math.max(minDamage, finalDamage);
 
         this.hp -= finalDamage;
         if (this.hp < 0) this.hp = 0;
+
+        this.updateHPUI(); // <-- TU BYŁ BŁĄD! Teraz pasek HP od razu odpada po dostaniu strzała
 
         return finalDamage;
     },
@@ -402,13 +448,36 @@ const player = {
 
         const rawDamage = this.getDamage(false);
         hitTargets.forEach(enemy => {
+            const critStats = this.getCritStats();
+
+            // 1. Sprawdzenie 100% krytyka na powalonym przeciwniku przy użyciu Heavy Attack
+            let isCrit = Math.random() < critStats.chance;
+            if (isHeavy && enemy.isKnockedDown) {
+                isCrit = true; // Gwarantowany krytyk na powalonym, ale wróg leży dalej aż wygaśnie timer!
+            }
+
+            const critMult = isCrit ? critStats.multiplier : 1.0;
             const enemyArmor = enemy.armor || 0;
-            const finalDmg = calculateDamage(rawDamage, enemyArmor, dmgMultiplier);
+            const baseDmg = calculateDamage(rawDamage, enemyArmor, dmgMultiplier);
+            const finalDmg = Math.round(baseDmg * critMult);
 
             enemy.takeDamage(finalDmg, this.x, this.y);
 
-            const prefix = attackType === 'THRUST' ? '🎯 ' : (attackType === 'SLASH' ? '💥 ' : '');
-            damageNumbers.add(enemy.x, enemy.y - 15, `${prefix}-${finalDmg}`, dmgColor);
+            // 2. 10% szansy na powalenie celów przy ataku Heavy (jeśli cel jeszcze nie jest powalony)
+            if (isHeavy && !enemy.isKnockedDown && Math.random() < 0.10) {
+                enemy.isKnockedDown = true;
+                enemy.knockDownTimer = 2.5; // Czas trwania powalenia w sekundach
+                if (typeof damageNumbers !== 'undefined') {
+                    damageNumbers.add(enemy.x, enemy.y - 35, '💫 POWALENIE!', '#e67e22');
+                }
+            }
+
+            const prefix = isCrit ? '💥 CRIT ' : (attackType === 'THRUST' ? '🎯 ' : '');
+            const color = isCrit ? '#f1c40f' : dmgColor;
+
+            if (typeof damageNumbers !== 'undefined') {
+                damageNumbers.add(enemy.x, enemy.y - 20, `${prefix}-${finalDmg}`, color);
+            }
         });
 
         const loc = gameMap.getCurrentData();
@@ -709,7 +778,10 @@ const player = {
             this.horse.x = this.x;
             this.horse.y = this.y;
         }
-
+        if (this.stamina < this.maxStamina) {
+            this.stamina = Math.min(this.maxStamina, this.stamina + (this.staminaRegen * dt));
+            this.updateStaminaUI();
+        }
         // Aktualizacja stanu czasowego wszystkich efektów (dt w sekundach)
         this.updateEffects(dt);
 

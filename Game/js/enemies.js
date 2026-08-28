@@ -104,7 +104,11 @@ class EnemyManager {
         const targets = candidates.slice(0, 2);
 
         targets.forEach(item => {
-            item.enemy.takeDamage(playerDmg, player.x, player.y);
+            const critStats = player.getCritStats ? player.getCritStats() : { chance: 0, multiplier: 1 };
+            const isCrit = Math.random() < critStats.chance;
+            const finalDmg = Math.round(playerDmg * (isCrit ? critStats.multiplier : 1.0));
+
+            item.enemy.takeDamage(finalDmg, player.x, player.y);
         });
         if (targets.length > 0) {
             player.hasDealtDamage = true; // Oznacz jako wykonany atak
@@ -193,10 +197,22 @@ class Enemy {
         this.state = 'IDLE';
         this.isAlive = true;
         this.hitStun = 0;
+        this.isKnockedDown = false;
+        this.knockDownTimer = 0;
     }
 
     update(dt, player, activePack, allies = [], manager = null) {
         if (this.isUnconscious || this.hp <= 0 || !this.isAlive) return;
+
+        // Zmora powalenia – powalony wrog nie podejmuje akcji
+        if (this.isKnockedDown) {
+            this.knockDownTimer -= dt;
+            if (this.knockDownTimer <= 0) {
+                this.isKnockedDown = false;
+            } else {
+                return; // Powalony przeciwnik nie wykonuje ruchu ani ataku
+            }
+        }
 
         const em = manager || (typeof enemyManager !== 'undefined' ? enemyManager : null);
         const validTargets = [player, ...allies.filter(a => a && a.isAlive)];
@@ -210,7 +226,9 @@ class Enemy {
                 target = t;
             }
         });
-
+        if (!this.isChargingHeavy && this.stamina < this.maxStamina) {
+            this.stamina = Math.min(this.maxStamina, this.stamina + (this.staminaRegen * dt));
+        }
         // Kluczowa zmiana: ZAWSZE aktualizujemy dystans do celu
         this.targetDist = distToTarget;
 
@@ -437,6 +455,14 @@ class Enemy {
             ctx.fillText(this.name, this.x, this.y - this.radius - nameOffsetY);
             ctx.restore();
         }
+        if (this.isKnockedDown) {
+            ctx.save();
+            ctx.fillStyle = '#e67e22';
+            ctx.font = 'bold 10px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('💫 POWALONY', this.x, this.y + this.radius + 14);
+            ctx.restore();
+        }
     }
 }
 
@@ -535,7 +561,7 @@ function updateCombat() {
 function updateQuickSlotsHUD() {
     for (let i = 0; i < 3; i++) {
         const itemId = player.quickSlots[i];
-        
+
         // Elementy HUD (w grze)
         const hudIcon = document.getElementById(`qs-icon-${i}`);
         const hudName = document.getElementById(`qs-name-${i}`);
