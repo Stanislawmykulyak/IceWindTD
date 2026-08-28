@@ -316,10 +316,8 @@ window.addEventListener('mousedown', (e) => {
     if (e.button === 0) { // LPM
         player.attackAngle = getPlayerAimAngle();
 
-        // e.ctrlKey zwraca true, jeśli podczas kliknięcia LPM przytrzymujesz Ctrl
-        const isHeavy = e.ctrlKey;
 
-        player.attack(isHeavy); // true = ciężki, false = lekki
+        player.attack(); // true = ciężki, false = lekki
     } else if (e.button === 2) { // PPM -> Parowanie
         player.parry();
     }

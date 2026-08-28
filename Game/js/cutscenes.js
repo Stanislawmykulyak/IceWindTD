@@ -97,7 +97,7 @@ const cutsceneManager = {
 
                 thugs.forEach(t => {
                     const dx = 200 - t.x;
-                    const dy = 0 - t.y;
+                    const dy = 670 - t.y;
                     const dist = Math.hypot(dx, dy);
 
                     if (dist > 15) {
@@ -107,7 +107,19 @@ const cutsceneManager = {
                         reachedDoor++;
                     }
                 });
-
+                if (typeof LootManager !== 'undefined') {
+                    LootManager.addBag(enemy.x, enemy.y, [
+                        {
+                            id: 'iron_sword',
+                            name: 'Żelazny Miecz',
+                            icon: '⚔️',
+                            type: 'weapon',
+                            weight: 3.0,
+                            description: 'Stary miecz jednego ze zbirów.',
+                            count: 1
+                        }
+                    ]);
+                }
                 // Jeśli dotarli do drzwi LUB minęły 2 sekundy (zabezpieczenie na utknięcie w ścianie)
                 if (reachedDoor >= thugs.length || elapsedTime > 2000) {
                     clearInterval(exitInterval);
