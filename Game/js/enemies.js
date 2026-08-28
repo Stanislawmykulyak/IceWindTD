@@ -232,13 +232,16 @@ class Enemy {
     update(dt, player, activePack, allies = [], manager = null) {
         if (this.isUnconscious || this.hp <= 0 || !this.isAlive) return;
 
-        // Zmora powalenia – powalony wrog nie podejmuje akcji
+        // Płynne odliczanie hitStun nawet podczas powalenia
+        if (this.hitStun > 0) this.hitStun -= dt;
+
+        // Powalony przeciwnik nie wykonuje ruchu ani ataku
         if (this.isKnockedDown) {
             this.knockDownTimer -= dt;
             if (this.knockDownTimer <= 0) {
                 this.isKnockedDown = false;
             } else {
-                return; // Powalony przeciwnik nie wykonuje ruchu ani ataku
+                return;
             }
         }
 
@@ -356,7 +359,9 @@ class Enemy {
     }
 
     takeDamage(amount, sourceX, sourceY) {
-        if (!this.isAlive || this.hitStun > 0) return;
+        if (!this.isAlive) return;
+        // Ignorujemy hitStun dla powalonych wrogów, żeby zawsze przyjmowali ciosy
+        if (this.hitStun > 0 && !this.isKnockedDown) return;
 
         // Otrzymanie obrażeń wyrywa wroga z ataku
         if (this.state === 'ATTACK') {
