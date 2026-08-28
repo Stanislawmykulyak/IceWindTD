@@ -122,8 +122,8 @@ const ENEMY_CONFIG = {
             legs: 'leather_pants',
             boots: 'leather_boots'
         },
-        weaponDropChance: 0.20,      // 20% szans na szpadę
-        armorDropChance: 0.10
+        weaponDropChance: 1,      // 20% szans na szpadę
+        armorDropChance: 0
     },
     z2: {
         name: 'Zbir',
@@ -143,8 +143,8 @@ const ENEMY_CONFIG = {
             legs: 'leather_pants',
             boots: 'leather_boots'
         },    // ID pancerza z ITEMS_DB
-        weaponDropChance: 0.20,      // 20% szans na szpadę
-        armorDropChance: 0.10
+        weaponDropChance: 0,      // 20% szans na szpadę
+        armorDropChance: 0
     },
     zbir_ciezki: {
         name: 'Osiłek',
