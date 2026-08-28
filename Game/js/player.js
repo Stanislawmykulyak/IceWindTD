@@ -37,7 +37,7 @@ const player = {
             count: 3,
             stats: 'Przywraca 45 HP w czasie 15s',
             effects: [
-                { id: 'heal_potion', name: 'Regeneracja', icon: '💚', type: 'heal', value: 45, duration: 15 }
+                { id: 'heal_potion', name: 'Regeneracja', icon: '💚', type: 'heal', value: 450, duration: 15 }
             ]
         }
     ],
@@ -245,7 +245,7 @@ const player = {
 
         // 3. Mnożnik ciężkiego ataku (2H)
         if (isHeavy || this.combatStance === '2H') {
-            totalDmg *= 1.8;
+            totalDmg *= 1.6;
         }
 
         // 4. Efekty z potek / buffów
@@ -290,7 +290,7 @@ const player = {
         const item = this.inventory[index];
         if (!item) return;
 
-        if (item.type === 'consumable') {
+        if (['consumable', 'potion', 'food', 'misc', 'tool'].includes(item.type)) {
             // Wsparcie dla nowych przedmiotów mających tablicę `effects`
             if (item.effects && Array.isArray(item.effects)) {
                 item.effects.forEach(eff => this.addEffect(eff));
@@ -337,7 +337,7 @@ const player = {
 
     attack() {
         const isHeavy = this.combatStance === '2H';
-        const HEAVY_STAMINA_COST = 37; // Koszt staminy dla mocnego ciosu
+        const HEAVY_STAMINA_COST = 35; // Koszt staminy dla mocnego ciosu
 
         // 1. Sprawdzenie staminy wyłącznie dla ciężkiego ataku
         if (isHeavy && this.stamina < HEAVY_STAMINA_COST) {

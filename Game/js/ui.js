@@ -205,17 +205,8 @@ const menuSystem = {
                 }
             }
             // C. Używanie przedmiotów użytkowych / konsumpcyjnych
-            else if (item.type === 'consumable' || item.type === 'misc' || item.type === 'tool') {
-                if (typeof player.useItem === 'function') {
-                    player.useItem(target.index);
-                } else {
-                    showToast(`Użyto: ${item.name}`);
-                    if (item.count && item.count > 1) {
-                        item.count--;
-                    } else {
-                        player.inventory.splice(target.index, 1);
-                    }
-                }
+            else if (['consumable', 'potion', 'food', 'misc', 'tool'].includes(item.type)) {
+                player.useConsumable(target.index);
             }
         } else if (target.type === 'equipment') {
             // D. Ściąganie założonego pancerza z rynsztunku do plecaka
@@ -556,10 +547,6 @@ const shopSystem = {
 
         const merchantNameEl = document.getElementById('shop-merchant-name');
         if (merchantNameEl) merchantNameEl.innerText = shop.name || 'Kupiec';
-        if (typeof menuSystem !== 'undefined' && !menuSystem.isOpen) {
-            drawCombatHUD(ctx);
-            drawActiveEffectsHUD(ctx);
-        }
         // 1. EKWIPUNEK GRACZA (LEWA STRONA) - 10 KOLUMN, NIESKOŃCZONOŚĆ (MIN. 60 KRATEK)
         const playerGrid = document.getElementById('shop-player-grid');
         if (playerGrid) {
@@ -820,7 +807,8 @@ function drawCombatHUD(ctx) {
     ctx.save();
 
     const startX = 40;
-    const startY = canvas.height - 180;
+    const canvasEl = ctx.canvas || document.getElementById('gameCanvas');
+    const startY = canvasEl.height - 180;
 
     // Cień pod tekstem
     ctx.shadowColor = 'rgba(0, 0, 0, 0.9)';
@@ -834,7 +822,8 @@ function drawCombatHUD(ctx) {
     for (let i = 0; i < 3; i++) {
         const itemId = player.quickSlots[i];
         const item = itemId ? (player.inventory.find(inv => inv.id === itemId) || (typeof ITEMS_DB !== 'undefined' ? ITEMS_DB[itemId] : null)) : null;
-        const itemText = item ? `${item.icon || ''} ${item.name}`.trim() : '';
+        const countText = (item && item.count && item.count > 1) ? ` (x${item.count})` : '';
+const itemText = item ? `${item.icon || ''} ${item.name}${countText}`.trim() : '';
         const lineY = startY + (i * 36);
 
         // Numeracja slotu
@@ -864,49 +853,40 @@ function drawCombatHUD(ctx) {
 }
 
 function drawActiveEffectsHUD(ctx) {
-    if (!player.activeEffects || player.activeEffects.length === 0) return;
+    // 1. Sprawdzamy, czy gracz ma jakiekolwiek aktywne buffy/mikstury
+    if (!player || !player.activeEffects || player.activeEffects.length === 0) return;
 
     ctx.save();
 
-    // Pozycja w prawym górnym rogu
-    const startX = canvas.width - 30;
-    const startY = 25;
-    const cardWidth = 80;
-    const cardHeight = 32;
-    const gap = 10;
+    // 2. Pozycjonowanie w prawym górnym rogu (tuż pod minimapą)
+    const boxWidth = 160;
+    const boxHeight = 32;
+    const canvasEl = ctx.canvas || document.getElementById('gameCanvas');
+    const startX = canvasEl.width - boxWidth - 15;// 15px od prawej krawędzi
+    let startY = 275; // Wysokość pod minimapą (dopasuj według potrzeb)
 
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
-    ctx.shadowBlur = 5;
+    player.activeEffects.forEach((effect, index) => {
+        const y = startY + (index * (boxHeight + 6)); // Odstęp między efektami
 
-    player.activeEffects.forEach((eff, index) => {
-        // Efekty układają się od prawej do lewej
-        const x = startX - ((index + 1) * (cardWidth + gap));
+        // Tło ramki efektu
+        ctx.fillStyle = 'rgba(20, 15, 10, 0.75)';
+        ctx.fillRect(startX, y, boxWidth, boxHeight);
+        ctx.strokeStyle = '#8c6d3f';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(startX, y, boxWidth, boxHeight);
 
-        // Tło kafelka efektu
-        ctx.fillStyle = 'rgba(20, 15, 10, 0.85)';
-        ctx.strokeStyle = '#8a6f37';
-        ctx.lineWidth = 1.5;
+        // Ikona oraz Nazwa efektu
+        ctx.font = 'bold 13px sans-serif';
+        ctx.fillStyle = '#ffffff';
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(`${effect.icon} ${effect.name}`, startX + 8, y + (boxHeight / 2));
 
-        ctx.beginPath();
-        if (typeof ctx.roundRect === 'function') {
-            ctx.roundRect(x, startY, cardWidth, cardHeight, 4);
-        } else {
-            ctx.fillRect(x, startY, cardWidth, cardHeight);
-        }
-        ctx.fill();
-        ctx.stroke();
-
-        // Ikona mikstury (emotka z możliwością zamiany na Image w przyszłości)
-        // Jeśli masz własną grafikę, podmień poniższą zmienną np. na obiekt Image()
-        const potionIcon = eff.icon || '🧪';
-
-        ctx.font = '16px "Georgia", serif';
-        ctx.fillText(potionIcon, x + 8, startY + 22);
-
-        // Czas trwania
+        // Pozostały czas trwania (np. 12s)
+        const timeLeft = Math.ceil(effect.remainingTime);
         ctx.fillStyle = '#f1c40f';
-        ctx.font = 'bold 13px "Georgia", serif';
-        ctx.fillText(`${Math.ceil(eff.remainingTime)}s`, x + 34, startY + 21);
+        ctx.textAlign = 'right';
+        ctx.fillText(`${timeLeft}s`, startX + boxWidth - 8, y + (boxHeight / 2));
     });
 
     ctx.restore();
