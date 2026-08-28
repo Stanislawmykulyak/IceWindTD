@@ -193,16 +193,14 @@ const gameMap = {
                 { x: 130, y: 750, width: 60, height: 20, targetLocation: 'mlyn_wnetrze', spawnX: 120, spawnY: 460, label: 'Wyjście na górę [E]' }
             ],
             onEnter() {
-                const z1 = new Enemy({ id: 'z1', type: 'zbir_lekki', x: 500, y: 350, name: 'Zbir' });
+                const z1 = new Enemy({ id: 'z1', type: 'z1', x: 500, y: 350 });
                 Object.assign(z1, {
-                    hp: 300, maxHp: 300, armor: 2,
-                    color: '#e74c3c', nonLethal: true, isBasementThug: true, isHostile: false
+                    nonLethal: true, isBasementThug: true, isHostile: false
                 });
 
-                const z2 = new Enemy({ id: 'z2', type: 'zbir_ciezki', x: 580, y: 350, name: 'Zbir Ciężki' });
+                const z2 = new Enemy({ id: 'z2', type: 'z2', x: 580, y: 350, name: 'Zbir Ciężki' });
                 Object.assign(z2, {
-                    hp: 550, maxHp: 550, armor: 5,
-                    color: '#c0392b', nonLethal: true, isBasementThug: true, isHostile: false
+                    nonLethal: true, isBasementThug: true, isHostile: false
                 });
 
                 enemyManager.enemies = [z1, z2];

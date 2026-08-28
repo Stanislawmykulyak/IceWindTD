@@ -93,7 +93,58 @@ const ENEMY_CONFIG = {
         color: '#e74c3c',
         attackRange: 38,
         attackCooldown: 3.0,
-        rewardGold: 15
+        rewardGold: 15,
+        weaponId: 'simple_sword',    // ID broni z ITEMS_DB
+        equipment: {
+            head: 'leather_helmet',
+            chest: 'leather_chest',
+            legs: 'leather_pants',
+            boots: 'leather_boots'
+        },    // ID pancerza z ITEMS_DB
+        weaponDropChance: 0.20,      // 20% szans na szpadę
+        armorDropChance: 0.10
+    },
+    z1: {
+        name: 'Zbir',
+        maxHp: 1150,
+        armor: 15,
+        speed: 45,
+        damage: 12,
+        radius: 12,
+        color: '#e74c3c',
+        attackRange: 38,
+        attackCooldown: 3.0,
+        rewardGold: 15,
+        weaponId: 'miecz_stalowy',    // ID broni z ITEMS_DB
+        equipment: {
+            head: 'leather_helmet',
+            chest: 'leather_chest',
+            legs: 'leather_pants',
+            boots: 'leather_boots'
+        },
+        weaponDropChance: 0.20,      // 20% szans na szpadę
+        armorDropChance: 0.10
+    },
+    z2: {
+        name: 'Zbir',
+        maxHp: 1150,
+        armor: 15,
+        speed: 45,
+        damage: 12,
+        radius: 12,
+        color: '#e74c3c',
+        attackRange: 38,
+        attackCooldown: 3.0,
+        rewardGold: 15,
+        weaponId: 'maczuga_zbira',    // ID broni z ITEMS_DB
+        equipment: {
+            head: 'leather_helmet',
+            chest: 'leather_chest',
+            legs: 'leather_pants',
+            boots: 'leather_boots'
+        },    // ID pancerza z ITEMS_DB
+        weaponDropChance: 0.20,      // 20% szans na szpadę
+        armorDropChance: 0.10
     },
     zbir_ciezki: {
         name: 'Osiłek',
@@ -105,7 +156,16 @@ const ENEMY_CONFIG = {
         color: '#c0392b',
         attackRange: 45,
         attackCooldown: 4.0,
-        rewardGold: 35
+        rewardGold: 35,
+        weaponId: 'simple_sword',    // ID broni z ITEMS_DB
+        equipment: {
+            head: 'leather_helmet',
+            chest: 'leather_chest',
+            legs: 'leather_pants',
+            boots: 'leather_boots'
+        },    // ID pancerza z ITEMS_DB
+        weaponDropChance: 0.20,      // 20% szans na szpadę
+        armorDropChance: 0.10
     },
     wilk: {
         name: 'Wilk',
@@ -201,7 +261,31 @@ const ITEMS_DB = {
         monologueId: 'read_recipe_fort',
         unlocksRecipe: 'potion_fortification',
         content: '<b>Receptura: Mikstura Wzmocnienia</b><br><br>Sproszkowana ruda w połączeniu z niebieskim zielem utwardza skórę na ciosy.'
-    }
+    },
+    miecz_stalowy: {
+        id: 'miecz_stalowy',
+        name: 'Stalowy Miecz',
+        type: 'weapon',
+        icon: '⚔️',
+        damage: 95,
+        critChance: 0.05,
+        weight: 3.0,
+        value: 70,
+        stats: 'Obrażenia: 95',
+        description: 'Ciężka, wyśmienicie wyważona broń odebrana zbirowi w piwnicy.'
+    },
+    maczuga_zbira: {
+        id: 'maczuga_zbira',
+        name: 'Maczuga Zbira',
+        type: 'weapon',
+        icon: '🏏',
+        damage: 85,
+        critChance: 0.1,
+        weight: 4.0,
+        value: 50,
+        stats: 'Obrażenia: 85',
+        description: 'Masywna broń drugiego z opryszków.'
+    },
 };
 
 const LOOT_TABLES = {
