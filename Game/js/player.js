@@ -336,33 +336,31 @@ const player = {
     },
 
     attack() {
+        // 1. Sprawdzenie statusu gracza, UI oraz bieżącego timera
+        if (this.attackTimer > 0 || !this.canAttack || this.isAttacking || this.isSleeping) return;
+        if ((typeof menuSystem !== 'undefined' && menuSystem.isOpen) || (typeof dialogueManager !== 'undefined' && dialogueManager.isActive)) return;
+
         const isHeavy = this.combatStance === '2H';
         const HEAVY_STAMINA_COST = 35; // Koszt staminy dla mocnego ciosu
-
-        if (this.attackTimer > 0) return;
-
-        // Czas odnawiania w sekundach w zależności od chwytu (1H = 0.6s, 2H = 1.2s)
-        this.attackCooldown = this.combatStance === '1H' ? 0.6 : 1.2;
-        this.attackTimer = this.attackCooldown;
-
-        // 1. Sprawdzenie staminy wyłącznie dla ciężkiego ataku
-        if (isHeavy && this.stamina < HEAVY_STAMINA_COST) {
-            if (typeof showToast === 'function') showToast("Brak staminy na mocny cios!");
-            return;
-        }
-
-        // 2. Cooldowny dla lekkich i ciężkich ataków
         const now = Date.now();
+
+        // 2. Cooldowny starych zmiennych czasowych
         if (isHeavy) {
             if (now - this.lastHeavyAttackTime < this.heavyAttackCooldown) return;
         } else {
             if (now - this.lastLightAttackTime < this.lightAttackCooldown) return;
         }
 
-        // 3. Sprawdzenie statusu gracza i UI
-        if (!this.canAttack || this.isAttacking || this.isSleeping || menuSystem.isOpen || dialogueManager.isActive) return;
+        // 3. WARUNEK STAMINY: Jeśli brak staminy, przerywamy BEZ nakładania cooldownu na pasek HUD!
+        if (isHeavy && this.stamina < HEAVY_STAMINA_COST) {
+            if (typeof showToast === 'function') showToast("Brak staminy na mocny cios!");
+            return;
+        }
 
-        // 4. Pobieramy staminę TYLKO jeśli to heavy attack i przechodzimy do ciosu
+        // 4. DOPIERO TERAZ nakładamy cooldown i pobieramy zasoby (Atak udany)
+        this.attackCooldown = isHeavy ? 1.2 : 0.6;
+        this.attackTimer = this.attackCooldown;
+
         if (isHeavy) {
             this.stamina -= HEAVY_STAMINA_COST;
             this.lastHeavyAttackTime = now;
