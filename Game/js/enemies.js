@@ -7,6 +7,7 @@ class EnemyManager {
     }
 
     requestAttackToken(enemy, distToTarget) {
+        enemy.targetDist = distToTarget;
         if (this.activeTokenHolders.has(enemy)) return true;
 
         // 1. Dostępne wolne sloty
@@ -179,6 +180,9 @@ class Enemy {
         this.name = config.name || baseConfig.name || 'Przeciwnik';
         this.lootTable = (typeof LOOT_TABLES !== 'undefined' && LOOT_TABLES[type]) ? LOOT_TABLES[type] : [];
 
+        this.orbitDir = Math.random() < 0.5 ? 1 : -1; // Losowy kierunek krążenia (lewo/prawo)
+        this.windupTimer = 0;
+        this.retreatTimer = 0;
         this.maxHp = baseConfig.maxHp || 100;
         this.hp = this.maxHp;
         this.speed = baseConfig.speed || 1.1;
@@ -280,14 +284,9 @@ class Enemy {
                     this.state = 'RETURNING';
                     break;
                 }
-                if (distToTarget <= this.attackRadius) {
-                    const hasToken = em ? em.requestAttackToken(this, distToTarget) : true;
-                    if (hasToken && this.attackCooldown <= 0) {
-                        this.state = 'ATTACK';
-                        this.attackWindup = 0;
-                    } else {
-                        this.state = 'CIRCLE';
-                    }
+                // Jeśli wróg dojedzie blisko gracza, przechodzi w krążenie (orbitę)
+                if (distToTarget <= this.attackRadius + 40) {
+                    this.state = 'CIRCLE';
                 } else {
                     this.moveTowards(target.x, target.y, dt, 1.0);
                 }
@@ -299,40 +298,85 @@ class Enemy {
                     this.state = 'RETURNING';
                     break;
                 }
+                
+                // --- 1. RUCH PO ORBICIE (Prostopadły wektor ruchu) ---
+                const angle = Math.atan2(this.y - target.y, this.x - target.x);
+                // Wróg wchodzi w Twój osobisty zasięg, idealnie pod swój atak:
+                const idealDist = this.attackRadius - 5;
 
-                // Ciasniejszy dystans i ciągły korygujący ruch
-                const minDist = 65;
-                const maxDist = 100;
+                const tangentX = -Math.sin(angle) * this.orbitDir;
+                const tangentY = Math.cos(angle) * this.orbitDir;
 
-                if (distToTarget < minDist) {
-                    const angle = Math.atan2(this.y - target.y, this.x - target.x);
-                    const targetX = target.x + Math.cos(angle) * minDist;
-                    const targetY = target.y + Math.sin(angle) * minDist;
-                    this.moveTowards(targetX, targetY, dt, 0.5);
+                const distDiff = distToTarget - idealDist;
+                const radialX = (target.x - this.x) / (distToTarget || 1);
+                const radialY = (target.y - this.y) / (distToTarget || 1);
+
+                const speed = this.speed * 0.75;
+                const moveX = (tangentX * 0.75 + radialX * (distDiff * 0.02)) * speed * dt;
+                const moveY = (tangentY * 0.75 + radialY * (distDiff * 0.02)) * speed * dt;
+
+                // Sprawdzanie kolizji z ścianami podczas krążenia
+                if (typeof gameMap !== 'undefined' && gameMap.checkCollision) {
+                    if (!gameMap.checkCollision(this.x + moveX, this.y, this.radius)) this.x += moveX;
+                    if (!gameMap.checkCollision(this.x, this.y + moveY, this.radius)) this.y += moveY;
                 } else {
-                    // Lekki podjazd i presja na gracza
-                    this.moveTowards(target.x, target.y, dt, 0.65);
+                    this.x += moveX;
+                    this.y += moveY;
                 }
 
-                if (this.attackCooldown <= 0) {
-                    this.state = 'CHASE';
+                // Losowa zmiana kierunku okrążania
+                if (Math.random() < 0.005) this.orbitDir *= -1;
+
+                // --- 2. ATRAKCYJNOŚĆ / PROŚBA O TOKEN ATRAKCJI ---
+                if (this.attackCooldown <= 0 && distToTarget <= this.attackRadius + 5) {
+                    const hasToken = em ? em.requestAttackToken(this, distToTarget) : true;
+                    if (hasToken) {
+                        this.state = 'WINDUP';
+                        this.windupTimer = 0.35;
+                    }
                 }
                 break;
 
-            case 'ATTACK':
-                this.attackWindup += dt;
-                // Szybszy wyprowadzany cios (0.28s zamiast 0.4s)
-                if (this.attackWindup >= 0.28) {
+            case 'WINDUP':
+                // Ładowanie ciosu – wróg staje w miejscu i telegrafuje atak
+                this.windupTimer -= dt;
+                if (this.windupTimer <= 0) {
                     const isTargetDodging = target.isInvulnerable || target.isDodging;
+                    // Zwiększona tolerancja na trafienie, żeby ataki "nie uciekały"
                     if (distToTarget <= this.attackRadius + 15 && !isTargetDodging) {
                         if (typeof target.takeDamage === 'function') {
                             target.takeDamage(this.getDamage());
                         }
                     }
-                    // Krótszy, bardziej dynamiczny cooldown (1.2s - 1.8s)
-                    this.attackCooldown = 1.2 + Math.random() * 0.6;
-                    this.attackWindup = 0;
+                    
+                    // NATYCHMIASTOWE ZWOLNIENIE TOKENA! Gdy ten wróg zaczyna odskok, 
+                    // inny już może ładować swój atak. To wymusza ciągłą rotację.
                     if (em) em.releaseAttackToken(this);
+
+                    // Po wykonaniu ciosu przechodzi w odskok
+                    this.state = 'RETREAT';
+                    this.retreatTimer = 0.4; // 400ms odskoku
+                }
+                break;
+
+            case 'RETREAT':
+                // Szybki krok w tył po ataku – oddalenie od gracza
+                const retreatAngle = Math.atan2(this.y - target.y, this.x - target.x);
+                const retreatSpeed = this.speed * 1.1;
+                const rx = Math.cos(retreatAngle) * retreatSpeed * dt;
+                const ry = Math.sin(retreatAngle) * retreatSpeed * dt;
+
+                if (typeof gameMap !== 'undefined' && gameMap.checkCollision) {
+                    if (!gameMap.checkCollision(this.x + rx, this.y, this.radius)) this.x += rx;
+                    if (!gameMap.checkCollision(this.x, this.y + ry, this.radius)) this.y += ry;
+                } else {
+                    this.x += rx;
+                    this.y += ry;
+                }
+
+                this.retreatTimer -= dt;
+                if (this.retreatTimer <= 0) {
+                    this.attackCooldown = 1.2 + Math.random() * 0.7; // Czas do kolejnego ataku
                     this.state = 'CIRCLE';
                 }
                 break;
@@ -364,9 +408,10 @@ class Enemy {
         if (this.hitStun > 0 && !this.isKnockedDown) return;
 
         // Otrzymanie obrażeń wyrywa wroga z ataku
-        if (this.state === 'ATTACK') {
+        if (this.state === 'ATTACK' || this.state === 'WINDUP' || this.state === 'RETREAT') {
             if (typeof enemyManager !== 'undefined') enemyManager.releaseAttackToken(this);
-            this.attackWindup = 0;
+            this.windupTimer = 0;
+            this.retreatTimer = 0;
             this.attackCooldown = 0.8;
         }
 
@@ -469,7 +514,7 @@ class Enemy {
     draw(ctx) {
         if (!this.isAlive) return;
 
-        if (this.state === 'ATTACK') {
+        if (this.state === 'WINDUP' || this.state === 'ATTACK') {
             const angleToPlayer = Math.atan2(player.y - this.y, player.x - this.x);
             const arcAngle = Math.PI / 2.2;
 
@@ -485,7 +530,6 @@ class Enemy {
             ctx.stroke();
             ctx.restore();
         }
-
         ctx.fillStyle = this.hitStun > 0 ? '#ffffff' : (this.type === 'wolf' ? '#7f8c8d' : this.color);
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
@@ -686,7 +730,7 @@ function assignSelectedToQuickSlot(slotIndex) {
         if (typeof showToast === 'function') showToast("Wybierz najpierw przedmiot z ekwipunku!");
         return;
     }
-    
+
     const item = player.inventory[player.selectedItemIndex];
     if (!item) return;
 
