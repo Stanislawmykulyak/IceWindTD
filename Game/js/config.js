@@ -14,7 +14,7 @@ const CONFIG = {
     COLOR_CORRIDOR: '#362213',
     COLOR_NIGHT_FILTER: 'rgba(16, 23, 51, 0.40)',
     COLOR_WATER: '#2980b9',
-    COLOR_FOREST_GRASS: '#142314',
+    COLOR_FOREST_GRASS: '#0a720a',
     COLOR_GLADE: '#27ae60',
 };
 
