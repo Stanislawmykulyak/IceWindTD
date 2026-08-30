@@ -552,7 +552,13 @@ const craftBaseUI = {
                     const isSelected = this.selectedRecipeId === rec.id;
                     const ready = this.canCraft(rec);
                     recItem.className = `alc-recipe-item ${isSelected ? 'selected' : ''}`;
-                    recItem.innerHTML = `<span>${rec.icon} ${rec.name}</span><span class="alc-dot ${ready ? 'green' : 'red'}">●</span>`;
+                    recItem.innerHTML = `
+                        <div class="alc-recipe-main">
+                            <span class="alc-recipe-icon">${rec.icon}</span>
+                            <span class="alc-recipe-name">${rec.name}</span>
+                        </div>
+                        <span class="alc-dot ${ready ? 'green' : 'red'}">●</span>
+                    `;
                     recItem.onclick = () => {
                         this.selectedRecipeId = rec.id;
                         this.render();

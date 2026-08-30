@@ -30,6 +30,8 @@ const start_items = {
         critChance: 0.02,
         weight: 2.5,
         value: 35,
+        inventoryCategory: 'gear',
+        inventorySubcategory: 'weapon',
         stats: 'Obrażenia: 15',
         description: 'Zwykły, lekko wyświechtany miecz stalowy.'
     },
@@ -42,6 +44,8 @@ const start_items = {
         critChance: 0,
         weight: 1.0,
         value: 15,
+        inventoryCategory: 'gear',
+        inventorySubcategory: 'armor',
         stats: 'Pancerz: +2',
         description: 'Prosta czapka z utwardzanej skóry.'
     },
@@ -54,6 +58,8 @@ const start_items = {
         critChance: 0,
         weight: 3.5,
         value: 50,
+        inventoryCategory: 'gear',
+        inventorySubcategory: 'armor',
         stats: 'Pancerz: +5',
         description: 'Solidna kurtka ze skóry chroniąca klatkę piersiową.'
     },
@@ -210,12 +216,12 @@ const ITEMS_DB = {
     stary_sztylet: { name: 'Stary Sztylet', icon: '🗡️', type: 'weapon', weight: 1.2, damage: 15, lightDamage: 15, heavyDamage: 28, stats: 'Obrażenia: 15' },
     zelazny_miecz: { name: 'Żelazny Miecz', icon: '⚔️', type: 'weapon', weight: 3.0, damage: 25, lightDamage: 25, heavyDamage: 45, stats: 'Obrażenia: 25' },
     miedziana_moneta: { name: 'Miedziana Moneta', icon: '🪙', type: 'misc', weight: 0.05, stats: 'Warta parę miedziaków' },
-    mikstura_zdrowia: { name: 'Mikstura Zdrowia', icon: '🧪', type: 'misc', weight: 0.5, stats: 'Leczy HP' },
-    skora_wilka: { name: 'Skóra Wilka', icon: '🐺', type: 'misc', weight: 1.5, stats: 'Trofeum' },
-    kiel_wilka: { name: 'Kieł Wilka', icon: '🦷', type: 'misc', weight: 0.2, stats: 'Trofeum' },
-    lecznicze_ziele: { name: 'Lecznicze Ziele', icon: '🌿', type: 'misc', weight: 0.1, stats: 'Leczy 15 HP' },
-    jagody: { name: 'Leśne Jagody', icon: '🫐', type: 'misc', weight: 0.1, stats: 'Leczy 10 HP' },
-    surowe_mieso: { name: 'Surowe Mięso', icon: '🥩', type: 'misc', weight: 1.0, stats: 'Jedzenie' },
+    mikstura_zdrowia: { name: 'Mikstura Zdrowia', icon: '🧪', type: 'misc', weight: 0.5, inventoryCategory: 'food', inventorySubcategory: 'potions', stats: 'Leczy HP' },
+    skora_wilka: { name: 'Skóra Wilka', icon: '🐺', type: 'misc', weight: 1.5, inventoryCategory: 'misc', inventorySubcategory: 'misc', stats: 'Trofeum' },
+    kiel_wilka: { name: 'Kieł Wilka', icon: '🦷', type: 'misc', weight: 0.2, inventoryCategory: 'misc', inventorySubcategory: 'misc', stats: 'Trofeum' },
+    lecznicze_ziele: { name: 'Lecznicze Ziele', icon: '🌿', type: 'misc', weight: 0.1, inventoryCategory: 'alchemy', inventorySubcategory: 'ingredients', stats: 'Leczy 15 HP' },
+    jagody: { name: 'Leśne Jagody', icon: '🫐', type: 'misc', weight: 0.1, inventoryCategory: 'food', inventorySubcategory: 'food', stats: 'Leczy 10 HP' },
+    surowe_mieso: { name: 'Surowe Mięso', icon: '🥩', type: 'misc', weight: 1.0, inventoryCategory: 'food', inventorySubcategory: 'food', stats: 'Jedzenie' },
     ziolo_czerwone: { name: 'Czerwone Zioło', icon: '🌿', type: 'misc', weight: 0.1, value: 4, stats: 'Składnik alchemiczny' },
     herb_blue: { id: 'herb_blue', name: 'Niebieskie Zioło', icon: '🍃', type: 'misc', weight: 0.2, value: 6, stats: 'Składnik alchemiczny' },
     woda_butelka: { name: 'Woda w Butelce', icon: '🧴', type: 'misc', weight: 0.5, value: 2, stats: 'Czysta woda' },
@@ -232,7 +238,7 @@ const ITEMS_DB = {
     runic_clay: { id: 'runic_clay', name: 'Runiczna Glina', icon: '🟫', type: 'material', weight: 0.7, value: 11, stats: 'Mocno wypalona glina z dawnych znaków' },
     ruin_steel: { id: 'ruin_steel', name: 'Ruina Stal', icon: '🪓', type: 'material', weight: 1.4, value: 18, stats: 'Twarda stal z dawnych murów' },
     moonsteel_scrap: { id: 'moonsteel_scrap', name: 'Odcinek Księżycowej Stali', icon: '🌙', type: 'material', weight: 1.1, value: 20, stats: 'Przebijany blask księżyca i starej obróbki' },
-    potion_hp_small: { name: 'Mała Mikstura Zdrowia',icon: '<img src="img/health_potion.png" alt="Mikstura Życia" width="100" height="100">', type: 'consumable', weight: 0.4, value: 15, stats: '+30 HP' },
+    potion_hp_small: { name: 'Mała Mikstura Zdrowia',icon: '<img src="img/health_potion.png" alt="Mikstura Życia" width="100" height="100">', type: 'consumable', weight: 0.4, value: 15, inventoryCategory: 'food', inventorySubcategory: 'potions', stats: '+30 HP' },
     // === MIKSTURY ===
     potion_health: {
         id: 'potion_health',
@@ -240,6 +246,8 @@ const ITEMS_DB = {
         icon:'<img src="img/health_potion.png" alt="Mikstura Życia" width="100" height="100">',
         type: 'consumable',
         weight: 0.3,
+        inventoryCategory: 'food',
+        inventorySubcategory: 'potions',
         stats: 'Przywraca 45 HP w czasie 15s',
         effects: [
             { id: 'heal_potion', name: 'Regeneracja', icon: '💚', type: 'heal', value: 45, duration: 15 }
@@ -259,6 +267,8 @@ const ITEMS_DB = {
         icon: '⛏️',
         type: 'material',
         weight: 1.5,
+        inventoryCategory: 'crafting',
+        inventorySubcategory: 'ingredients',
         stats: 'Surowiec do wytopu i kuźni'
     },
     iron_ingot: {
@@ -267,6 +277,8 @@ const ITEMS_DB = {
         icon: '⛓️',
         type: 'material',
         weight: 1.2,
+        inventoryCategory: 'crafting',
+        inventorySubcategory: 'ingredients',
         stats: 'Podstawowy materiał kowalski'
     },
     wood_handle: {
@@ -292,6 +304,8 @@ const ITEMS_DB = {
         type: 'weapon',
         weight: 1.8,
         damage: 18,
+        inventoryCategory: 'gear',
+        inventorySubcategory: 'weapon',
         stats: 'Obrażenia: 18'
     },
     iron_sword: {
@@ -301,6 +315,8 @@ const ITEMS_DB = {
         type: 'weapon',
         weight: 3.4,
         damage: 32,
+        inventoryCategory: 'gear',
+        inventorySubcategory: 'weapon',
         stats: 'Obrażenia: 32'
     },
     iron_helmet: {
@@ -310,6 +326,8 @@ const ITEMS_DB = {
         type: 'head',
         weight: 2.2,
         armor: 4,
+        inventoryCategory: 'gear',
+        inventorySubcategory: 'armor',
         stats: 'Pancerz: +4'
     },
     ruinbreaker_blade: {
@@ -389,6 +407,8 @@ const ITEMS_DB = {
         icon: '📜',
         type: 'document',
         weight: 0.1,
+        inventoryCategory: 'alchemy',
+        inventorySubcategory: 'recipes',
         stats: 'Użyj, aby nauczyć się receptury',
         monologueId: 'read_recipe_str',
         unlocksRecipe: 'potion_strength', // Łącznik z bazą alchemii

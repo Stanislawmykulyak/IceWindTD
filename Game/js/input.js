@@ -90,6 +90,10 @@ function handleGlobalKeyDown(event) {
             return;
         }
 
+        if (typeof documentViewer !== 'undefined' && documentViewer.isOpen && typeof menuSystem !== 'undefined' && menuSystem.isOpen) {
+            return;
+        }
+
         if (typeof alchemyUI !== 'undefined' && alchemyUI.isOpen) {
             alchemyUI.close();
             return;
@@ -147,7 +151,7 @@ function handleGlobalKeyDown(event) {
     }
 
     if (readingModal && !readingModal.classList.contains('hidden')) {
-        if (key === 'escape' || key === 'esc' || key === 'e') {
+        if (key === 'escape' || key === 'esc') {
             if (typeof documentViewer !== 'undefined') documentViewer.close();
             return;
         }

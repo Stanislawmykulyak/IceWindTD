@@ -40,7 +40,28 @@ function renderItemIconMarkup(icon, fallback = '📦', size = 30) {
         return `<span class="item-icon-image" style="width:${safeSize}px; height:${safeSize}px; display:inline-flex; align-items:center; justify-content:center;">${normalized}</span>`;
     }
 
+    if (/\.(png|jpg|jpeg|gif|webp|svg)(\?.*)?$/i.test(raw)) {
+        return `<img src="${raw}" alt="icon" style="width:${safeSize}px; height:${safeSize}px; object-fit:contain; display:block; border-radius:4px;">`;
+    }
+
     return `<span class="item-icon-emoji" style="font-size:${Math.max(14, safeSize * 0.8)}px;">${raw}</span>`;
+}
+
+function renderInventoryTabIcon(icon, fallback = '📦', size = 26) {
+    if (!icon) {
+        return `<span style="font-size:${Math.max(14, size * 0.8)}px;">${fallback}</span>`;
+    }
+
+    if (typeof icon === 'string') {
+        const trimmed = icon.trim();
+        if (/<img|<svg|src=/.test(trimmed)) return renderItemIconMarkup(trimmed, fallback, size);
+        if (/\.(png|jpg|jpeg|gif|webp|svg)(\?.*)?$/i.test(trimmed)) {
+            return `<img src="${trimmed}" alt="tab icon" style="width:${size}px; height:${size}px; object-fit:contain; display:block; border-radius:4px;">`;
+        }
+        return `<span style="font-size:${Math.max(14, size * 0.8)}px;">${trimmed}</span>`;
+    }
+
+    return `<span style="font-size:${Math.max(14, size * 0.8)}px;">${fallback}</span>`;
 }
 
 function setItemIconElement(element, icon, fallback = '📦', size = 30) {
@@ -48,9 +69,112 @@ function setItemIconElement(element, icon, fallback = '📦', size = 30) {
     element.innerHTML = renderItemIconMarkup(icon, fallback, size);
 }
 
+const INVENTORY_CATEGORY_CONFIG = {
+    alchemy: {
+        label: 'Alchemia',
+        icon: '🧪',
+        subcategories: {
+            ingredients: { icon: '🌿', label: 'Składniki' },
+            recipes: { icon: '📜', label: 'Receptury' }
+        }
+    },
+    crafting: {
+        label: 'Rzemiosło',
+        icon: '⚒️',
+        subcategories: {
+            ingredients: { icon: '🪨', label: 'Składniki' },
+            recipes: { icon: '📜', label: 'Receptury' }
+        }
+    },
+    food: {
+        label: 'Jedzenie',
+        icon: '🍲',
+        subcategories: {
+            food: { icon: '🍖', label: 'Jedzenie' },
+            potions: { icon: '🧴', label: 'Mikstury' }
+        }
+    },
+    gear: {
+        label: 'Uzbrojenie',
+        icon: '<img src="img/tabs/weapons-tab.png" alt="weapon" style="width:30px; height:30px; object-fit:contain; display:block;">',
+        subcategories: {
+            armor: { icon: '🧥', label: 'Zbroje' },
+            weapon: { icon: '⚔️', label: 'Bronie' }
+        }
+    },
+    misc: {
+        label: 'Różne',
+        icon: '<img src="img/tabs/items-tab.png" alt="weapon" style="width:30px; height:30px; object-fit:contain; display:block;">',
+        subcategories: {
+            quest: { icon: '📜', label: 'Fabularne' },
+            misc: { icon: '🧩', label: 'Różne' }
+        }
+    }
+};
+
+function getInventoryCategoryConfigForItem(item) {
+    if (!item) return { main: 'misc', sub: 'misc' };
+
+    const explicitMain = item.inventoryCategory || item.category;
+    const explicitSub = item.inventorySubcategory || item.subcategory;
+    if (explicitMain && explicitSub && INVENTORY_CATEGORY_CONFIG[explicitMain]?.subcategories?.[explicitSub]) {
+        return { main: explicitMain, sub: explicitSub };
+    }
+
+    const id = String(item.id || '').toLowerCase();
+    const type = String(item.type || '').toLowerCase();
+    const name = String(item.name || '').toLowerCase();
+
+    if (item.unlocksRecipe || id.startsWith('recipe_') || type === 'document' || type === 'paper' || type === 'letter' || type === 'note' || type === 'book' || type === 'readable') {
+        if (id.startsWith('recipe_') && (id.includes('potion') || id.includes('antitoxin') || id.includes('healing'))) {
+            return { main: 'alchemy', sub: 'recipes' };
+        }
+        if (item.unlocksRecipe && (item.unlocksRecipe.startsWith('potion_') || item.unlocksRecipe.startsWith('antitoxin_'))) {
+            return { main: 'alchemy', sub: 'recipes' };
+        }
+        if (item.unlocksRecipe && (item.unlocksRecipe.startsWith('iron_') || item.unlocksRecipe.startsWith('hunter_') || item.unlocksRecipe.startsWith('steel_') || item.unlocksRecipe.startsWith('moonfang_') || item.unlocksRecipe.startsWith('ruinbreaker_'))) {
+            return { main: 'crafting', sub: 'recipes' };
+        }
+        return { main: 'misc', sub: 'quest' };
+    }
+
+    if (type === 'consumable' || type === 'food' || id.startsWith('potion_') || id.includes('mikstura') || name.includes('mikstura') || name.includes('jedzenie') || name.includes('owoc') || name.includes('żywność')) {
+        if (type === 'food' || name.includes('jedzenie') || name.includes('owoc') || name.includes('żywność')) {
+            return { main: 'food', sub: 'food' };
+        }
+        return { main: 'food', sub: 'potions' };
+    }
+
+    if (type === 'material' || type === 'resource' || id.includes('ziolo') || id.includes('korzen') || id.includes('herb') || id.includes('woda') || id.includes('mush') || id.includes('amber') || id.includes('steel') || id.includes('iron') || id.includes('ashwood') || id.includes('leather') || id.includes('wood')) {
+        if (id.includes('iron') || id.includes('steel') || id.includes('wood') || id.includes('leather') || id.includes('sand') || id.includes('clay')) {
+            return { main: 'crafting', sub: 'ingredients' };
+        }
+        return { main: 'alchemy', sub: 'ingredients' };
+    }
+
+    if (['weapon', 'head', 'chest', 'legs', 'boots', 'armor', 'shield'].includes(type)) {
+        if (type === 'weapon' || name.includes('miecz') || name.includes('nóż') || name.includes('topór') || name.includes('włócznia') || name.includes('ostrze') || name.includes('broń')) {
+            return { main: 'gear', sub: 'weapon' };
+        }
+        return { main: 'gear', sub: 'armor' };
+    }
+
+    if (type === 'quest' || type === 'fabled' || type === 'story' || name.includes('list') || name.includes('księga') || name.includes('zwój') || name.includes('receptura')) {
+        return { main: 'misc', sub: 'quest' };
+    }
+
+    if (type === 'tool' || type === 'misc' || type === 'currency') {
+        return { main: 'misc', sub: 'misc' };
+    }
+
+    return { main: 'misc', sub: 'misc' };
+}
+
 const menuSystem = {
     isOpen: false,
     activeTab: 'quests',
+    inventoryCategory: 'alchemy',
+    inventorySubcategory: 'ingredients',
     hoveredSlot: null,
     toggle(tabName) {
         if (this.isOpen && this.activeTab === tabName) {
@@ -129,7 +253,47 @@ const menuSystem = {
         if (!grid) return;
         grid.innerHTML = '';
 
-        // Włączenie dopuszczania dropu na obszarze plecaka
+        const inventorySection = grid.closest('.inventory-grid-section');
+        if (inventorySection) {
+            let filterBar = inventorySection.querySelector('.inv-filter-bar');
+            if (!filterBar) {
+                filterBar = document.createElement('div');
+                filterBar.className = 'inv-filter-bar';
+                inventorySection.insertBefore(filterBar, grid);
+            }
+            filterBar.innerHTML = '';
+
+            Object.entries(INVENTORY_CATEGORY_CONFIG).forEach(([key, cfg]) => {
+                const button = document.createElement('button');
+                button.type = 'button';
+                button.className = `inv-filter-btn ${this.inventoryCategory === key ? 'active' : ''}`;
+                button.title = key;
+                button.dataset.label = cfg.label || key;
+                button.innerHTML = renderInventoryTabIcon(cfg.icon, '📦', 22);
+                button.onmouseenter = (e) => {
+                    const tooltip = document.getElementById('item-tooltip');
+                    if (tooltip) {
+                        tooltip.classList.remove('hidden');
+                        tooltip.innerHTML = `<div class="tooltip-header"><span class="tooltip-icon">${renderInventoryTabIcon(cfg.icon, '📦', 18)}</span><div><div class="tooltip-title">${cfg.label || key}</div><div class="tooltip-type">Zakładka ekwipunku</div></div></div>`;
+                        const rect = e.currentTarget.getBoundingClientRect();
+                        tooltip.style.left = `${rect.left + rect.width / 2}px`;
+                        tooltip.style.top = `${rect.top - 18}px`;
+                    }
+                };
+                button.onmouseleave = () => {
+                    const tooltip = document.getElementById('item-tooltip');
+                    if (tooltip) tooltip.classList.add('hidden');
+                };
+                button.onclick = () => {
+                    this.inventoryCategory = key;
+                    const firstSub = Object.keys(cfg.subcategories)[0];
+                    this.inventorySubcategory = firstSub;
+                    this.renderInventoryTab();
+                };
+                filterBar.appendChild(button);
+            });
+        }
+
         grid.setAttribute('ondragover', 'dragDropManager.allowDrop(event)');
         grid.setAttribute('ondrop', 'dragDropManager.onDropToInventory(event)');
 
@@ -142,15 +306,32 @@ const menuSystem = {
         const maxWeightVal = document.getElementById('menu-max-weight-val');
         if (maxWeightVal) maxWeightVal.innerText = player.maxWeight;
 
-        const totalSlots = Math.max(70, player.inventory.length);
+        const visibleItems = player.inventory
+            .map((item, index) => ({ item, index }))
+            .filter(({ item }) => {
+                const cfg = getInventoryCategoryConfigForItem(item);
+                return cfg.main === this.inventoryCategory && cfg.sub === this.inventorySubcategory;
+            });
+
+        const totalSlots = Math.max(16, visibleItems.length);
         for (let i = 0; i < totalSlots; i++) {
             const slot = document.createElement('div');
-            const item = player.inventory[i];
+            const visible = visibleItems[i];
+            const item = visible ? visible.item : null;
+            const realIndex = visible ? visible.index : null;
+
+            const shadowX = 72 + ((i * 13) % 18);
+            const shadowY = 12 + ((i * 5) % 18);
+            const shadowAlpha = (0.18 + ((i * 19) % 12) * 0.02).toFixed(3);
+
+            slot.style.setProperty('--shadow-x', `${shadowX}%`);
+            slot.style.setProperty('--shadow-y', `${shadowY}%`);
+            slot.style.setProperty('--shadow-alpha', shadowAlpha);
 
             if (item) {
-                slot.className = `grid-slot ${player.selectedItemIndex === i ? 'selected' : ''}`;
+                slot.className = `grid-slot ${player.selectedItemIndex === realIndex ? 'selected' : ''}`;
                 slot.setAttribute('draggable', 'true');
-                slot.ondragstart = (e) => dragDropManager.onDragStart(e, 'inventory', i);
+                slot.ondragstart = (e) => dragDropManager.onDragStart(e, 'inventory', realIndex);
 
                 const countBadge = (item.count && item.count > 1) ? `<span class="slot-count">${item.count}</span>` : '';
                 slot.innerHTML = `${renderItemIconMarkup(item.icon, '📦')}${countBadge}`;
@@ -159,13 +340,13 @@ const menuSystem = {
                 applyItemFootprint(slot, item);
 
                 slot.onclick = () => {
-                    player.selectedItemIndex = i;
-                    menuSystem.renderInventoryTab();
+                    player.selectedItemIndex = realIndex;
+                    this.renderInventoryTab();
                 };
 
                 slot.ondblclick = () => {
                     showTooltip(null);
-                    player.equipItem(i);
+                    player.equipItem(realIndex);
                 };
             } else {
                 slot.className = 'grid-slot empty';
@@ -238,17 +419,20 @@ const menuSystem = {
             const item = player.inventory[target.index];
             if (!item) return;
 
+            const isDocumentLike = ['book', 'readable', 'letter', 'note', 'document', 'paper', 'quest'].includes(item.type)
+                || !!(item.text || item.content || item.pageText);
+
             // A. Zakładanie uzbrojenia i broni
             if (['armor', 'weapon', 'head', 'chest', 'legs', 'boots', 'shield'].includes(item.type)) {
                 showTooltip(null);
                 player.equipItem(target.index);
             }
-            else if (['book', 'readable', 'letter', 'note', 'document', 'paper'].includes(item.type) || item.text || item.content || item.description) {
+            else if (isDocumentLike) {
                 if (typeof documentViewer !== 'undefined') {
                     showTooltip(null);
                     const dbItem = (typeof ITEMS_DB !== 'undefined' && ITEMS_DB[item.id]) ? ITEMS_DB[item.id] : {};
                     const title = item.name || dbItem.name || 'Dokument';
-                    const content = item.content || item.text || item.description || dbItem.content || "<i>(Brak treści w liście)</i>";
+                    const content = item.content || item.text || item.pageText || dbItem.content || "<i>(Brak treści w liście)</i>";
                     const monologueId = item.monologueId || dbItem.monologueId || null;
                     const questTrigger = item.questTrigger || dbItem.questTrigger || null;
 

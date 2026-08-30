@@ -351,7 +351,7 @@ window.addEventListener('keydown', (e) => {
     // Zamknięcie okna czytania
     const readingModal = document.getElementById('reading-overlay');
     if (readingModal && !readingModal.classList.contains('hidden')) {
-        if (key === 'escape' || key === 'esc' || key === 'e') {
+        if (key === 'escape' || key === 'esc') {
             documentViewer.close();
             return;
         }
