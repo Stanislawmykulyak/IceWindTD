@@ -287,10 +287,10 @@ canvas {
 .inv-filter-btn .item-icon-image,
 .inv-filter-btn .item-icon-emoji,
 .inv-filter-btn>span {
-    width: 30px;
-    height: 30px;
-    max-width: 30px;
-    max-height: 30px;
+    width: 40px;
+    height: 40px;
+    max-width: 40px;
+    max-height: 40px;
     display: block;
     object-fit: contain;
     flex: 0 0 auto;

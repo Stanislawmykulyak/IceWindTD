@@ -96,7 +96,7 @@ const INVENTORY_CATEGORY_CONFIG = {
     },
     gear: {
         label: 'Uzbrojenie',
-        icon: '<img src="img/tabs/weapons-tab.png" alt="weapon" style="width:30px; height:30px; object-fit:contain; display:block;">',
+        icon: '<img src="img/tabs/weapons-tab.png" alt="weapon" style="width:40px; height:40px; object-fit:contain; display:block;">',
         subcategories: {
             armor: { icon: '🧥', label: 'Zbroje' },
             weapon: { icon: '⚔️', label: 'Bronie' }
@@ -104,7 +104,7 @@ const INVENTORY_CATEGORY_CONFIG = {
     },
     misc: {
         label: 'Różne',
-        icon: '<img src="img/tabs/items-tab.png" alt="weapon" style="width:30px; height:30px; object-fit:contain; display:block;">',
+        icon: '<img src="img/tabs/items-tab.png" alt="weapon" style="width:40px; height:40px; object-fit:contain; display:block;">',
         subcategories: {
             quest: { icon: '📜', label: 'Fabularne' },
             misc: { icon: '🧩', label: 'Różne' }
