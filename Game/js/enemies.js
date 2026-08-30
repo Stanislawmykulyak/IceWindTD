@@ -191,6 +191,12 @@ class Enemy {
         this.color = baseConfig.color || '#e74c3c';
         this.attackWindup = 0;
         this.hasDealtDamage = false;
+        this.isBoss = !!baseConfig.isBoss || type === 'ruin_guardian';
+        this.battleActive = false;
+        this.pursuitTimer = 0;
+        this.respawnTimer = 0;
+        this.shieldTimer = 0;
+        this.lastBossAction = 0;
 
         this.aggroRadius = config.aggroRadius || 250;
         this.deaggroRadius = config.deaggroRadius || 450;
@@ -233,8 +239,191 @@ class Enemy {
         }
         return totalArmor;
     }
+    updateBossAI(dt, player, manager = null) {
+        const distToPlayer = Math.hypot(player.x - this.x, player.y - this.y);
+        this.targetDist = distToPlayer;
+
+        if (this.shieldTimer > 0) this.shieldTimer -= dt;
+        if (this.shieldTimer <= 0) this.shielding = false;
+
+        if (distToPlayer <= 420) {
+            this.battleActive = true;
+            this.pursuitTimer = 0;
+        }
+
+        if (!this.battleActive) {
+            this.state = 'IDLE';
+            return;
+        }
+
+        if (distToPlayer > 500) {
+            this.pursuitTimer += dt;
+            if (this.pursuitTimer >= 5) {
+                this.state = 'RETURNING';
+                this.battleActive = false;
+                this.shieldTimer = 0;
+                this.shielding = false;
+                return;
+            }
+        } else {
+            this.pursuitTimer = 0;
+        }
+
+        if (this.state === 'RETURNING') {
+            const backAngle = Math.atan2(this.homeY - this.y, this.homeX - this.x);
+            const speed = this.speed * 0.9;
+            const moveX = Math.cos(backAngle) * speed * dt;
+            const moveY = Math.sin(backAngle) * speed * dt;
+            if (typeof gameMap !== 'undefined' && gameMap.checkCollision) {
+                if (!gameMap.checkCollision(this.x + moveX, this.y, this.radius)) this.x += moveX;
+                if (!gameMap.checkCollision(this.x, this.y + moveY, this.radius)) this.y += moveY;
+            } else {
+                this.x += moveX;
+                this.y += moveY;
+            }
+
+            if (Math.hypot(this.homeX - this.x, this.homeY - this.y) < 18) {
+                this.state = 'IDLE';
+                this.battleActive = false;
+                this.pursuitTimer = 0;
+                this.respawnTimer = 20;
+                this.hp = this.maxHp;
+                if (typeof showToast === 'function') showToast('Widmo wróciło do ruin i odpoczywa.');
+            }
+            return;
+        }
+
+        if (this.attackCooldown > 0) this.attackCooldown -= dt;
+
+        const playerAngle = Math.atan2(player.y - this.y, player.x - this.x);
+        const angleToPlayer = Math.atan2(player.y - this.y, player.x - this.x);
+        const strikeDist = Math.hypot(player.x - this.x, player.y - this.y);
+
+        if (strikeDist <= this.attackRadius + 18 && this.attackCooldown <= 0) {
+            const actionRoll = Math.random();
+            this.attackCooldown = 1.5;
+
+            if (actionRoll < 0.5) {
+                this.state = 'RUNE_PULSE';
+                this.windupTimer = 0.8;
+                this.lastBossAction = 1;
+                if (typeof showToast === 'function') showToast('Widmo rozpościera runiczny krąg!');
+            } else if (actionRoll < 0.8) {
+                this.state = 'SHIELD';
+                this.shieldTimer = 1.15;
+                this.shielding = true;
+                this.lastBossAction = 2;
+                if (typeof showToast === 'function') showToast('Widmo podnosi tarczę!');
+            } else {
+                this.state = 'RAZOR_CLEAVE';
+                this.windupTimer = 0.7;
+                this.lastBossAction = 3;
+                if (typeof showToast === 'function') showToast('Widmo rozcina powietrze!');
+            }
+        }
+
+        if (this.state === 'RUNE_PULSE') {
+            this.windupTimer -= dt;
+            if (this.windupTimer <= 0) {
+                const dist = Math.hypot(player.x - this.x, player.y - this.y);
+                if (dist <= 130) {
+                    const pulseDamage = this.getDamage() + 18;
+                    if (typeof player.takeDamage === 'function') player.takeDamage(pulseDamage);
+                    else if (typeof player.hit === 'function') player.hit(pulseDamage);
+                    const angle = Math.atan2(player.y - this.y, player.x - this.x);
+                    player.x += Math.cos(angle) * 20;
+                    player.y += Math.sin(angle) * 20;
+                }
+                this.state = 'CHASE';
+                this.attackCooldown = 1.3;
+            }
+            return;
+        }
+
+        if (this.state === 'SHIELD') {
+            this.shieldTimer -= dt;
+            if (this.shieldTimer <= 0) {
+                this.shielding = false;
+                this.state = 'CHASE';
+            }
+            return;
+        }
+
+        if (this.state === 'RAZOR_CLEAVE') {
+            this.windupTimer -= dt;
+            if (this.windupTimer <= 0) {
+                const dist = Math.hypot(player.x - this.x, player.y - this.y);
+                if (dist <= 92) {
+                    const cleaveDmg = this.getDamage() + 36;
+                    if (typeof player.takeDamage === 'function') player.takeDamage(cleaveDmg);
+                    else if (typeof player.hit === 'function') player.hit(cleaveDmg);
+                }
+                this.state = 'CHASE';
+                this.attackCooldown = 1.6;
+            }
+            return;
+        }
+
+        const stepAngle = Math.atan2(player.y - this.y, player.x - this.x);
+        const baseMoveX = Math.cos(stepAngle) * this.speed * dt * (strikeDist > this.attackRadius + 18 ? 1 : 0.5);
+        const baseMoveY = Math.sin(stepAngle) * this.speed * dt * (strikeDist > this.attackRadius + 18 ? 1 : 0.5);
+
+        let moved = false;
+        if (typeof gameMap !== 'undefined' && gameMap.checkCollision) {
+            const angles = [stepAngle, stepAngle + 0.7, stepAngle - 0.7, stepAngle + 1.3, stepAngle - 1.3];
+            for (const angle of angles) {
+                const attemptX = Math.cos(angle) * this.speed * dt * (strikeDist > this.attackRadius + 18 ? 1 : 0.5);
+                const attemptY = Math.sin(angle) * this.speed * dt * (strikeDist > this.attackRadius + 18 ? 1 : 0.5);
+                const xOk = !gameMap.checkCollision(this.x + attemptX, this.y, this.radius);
+                const yOk = !gameMap.checkCollision(this.x, this.y + attemptY, this.radius);
+
+                if (xOk && yOk) {
+                    this.x += attemptX;
+                    this.y += attemptY;
+                    moved = true;
+                    break;
+                }
+
+                if (xOk) {
+                    this.x += attemptX;
+                    moved = true;
+                    break;
+                }
+
+                if (yOk) {
+                    this.y += attemptY;
+                    moved = true;
+                    break;
+                }
+            }
+
+            if (!moved && gameMap.checkCollision(this.x, this.y, this.radius)) {
+                const fallbackX = this.homeX + (Math.random() - 0.5) * 40;
+                const fallbackY = this.homeY + (Math.random() - 0.5) * 40;
+                if (!gameMap.checkCollision(fallbackX, fallbackY, this.radius)) {
+                    this.x = fallbackX;
+                    this.y = fallbackY;
+                }
+            }
+        } else {
+            this.x += baseMoveX;
+            this.y += baseMoveY;
+        }
+
+        if (distToPlayer <= 330 && this.attackCooldown <= 0) {
+            this.attackCooldown = 1.2;
+        }
+    }
+
     update(dt, player, activePack, allies = [], manager = null) {
         if (this.isUnconscious || this.hp <= 0 || !this.isAlive) return;
+
+        if (this.hitStun > 0) this.hitStun -= dt;
+
+        if (this.type === 'ruin_guardian') {
+            this.updateBossAI(dt, player, manager);
+            return;
+        }
 
         // Płynne odliczanie hitStun nawet podczas powalenia
         if (this.hitStun > 0) this.hitStun -= dt;
@@ -436,6 +625,15 @@ class Enemy {
             return;
         }
 
+        if (this.type === 'ruin_guardian' && this.hp <= 0) {
+            this.isAlive = false;
+            this.state = 'DEFEATED';
+            this.battleActive = false;
+            this.dropLoot();
+            if (typeof showToast === 'function') showToast('Widmo rycerza zostało pokonane!');
+            return;
+        }
+
         if (this.hp <= 0 && !this.nonLethal) {
             this.isAlive = false;
             this.onDeath();
@@ -513,6 +711,24 @@ class Enemy {
 
     draw(ctx) {
         if (!this.isAlive) return;
+
+        if (this.type === 'ruin_guardian' && (this.state === 'RUNE_PULSE' || this.state === 'RAZOR_CLEAVE')) {
+            const angleToPlayer = Math.atan2(player.y - this.y, player.x - this.x);
+            const arcAngle = this.state === 'RUNE_PULSE' ? Math.PI * 1.45 : Math.PI / 1.8;
+            const radius = this.state === 'RUNE_PULSE' ? 170 : 120;
+
+            ctx.save();
+            ctx.beginPath();
+            ctx.moveTo(this.x, this.y);
+            ctx.arc(this.x, this.y, radius, angleToPlayer - arcAngle / 2, angleToPlayer + arcAngle / 2);
+            ctx.closePath();
+            ctx.fillStyle = this.state === 'RUNE_PULSE' ? 'rgba(143, 157, 255, 0.25)' : 'rgba(255, 120, 80, 0.30)';
+            ctx.strokeStyle = this.state === 'RUNE_PULSE' ? '#8f9dff' : '#ff8a5b';
+            ctx.lineWidth = 2;
+            ctx.fill();
+            ctx.stroke();
+            ctx.restore();
+        }
 
         if (this.state === 'WINDUP' || this.state === 'ATTACK') {
             const angleToPlayer = Math.atan2(player.y - this.y, player.x - this.x);

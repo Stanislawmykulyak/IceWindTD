@@ -367,6 +367,9 @@ window.addEventListener('keyup', (e) => { keys[e.key.toLowerCase()] = false; });
 resizeCanvas();
 gameMap.spawnVillageNPCs();
 questManager.init();
+if (typeof showLocationBanner === 'function') {
+    showLocationBanner(gameMap.getCurrentData()?.name || 'Kruczy Dół');
+}
 
 const mouse = { x: 0, y: 0 };
 
@@ -394,6 +397,8 @@ function gameLoop() {
     if (!dialogueManager.isActive && !player.isSleeping && !menuSystem.isOpen && !alchemyUI.isOpen) {
         player.update(keys, stateText);
         gameMap.updateNPCs();
+        gameMap.updateRuinsState(player);
+        gameMap.updateAreaBanner(player);
         enemyManager.update(dt, player);
         LootManager.update(player, keys);
     }

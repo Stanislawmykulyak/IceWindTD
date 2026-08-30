@@ -43,7 +43,7 @@
               </div>
               <div id="inv-grid-container" class="grid-container scrollable-grid"></div>
             </div>
-
+            
             <!-- PRAWA STRONA: Rynsztunek -->
             <div class="equipment-section">
               <h3>Rynsztunek</h3>
@@ -185,7 +185,28 @@
         </div>
       </div>
     </div>
+
+    <div id="chest-modal" class="chest-modal hidden">
+      <div class="chest-container">
+        <div class="chest-header">
+          <h2>📦 Skrzynia z ruin</h2>
+          <button class="shop-close-btn" onclick="chestSystem.close()">✕ Zamknij</button>
+        </div>
+        <div class="chest-body">
+          <div class="chest-side">
+            <h3>Twój ekwipunek</h3>
+            <div id="chest-player-grid" class="chest-grid" ondragover="event.preventDefault()" ondrop="chestSystem.onDropToPlayer(event)"></div>
+          </div>
+          <div class="chest-side">
+            <h3>Łup w skrzyni</h3>
+            <div id="chest-grid" class="chest-grid" ondragover="event.preventDefault()" ondrop="chestSystem.onDropToChest(event)"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div id="toast-message" class="hidden"></div>
+    <div id="area-banner" class="area-banner hidden">Kruczy Dół</div>
 
     <div id="dialogue-box" class="hidden">
       <div id="dialogue-speaker">Karczmarz</div>

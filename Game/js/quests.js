@@ -8,11 +8,12 @@ const QUEST_DATABASE = {
     description: "Dostałeś od przyjaciela niepokojący list.",
     objectives: [
         { 
-            text: "Przeczytaj list", 
-            done: false 
+            text: "Przeczytaj list od Nicolasa", 
+            done: false,
+            target: { location: 'pokoj_gracza', x: 150, y: 180, name: 'List' } 
         },
         { 
-            text: "Przespij sie w karczmie", 
+            text: "Przespij się w karczmie", 
             done: false, 
             target: { location: 'pokoj_gracza', x: 150, y: 180, name: 'Łóżko' } 
         },
@@ -29,10 +30,18 @@ const QUEST_DATABASE = {
         { 
             text: "Wejdź do piwnicy młyna", 
             done: false, 
-            target: { location: 'wioska_mlyn', x: 820, y: 1250, name: 'Drzwi do piwnicy' } 
+            target: { location: 'mlyn_wnetrze', x: 120, y: 450, name: 'Drzwi do piwnicy' } 
         },
         { 
             text: "Pokonaj zbirów w piwnicy", 
+            done: false 
+        },
+        { 
+            text: "Przeszukaj piwnicę", 
+            done: false 
+        },
+        { 
+            text: "Przeczytaj znaleziony list", 
             done: false 
         }
     ]

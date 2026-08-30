@@ -1,3 +1,24 @@
+function getItemFootprint(item) {
+    if (!item) return { width: 1, height: 1 };
+    const footprint = item.footprint || item.grid || { width: item.gridWidth || 1, height: item.gridHeight || 1 };
+    const width = Number(footprint.width || footprint.w || item.gridWidth || 1);
+    const height = Number(footprint.height || footprint.h || item.gridHeight || 1);
+    return {
+        width: Math.max(1, width),
+        height: Math.max(1, height)
+    };
+}
+
+function applyItemFootprint(slot, item) {
+    const footprint = getItemFootprint(item);
+    const isLarge = footprint.width > 1 || footprint.height > 1;
+    slot.style.gridColumn = `span ${footprint.width}`;
+    slot.style.gridRow = `span ${footprint.height}`;
+    slot.style.width = isLarge ? `${56 * footprint.width}px` : '56px';
+    slot.style.height = isLarge ? `${56 * footprint.height}px` : '56px';
+    if (isLarge) slot.classList.add('item-large');
+}
+
 const menuSystem = {
     isOpen: false,
     activeTab: 'quests',
@@ -106,6 +127,7 @@ const menuSystem = {
                 slot.innerHTML = `${item.icon || '📦'}${countBadge}`;
                 slot.onmouseenter = (e) => showTooltip(item, e);
                 slot.onmouseleave = () => showTooltip(null);
+                applyItemFootprint(slot, item);
 
                 slot.onclick = () => {
                     player.selectedItemIndex = i;
@@ -375,18 +397,39 @@ const shopSystem = {
                     armor: 1,
                     stats: 'Pancerz: 1',
                     count: 1
-                },
-                {
-                    id: 'ziolo_czerwone',
-                    name: 'Czerwone Zioło',
-                    icon: '🌿', type: 'misc',
-                    weight: 0.1,
-                    value: 4,
-                    count: 10,
-                    restock: true
-                },
-                { id: 'woda_butelka', name: 'Woda w Butelce', icon: '🧴', type: 'misc', weight: 0.5, value: 2, count: 5, restock: true },
-                { id: 'korzen_zycia', name: 'Korzeń Życia', icon: '🌱', type: 'misc', weight: 0.2, value: 8, count: 3, restock: true }
+                }
+            ]
+        },
+        zielarz_shop: {
+            name: "Mira Zielarka",
+            gold: 400,
+            items: [
+                { id: 'ziolo_czerwone', name: 'Czerwone Zioło', icon: '🌿', type: 'misc', weight: 0.1, value: 4, count: 12, restock: true },
+                { id: 'herb_green', name: 'Zielone Zioło', icon: '🌱', type: 'misc', weight: 0.2, value: 5, count: 10, restock: true },
+                { id: 'herb_blue', name: 'Niebieskie Zioło', icon: '🍃', type: 'misc', weight: 0.2, value: 6, count: 8, restock: true },
+                { id: 'moon_lichen', name: 'Porost Księżycowy', icon: '🌙', type: 'material', weight: 0.2, value: 8, count: 6, restock: true },
+                { id: 'crimson_pollen', name: 'Szkarłatny Pyłek', icon: '✨', type: 'material', weight: 0.1, value: 7, count: 6, restock: true },
+                { id: 'ashwood_bark', name: 'Kora Jesionu', icon: '🌳', type: 'material', weight: 0.4, value: 6, count: 5, restock: true },
+                { id: 'woda_butelka', name: 'Woda w Butelce', icon: '🧴', type: 'misc', weight: 0.5, value: 2, count: 8, restock: true },
+                { id: 'korzen_zycia', name: 'Korzeń Życia', icon: '🌱', type: 'misc', weight: 0.2, value: 8, count: 5, restock: true },
+                { id: 'potion_health', name: 'Mikstura Zdrowia', icon:'<img src="img/health_potion.png" alt="Mikstura Życia">', type: 'consumable', weight: 0.3, value: 18, count: 3, restock: true },
+                { id: 'recipe_potion_guard', name: 'Receptura: Mikstura Ochronna', icon: '📜', type: 'document', weight: 0.1, value: 24, count: 1, restock: false, unlocksRecipe: 'potion_guard' },
+                { id: 'recipe_potion_swiftness', name: 'Receptura: Mikstura Szybkości', icon: '📜', type: 'document', weight: 0.1, value: 26, count: 1, restock: false, unlocksRecipe: 'potion_swiftness' }
+            ]
+        },
+        kowal_shop: {
+            name: "Tomasz Kowal",
+            gold: 600,
+            items: [
+                { id: 'iron_ore', name: 'Ruda Żelaza', icon: '⛏️', type: 'material', weight: 1.5, value: 12, count: 10, restock: true },
+                { id: 'iron_ingot', name: 'Sztabka Żelaza', icon: '⛓️', type: 'material', weight: 1.2, value: 20, count: 8, restock: true },
+                { id: 'iron_sand', name: 'Piasek Żelazny', icon: '🪨', type: 'material', weight: 0.9, value: 9, count: 6, restock: true },
+                { id: 'ember_amber', name: 'Żarliwy Bursztyn', icon: '🟠', type: 'material', weight: 0.3, value: 11, count: 5, restock: true },
+                { id: 'wood_handle', name: 'Drewniana Rękojeść', icon: '🪵', type: 'material', weight: 0.4, value: 10, count: 8, restock: true },
+                { id: 'leather_strips', name: 'Skórzane Pasma', icon: '🧵', type: 'material', weight: 0.3, value: 9, count: 6, restock: true },
+                { id: 'iron_knife', name: 'Żelazny Nóż', icon: '🗡️', type: 'weapon', weight: 1.8, value: 42, damage: 18, stats: 'Obrażenia: 18', count: 2, restock: true },
+                { id: 'recipe_hunter_axe', name: 'Receptura: Topór Myśliwski', icon: '📜', type: 'document', weight: 0.1, value: 32, count: 1, restock: false, unlocksRecipe: 'hunter_axe' },
+                { id: 'recipe_steel_spear', name: 'Receptura: Włócznia Żelazna', icon: '📜', type: 'document', weight: 0.1, value: 36, count: 1, restock: false, unlocksRecipe: 'steel_spear' }
             ]
         }
     },
@@ -448,6 +491,11 @@ const shopSystem = {
             itemDamage, // damage
             itemArmor   // armor
         );
+
+        if (item.unlocksRecipe) {
+            player.unlockRecipe(item.unlocksRecipe);
+            player.lastUnlockedRecipe = item.unlocksRecipe;
+        }
 
         if (item.count <= 0 && !item.restock) {
             shop.items.splice(itemIndex, 1);
@@ -562,6 +610,7 @@ const shopSystem = {
                     slot.className = 'grid-slot occupied';
                     slot.setAttribute('draggable', 'true');
                     slot.innerHTML = `${item.icon || '📦'}${countBadge}`;
+                    applyItemFootprint(slot, item);
 
                     slot.ondragstart = (e) => this.onDragStart(e, 'player', i);
                     slot.onclick = (e) => this.onItemClick(e, 'player', i);
@@ -591,6 +640,7 @@ const shopSystem = {
                     slot.className = 'grid-slot occupied';
                     slot.setAttribute('draggable', 'true');
                     slot.innerHTML = `${item.icon || '📦'}${countBadge}`;
+                    applyItemFootprint(slot, item);
 
                     slot.ondragstart = (e) => this.onDragStart(e, 'shop', i);
                     slot.onclick = (e) => this.onItemClick(e, 'shop', i);
@@ -613,6 +663,28 @@ function showToast(text) {
     toast.innerText = text;
     toast.classList.remove('hidden');
     setTimeout(() => toast.classList.add('hidden'), 2500);
+}
+
+function showLocationBanner(text, options = {}) {
+    const banner = document.getElementById('area-banner');
+    if (!banner) return;
+
+    const artSrc = options.art || null;
+    const label = text || 'Nowe miejsce';
+
+    if (artSrc) {
+        banner.innerHTML = `
+            <div class="area-banner-content">
+                <img class="area-banner-art" src="${artSrc}" alt="${label}" />
+            </div>
+        `;
+    } else {
+        banner.innerHTML = `<span class="area-banner-text">${label}</span>`;
+    }
+
+    banner.classList.remove('hidden');
+    clearTimeout(showLocationBanner._timer);
+    showLocationBanner._timer = setTimeout(() => banner.classList.add('hidden'), 2200);
 }
 
 
@@ -917,6 +989,140 @@ function drawActiveEffectsHUD(ctx) {
 
     ctx.restore();
 }
+
+const chestSystem = {
+    currentChest: null,
+    draggedData: null,
+
+    onDragStart(event, source, index) {
+        this.draggedData = { source, index };
+        event.dataTransfer.setData('text/plain', JSON.stringify(this.draggedData));
+    },
+
+    allowDrop(event) {
+        event.preventDefault();
+    },
+
+    onDropToPlayer(event) {
+        event.preventDefault();
+        if (!this.currentChest) return;
+        const data = this.draggedData || (() => {
+            try { return JSON.parse(event.dataTransfer.getData('text/plain')); } catch (e) { return null; }
+        })();
+        if (!data) return;
+
+        if (data.source === 'chest') {
+            const item = this.currentChest.items[data.index];
+            if (!item) return;
+            if (player.getWeight() + (item.weight || 0) > player.maxWeight) {
+                showToast('Brak miejsca w plecaku!');
+                this.draggedData = null;
+                return;
+            }
+            this.currentChest.items.splice(data.index, 1);
+            player.addItem(item.id, item.name, item.icon, item.type, item.weight || 0.1, item.stats || '', item.count || 1, item.damage || 0, item.armor || 0);
+            this.render();
+        }
+        this.draggedData = null;
+    },
+
+    onDropToChest(event) {
+        event.preventDefault();
+        if (!this.currentChest) return;
+        const data = this.draggedData || (() => {
+            try { return JSON.parse(event.dataTransfer.getData('text/plain')); } catch (e) { return null; }
+        })();
+        if (!data) return;
+
+        if (data.source === 'player') {
+            const item = player.inventory[data.index];
+            if (!item) return;
+            player.inventory.splice(data.index, 1);
+            this.currentChest.items.push({ ...item });
+            this.render();
+        }
+        this.draggedData = null;
+    },
+
+    transferToPlayer(index) {
+        if (!this.currentChest || !this.currentChest.items[index]) return;
+        const item = this.currentChest.items[index];
+        if (player.getWeight() + (item.weight || 0) > player.maxWeight) {
+            showToast('Brak miejsca w plecaku!');
+            return;
+        }
+        this.currentChest.items.splice(index, 1);
+        player.addItem(item.id, item.name, item.icon, item.type, item.weight || 0.1, item.stats || '', item.count || 1, item.damage || 0, item.armor || 0);
+        this.render();
+    },
+
+    transferToChest(index) {
+        if (!this.currentChest) return;
+        const item = player.inventory[index];
+        if (!item) return;
+        player.inventory.splice(index, 1);
+        this.currentChest.items.push({ ...item });
+        this.render();
+    },
+
+    open(chest) {
+        this.currentChest = chest;
+        const modal = document.getElementById('chest-modal');
+        if (modal) modal.classList.remove('hidden');
+        this.render();
+    },
+
+    close() {
+        this.currentChest = null;
+        const modal = document.getElementById('chest-modal');
+        if (modal) modal.classList.add('hidden');
+    },
+
+    render() {
+        if (!this.currentChest) return;
+
+        const playerGrid = document.getElementById('chest-player-grid');
+        const chestGrid = document.getElementById('chest-grid');
+        if (!playerGrid || !chestGrid) return;
+
+        playerGrid.innerHTML = '';
+        chestGrid.innerHTML = '';
+
+        const renderSlotGrid = (grid, source, items, onAction) => {
+            const totalSlots = Math.max(24, Math.ceil((items.length || 1) / 6) * 6);
+            for (let i = 0; i < totalSlots; i++) {
+                const slot = document.createElement('div');
+                const item = items[i];
+                if (item) {
+                    const countBadge = (item.count && item.count > 1) ? `<span class="slot-count">${item.count}</span>` : '';
+                    slot.className = 'grid-slot occupied';
+                    slot.setAttribute('draggable', 'true');
+                    slot.innerHTML = `${item.icon || '📦'}${countBadge}`;
+                    slot.ondragstart = (e) => this.onDragStart(e, source, i);
+                    slot.onclick = (e) => {
+                        if (e.shiftKey) {
+                            onAction(i);
+                            return;
+                        }
+                        if (source === 'player') {
+                            const target = player.inventory[i];
+                            if (target) player.selectedItemIndex = i;
+                        }
+                    };
+                    slot.ondblclick = () => onAction(i);
+                    slot.onmouseenter = (e) => showTooltip(item, e);
+                    slot.onmouseleave = () => showTooltip(null);
+                } else {
+                    slot.className = 'grid-slot empty';
+                }
+                grid.appendChild(slot);
+            }
+        };
+
+        renderSlotGrid(playerGrid, 'player', player.inventory, (i) => this.transferToChest(i));
+        renderSlotGrid(chestGrid, 'chest', this.currentChest.items, (i) => this.transferToPlayer(i));
+    }
+};
 
 const dragDropManager = {
     draggedData: null,

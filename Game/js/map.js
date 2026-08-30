@@ -86,9 +86,108 @@ const gameMap = {
     nearNPC: null,
     nearHerb: null,
     nearBed: false,
+    lastAreaBanner: null,
+
+    registerEntity(locationId, layerName, entity) {
+        const targetLocation = this.locations[locationId] || this.getCurrentData();
+        if (!targetLocation.renderLayers) targetLocation.renderLayers = {};
+        if (!targetLocation.renderLayers[layerName]) targetLocation.renderLayers[layerName] = [];
+        targetLocation.renderLayers[layerName].push(entity);
+        return entity;
+    },
+
+    renderLayerList(ctx, list, drawer) {
+        if (!Array.isArray(list)) return;
+        list.forEach((item) => {
+            if (!item) return;
+            if (typeof drawer === 'function') drawer(item, ctx);
+        });
+    },
+
+    getRenderLayer(loc, layerName, fallback = []) {
+        if (!loc || !loc.renderLayers) return fallback;
+        const layer = loc.renderLayers[layerName];
+        return Array.isArray(layer) ? layer : fallback;
+    },
+
+    ruinZone: {
+        x: 2230,
+        y: 1075,
+        width: 520,
+        height: 580,
+        bossSpawnX: 2500,
+        bossSpawnY: 1375,
+        bossName: 'Widmo Rycerza'
+    },
+
+    isInRuins(x, y) {
+        const z = this.ruinZone;
+        return x >= z.x && x <= z.x + z.width && y >= z.y && y <= z.y + z.height;
+    },
+
+    isNearRuins(x, y, margin = 120) {
+        const z = this.ruinZone;
+        return x >= z.x - margin && x <= z.x + z.width + margin && y >= z.y - margin && y <= z.y + z.height + margin;
+    },
+
+    updateRuinsState(player) {
+        const inside = this.isInRuins(player.x, player.y);
+        const boss = enemyManager && enemyManager.enemies ? enemyManager.enemies.find(e => e && e.type === 'ruin_guardian') : null;
+
+        if (!this.ruinBossDefeated && inside && !boss) {
+            const guardian = new Enemy({
+                id: 'ruin_guardian_01',
+                type: 'ruin_guardian',
+                x: this.ruinZone.bossSpawnX,
+                y: this.ruinZone.bossSpawnY,
+                homeX: this.ruinZone.bossSpawnX,
+                homeY: this.ruinZone.bossSpawnY,
+                aggroRadius: 420,
+                deaggroRadius: 620
+            });
+            guardian.name = 'Widmo Rycerza';
+            guardian.battleActive = true;
+            guardian.pursuitTimer = 0;
+            guardian.respawnTimer = 0;
+            enemyManager.enemies.push(guardian);
+            if (typeof showToast === 'function') showToast('Widmo rycerza budzi się w ruinach!');
+        }
+
+        if (boss && !inside && boss.state === 'RETURNING') {
+            boss.pursuitTimer = (boss.pursuitTimer || 0) + 0.016;
+            if ((boss.pursuitTimer || 0) > 20) {
+                boss.hp = boss.maxHp;
+                boss.isAlive = false;
+                boss.state = 'IDLE';
+                boss.battleActive = false;
+                boss.pursuitTimer = 0;
+                this.ruinBossDefeated = false;
+            }
+        }
+
+        if (boss && !boss.isAlive && !this.ruinBossDefeated) {
+            this.ruinBossDefeated = true;
+            this.ruinBossRespawnTimer = 20;
+            if (typeof showToast === 'function') showToast('Widmo rycerza padło!');
+        }
+
+        if (this.ruinBossDefeated) {
+            this.ruinBossRespawnTimer = Math.max(0, (this.ruinBossRespawnTimer || 0) - 0.016);
+            if (this.ruinBossRespawnTimer <= 0) {
+                this.ruinBossDefeated = false;
+                if (boss) {
+                    boss.hp = boss.maxHp;
+                    boss.isAlive = true;
+                    boss.state = 'IDLE';
+                    boss.battleActive = false;
+                }
+            }
+        }
+    },
 
     locations: {
         kruczy_dol: {
+            name: 'Kruczy Dół',
             width: 5500, 
             height: 3500, 
             bgColor: CONFIG.COLOR_GRASS,
@@ -101,16 +200,40 @@ const gameMap = {
 
             buildings: [
                 { id: 'tavern', name: 'Karczma Pod Krukiem', x: 700, y: 400, width: 260, height: 180, color: '#5c3a21' },
+                { id: 'herbalist_hut', name: 'Chatka Zielarza', x: 980, y: 310, width: 170, height: 150, color: '#496b42' },
                 { id: 'blacksmith', name: 'Kuźnia', x: 1200, y: 700, width: 160, height: 130, color: '#4a4a4a' },
                 { id: 'mill', name: 'Młyn', x: 1700, y: 300, width: 140, height: 140, color: '#6e5438' },
-                { id: 'nicolas_house', name: 'Chata Nicolasa', x: 1900, y: 480, width: 120, height: 100, color: '#4d3319' }
+                { id: 'nicolas_house', name: 'Chata Nicolasa', x: 1900, y: 480, width: 120, height: 100, color: '#4d3319' },
+                { id: 'ruin_wall_left', x: 2320, y: 1120, width: 30, height: 290, color: '#655c57' },
+                { id: 'ruin_wall_back', x: 2320, y: 1120, width: 250, height: 30, color: '#655c57' },
+                { id: 'ruin_wall_right', x: 2660, y: 1200, width: 30, height: 210, color: '#655c57' },
+                { id: 'ruin_wall_bottom', x: 2360, y: 1540, width: 260, height: 26, color: '#655c57' },
             ],
 
             doors: [
                 { x: 810, y: 580, width: 40, height: 20, targetLocation: 'karczma_wnetrze', spawnX: 400, spawnY: 480, label: 'Wejdź [E]' },
+                { x: 1040, y: 455, width: 40, height: 20, targetLocation: 'chatka_zielarza', spawnX: 260, spawnY: 420, label: 'Wejdź do chatki [E]' },
+                { x: 1290, y: 820, width: 40, height: 20, targetLocation: 'kuznia_wnetrze', spawnX: 250, spawnY: 440, label: 'Wejdź do kuźni [E]' },
                 { x: 1940, y: 580, width: 40, height: 20, targetLocation: 'nicolas_wnetrze', spawnX: 400, spawnY: 480, label: 'Wejdź [E]' },
-                { x: 1750, y: 440, width: 40, height: 20, targetLocation: 'wioska_mlyn', spawnX: 1220, spawnY: 1900, label: 'Stary Młyn [E]' }
+                { x: 1750, y: 440, width: 40, height: 20, targetLocation: 'mlyn_wnetrze', spawnX: 1220, spawnY: 1900, label: 'Stary Młyn [E]' }
             ],
+
+            chests: [{
+                id: 'ruins_chest',
+                x: 2408,
+                y: 1198,
+                width: 68,
+                height: 36,
+                opened: false,
+                label: 'Skrzynia z ruin [E]',
+                items: [
+                    { id: 'miecz_rozpadlina', name: 'Miecz Rozpadlina', icon: '🗡️', type: 'weapon', weight: 5.2, damage: 165, critChance: 0.14, footprint: { width: 1, height: 2 }, stats: 'Obrażenia: 165', count: 1 },
+                    { id: 'ruin_steel', name: 'Ruina Stal', icon: '🪓', type: 'material', weight: 1.4, count: 3 },
+                    { id: 'moonsteel_scrap', name: 'Odcinek Księżycowej Stali', icon: '🌙', type: 'material', weight: 1.1, count: 2 },
+                    { id: 'sun_amber', name: 'Słoneczny Bursztyn', icon: '🌞', type: 'material', weight: 0.3, count: 2 },
+                    { id: 'runic_clay', name: 'Runiczna Glina', icon: '🟫', type: 'material', weight: 0.7, count: 2 }
+                ]
+            }],
 
             // Zioła generowane blisko obrzeża lasu oraz na polanach w pęczkach 1-3 szt.
             herbs: [
@@ -124,7 +247,50 @@ const gameMap = {
             ],
             npcs: []
         },
+        chatka_zielarza: {
+            name: 'Chatka Zielarza',
+            width: 600, height: 500, bgColor: CONFIG.COLOR_INTERIOR,
+            buildings: [
+                { id: 'zielarz_stol', name: 'Stół Zielarza', x: 180, y: 120, width: 160, height: 100, color: '#483521' },
+                { id: 'zielarz_polka', name: 'Półki z ziołami', x: 380, y: 140, width: 120, height: 120, color: '#3b5b2d' }
+            ],
+            doors: [
+                { x: 260, y: 470, width: 80, height: 20, targetLocation: 'kruczy_dol', spawnX: 1020, spawnY: 520, label: 'Wyjdź z chatki [E]' }
+            ],
+            npcs: [{
+                id: 'zielarka',
+                name: 'Mira Zielarka',
+                x: 320,
+                y: 240,
+                radius: 14,
+                color: '#16a085',
+                dialogueId: 'zielarz_intro',
+                talkRadius: 110
+            }]
+        },
+        kuznia_wnetrze: {
+            name: 'Kuźnia',
+            width: 700, height: 520, bgColor: CONFIG.COLOR_INTERIOR,
+            buildings: [
+                { id: 'forge', name: 'Piec kuźni', x: 120, y: 120, width: 180, height: 140, color: '#3f3a3a' },
+                { id: 'anvil', name: 'Kowadło', x: 390, y: 160, width: 110, height: 90, color: '#6c5c4a' }
+            ],
+            doors: [
+                { x: 290, y: 480, width: 90, height: 20, targetLocation: 'kruczy_dol', spawnX: 1290, spawnY: 845, label: 'Wyjdź z kuźni [E]' }
+            ],
+            npcs: [{
+                id: 'kowal',
+                name: 'Tomasz Kowal',
+                x: 430,
+                y: 300,
+                radius: 14,
+                color: '#7f8c8d',
+                dialogueId: 'kowal_intro',
+                talkRadius: 120
+            }]
+        },
         karczma_wnetrze: {
+            name: 'Karczma Pod Krukiem',
             width: 800, height: 600, bgColor: CONFIG.COLOR_INTERIOR,
             buildings: [
                 { id: 'bar', name: 'Lada Karczmarza', x: 300, y: 150, width: 200, height: 50, color: '#2b170a' }
@@ -139,6 +305,7 @@ const gameMap = {
             }]
         },
         karczma_pietro: {
+            name: 'Piętro Karczmy',
             width: 1000, height: 400, bgColor: CONFIG.COLOR_CORRIDOR,
             buildings: [
                 { id: 'wall_top', name: '', x: 0, y: 0, width: 1000, height: 120, color: '#23150b' }
@@ -153,6 +320,7 @@ const gameMap = {
             npcs: []
         },
         pokoj_gracza: {
+            name: 'Pokój Gracza',
             width: 600, height: 500, bgColor: CONFIG.COLOR_INTERIOR,
             buildings: [
                 { id: 'bed', name: 'Wygodne Łóżko', x: 100, y: 100, width: 100, height: 160, color: '#8e44ad' }
@@ -162,18 +330,9 @@ const gameMap = {
             ],
             npcs: []
         },
-        wioska_mlyn: {
-            width: 2400, height: 2400, name: "Obszar Starego Młyna", bgColor: '#2e3d29',
-            buildings: [
-                { id: 'mlyn_bldg', name: 'Młyn', x: 1100, y: 1600, width: 300, height: 240, color: '#4a3525' }
-            ],
-            doors: [
-                { x: 1230, y: 1840, width: 40, height: 20, targetLocation: 'mlyn_wnetrze', spawnX: 600, spawnY: 820, label: 'Wejdź do Młyna [E]' },
-                { x: 1230, y: 1980, width: 40, height: 20, targetLocation: 'kruczy_dol', spawnX: 1770, spawnY: 480, label: 'Powrót do Wioski [E]' }
-            ]
-        },
         mlyn_wnetrze: {
-            width: 1200, height: 900, name: "Wnętrze Młyna", bgColor: '#3a271d',
+            name: 'Wnętrze Młyna',
+            width: 1200, height: 900, bgColor: '#3a271d',
             buildings: [
                 { id: 'mlyn_mecz', name: 'Mechanizm Młyński', x: 150, y: 100, width: 220, height: 220, color: '#271911' },
                 { id: 'worki_maka', name: 'Stos worków z mąką', x: 850, y: 120, width: 180, height: 100, color: '#8a7967' },
@@ -185,13 +344,48 @@ const gameMap = {
             ]
         },
         mlyn_piwnica: {
-            width: 1000, height: 800, name: "Piwnica Młyna", bgColor: '#120d0a',
+            name: 'Piwnica Młyna',
+            width: 1000, height: 800, bgColor: '#120d0a',
             buildings: [
                 { id: 'stare_skrzynie', name: 'Rupiecie i Skrzynie', x: 700, y: 150, width: 180, height: 120, color: '#2b1f17' }
             ],
             doors: [
                 { x: 130, y: 750, width: 60, height: 20, targetLocation: 'mlyn_wnetrze', spawnX: 120, spawnY: 460, label: 'Wyjście na górę [E]' }
             ],
+            chests: [{
+                id: 'mlyn_hidden_chest',
+                x: 340,
+                y: 610,
+                width: 62,
+                height: 42,
+                opened: false,
+                label: 'Skrzynia [E]',
+                items: [
+                    { id: 'iron_ore', name: 'Ruda Żelaza', icon: '⛏️', type: 'material', weight: 1.5, count: 2 },
+                    { id: 'herb_green', name: 'Zielone Zioło', icon: '🌱', type: 'misc', weight: 0.2, count: 2 },
+                    { id: 'woda_butelka', name: 'Woda w Butelce', icon: '🧴', type: 'misc', weight: 0.5, count: 1 }
+                ]
+            }],
+            paperLoot: {
+                id: 'mlyn_list',
+                x: 640,
+                y: 420,
+                radius: 18,
+                collected: false,
+                itemId: 'mlyn_secret_letter',
+                label: 'Zagubiony list [E]',
+                item: {
+                    id: 'mlyn_secret_letter',
+                    name: 'List z Młyna',
+                    icon: '📜',
+                    type: 'document',
+                    weight: 0.1,
+                    stats: 'Zmęczony, zmięty list znaleziony w piwnicy',
+                    content: "<b>Do Arkelasa</b><br><br>Jeśli czytasz ten list, to znaczy, że ktoś już odnalazł to miejsce. Młyn nie był martwy przez przypadek. W podziemiach kryje się nie tylko zboże, ale i tajemne zapiski. Po południu przychodzą zbiry, bo ktoś z miasta lub z zamku chce zakryć ślady. Nie ufaj nikomu, kto mówi, że to tylko przypadek. Jeśli wyjdziesz żywy, zanieś ten list do karczmy albo do Nicolasa. <br><br>— Zapiski z młyna",
+                    monologueId: 'read_mill_list',
+                    questTrigger: { questId: 'Q1', step: 7 }
+                }
+            },
             onEnter() {
                 const z1 = new Enemy({ id: 'z1', type: 'z1', x: 500, y: 350 });
                 Object.assign(z1, {
@@ -211,6 +405,43 @@ const gameMap = {
 
     getCurrentData() { 
         return this.locations[this.currentLocation] || this.locations['kruczy_dol']; 
+    },
+
+    getLocationBannerArt(locationName) {
+        const artMap = {
+            'Kruczy Dół': 'media/banners/kruczy-dol.png',
+            'Ruiny': 'media/banners/ruiny.png',
+            'Chatka Zielarza': 'media/banners/chatka-zielarza.png',
+            'Kuźnia': 'media/banners/kuznia.png',
+            'Karczma Pod Krukiem': 'media/banners/karczma.png',
+            'Młyn': 'media/banners/mlyn.png'
+        };
+        return artMap[locationName] || null;
+    },
+
+    setLocation(locationId, options = {}) {
+        if (!this.locations[locationId]) return false;
+        this.currentLocation = locationId;
+        if (options.showBanner && typeof showLocationBanner === 'function') {
+            const label = this.getCurrentData()?.name || locationId;
+            this.lastAreaBanner = label;
+            showLocationBanner(label, { art: this.getLocationBannerArt(label) });
+        }
+        return true;
+    },
+
+    updateAreaBanner(player) {
+        if (!player) return;
+
+        let bannerText = this.getCurrentData()?.name || this.currentLocation;
+        if (this.currentLocation === 'kruczy_dol' && (this.isInRuins(player.x, player.y) || this.isNearRuins(player.x, player.y))) {
+            bannerText = 'Ruiny';
+        }
+
+        if (this.lastAreaBanner !== bannerText && typeof showLocationBanner === 'function') {
+            this.lastAreaBanner = bannerText;
+            showLocationBanner(bannerText, { art: this.getLocationBannerArt(bannerText) });
+        }
     },
 
     spawnVillageNPCs() {
@@ -286,74 +517,74 @@ const gameMap = {
     draw(ctx) {
         const loc = this.getCurrentData();
 
-        // 1. Podstawowa ziemia (Trawa wioski)
-        ctx.fillStyle = loc.bgColor;
-        ctx.fillRect(0, 0, loc.width, loc.height);
+        const drawTerrain = () => {
+            ctx.fillStyle = loc.bgColor;
+            ctx.fillRect(0, 0, loc.width, loc.height);
 
-        if (this.currentLocation === 'kruczy_dol') {
-            // 2. Organiczny, nieregularny początek lasu od X = 2300
-            ctx.fillStyle = '#111e11';
-            ctx.beginPath();
-            ctx.moveTo(2300, 0);
-            
-            for (let y = 0; y <= loc.height; y += 80) {
-                const waveX = 2300 + Math.sin(y * 0.008) * 110 + (y % 160 === 0 ? 40 : -40);
-                ctx.lineTo(waveX, y);
+            if (this.currentLocation === 'kruczy_dol') {
+                ctx.fillStyle = '#111e11';
+                ctx.beginPath();
+                ctx.moveTo(2300, 0);
+
+                for (let y = 0; y <= loc.height; y += 80) {
+                    const waveX = 2300 + Math.sin(y * 0.008) * 110 + (y % 160 === 0 ? 40 : -40);
+                    ctx.lineTo(waveX, y);
+                }
+                ctx.lineTo(loc.width, loc.height);
+                ctx.lineTo(loc.width, 0);
+                ctx.closePath();
+                ctx.fill();
+
+                if (loc.clearings) {
+                    loc.clearings.forEach(c => {
+                        if (!camera.isVisible(c.x - c.radius, c.y - c.radius, c.radius * 2, c.radius * 2)) return;
+                        const grad = ctx.createRadialGradient(c.x, c.y, 20, c.x, c.y, c.radius);
+                        grad.addColorStop(0, '#1d331d');
+                        grad.addColorStop(1, '#111e11');
+                        ctx.fillStyle = grad;
+                        ctx.beginPath();
+                        ctx.arc(c.x, c.y, c.radius, 0, Math.PI * 2);
+                        ctx.fill();
+                    });
+                }
+
+                if (camera.isVisible(0, 500, 2300, 100)) {
+                    ctx.fillStyle = CONFIG.COLOR_ROAD;
+                    ctx.fillRect(0, 500, 2300, 100);
+                }
+                if (camera.isVisible(800, 580, 60, 200)) {
+                    ctx.fillStyle = CONFIG.COLOR_ROAD;
+                    ctx.fillRect(800, 580, 60, 200);
+                }
+                if (camera.isVisible(1930, 580, 60, 200)) {
+                    ctx.fillStyle = CONFIG.COLOR_ROAD;
+                    ctx.fillRect(1930, 580, 60, 200);
+                }
             }
-            ctx.lineTo(loc.width, loc.height);
-            ctx.lineTo(loc.width, 0);
-            ctx.closePath();
-            ctx.fill();
+        };
 
-            // 3. Rysowanie polan (jaśniejszych okręgów z miękkim przejściem)
-            if (loc.clearings) {
-                loc.clearings.forEach(c => {
-                    if (!camera.isVisible(c.x - c.radius, c.y - c.radius, c.radius * 2, c.radius * 2)) return;
-                    const grad = ctx.createRadialGradient(c.x, c.y, 20, c.x, c.y, c.radius);
-                    grad.addColorStop(0, '#1d331d');
-                    grad.addColorStop(1, '#111e11');
-                    ctx.fillStyle = grad;
-                    ctx.beginPath();
-                    ctx.arc(c.x, c.y, c.radius, 0, Math.PI * 2);
-                    ctx.fill();
-                });
-            }
+        const drawStructures = () => {
+            loc.buildings.forEach(b => {
+                if (!camera.isVisible(b.x, b.y, b.width, b.height)) return;
 
-            // Drogi w wiosce
-            if (camera.isVisible(0, 500, 2300, 100)) {
-                ctx.fillStyle = CONFIG.COLOR_ROAD;
-                ctx.fillRect(0, 500, 2300, 100);
-            }
-            if (camera.isVisible(800, 580, 60, 200)) {
-                ctx.fillStyle = CONFIG.COLOR_ROAD;
-                ctx.fillRect(800, 580, 60, 200);
-            }
-            if (camera.isVisible(1930, 580, 60, 200)) {
-                ctx.fillStyle = CONFIG.COLOR_ROAD;
-                ctx.fillRect(1930, 580, 60, 200);
-            }
-        }
+                ctx.fillStyle = b.color;
+                ctx.fillRect(b.x, b.y, b.width, b.height);
+                ctx.strokeStyle = '#1a1008';
+                ctx.lineWidth = 3;
+                ctx.strokeRect(b.x, b.y, b.width, b.height);
 
-        // 4. Budynki
-        loc.buildings.forEach(b => {
-            if (!camera.isVisible(b.x, b.y, b.width, b.height)) return;
+                if (b.name) {
+                    ctx.fillStyle = '#e0e0e0';
+                    ctx.font = '12px sans-serif';
+                    ctx.fillText(b.name, b.x + 10, b.y - 8);
+                }
+            });
+        };
 
-            ctx.fillStyle = b.color;
-            ctx.fillRect(b.x, b.y, b.width, b.height);
-            ctx.strokeStyle = '#1a1008';
-            ctx.lineWidth = 3;
-            ctx.strokeRect(b.x, b.y, b.width, b.height);
+        const drawHerbs = () => {
+            this.nearHerb = null;
+            if (!loc.herbs) return;
 
-            if (b.name) {
-                ctx.fillStyle = '#e0e0e0';
-                ctx.font = '12px sans-serif';
-                ctx.fillText(b.name, b.x + 10, b.y - 8);
-            }
-        });
-
-        // 5. Renderowanie Ziół (kępki)
-        this.nearHerb = null;
-        if (loc.herbs) {
             loc.herbs.forEach(herb => {
                 if (herb.picked) return;
                 if (!camera.isVisible(herb.x - 10, herb.y - 10, 20, 20)) return;
@@ -371,26 +602,52 @@ const gameMap = {
                     ctx.fillText('Zabierz [E]', herb.x - 25, herb.y - 12);
                 }
             });
-        }
+        };
 
-        // 6. Łóżko
-        this.nearBed = false;
-        if (this.currentLocation === 'pokoj_gracza') {
+        const drawBed = () => {
+            this.nearBed = false;
+            if (this.currentLocation !== 'pokoj_gracza') return;
+
             const bed = loc.buildings.find(b => b.id === 'bed');
-            if (bed) {
-                const dist = Math.hypot(player.x - (bed.x + bed.width / 2), player.y - (bed.y + bed.height / 2));
-                if (dist < 80) {
-                    this.nearBed = true;
-                    ctx.fillStyle = '#f1c40f';
-                    ctx.font = 'bold 13px sans-serif';
-                    ctx.fillText('Połóż się spać [E]', bed.x, bed.y - 12);
-                }
-            }
-        }
+            if (!bed) return;
 
-        // 7. Renderowanie NPC
-        this.nearNPC = null;
-        if (loc.npcs) {
+            const dist = Math.hypot(player.x - (bed.x + bed.width / 2), player.y - (bed.y + bed.height / 2));
+            if (dist < 80) {
+                this.nearBed = true;
+                ctx.fillStyle = '#f1c40f';
+                ctx.font = 'bold 13px sans-serif';
+                ctx.fillText('Połóż się spać [E]', bed.x, bed.y - 12);
+            }
+        };
+
+        const drawChests = () => {
+            if (!loc.chests) return;
+            loc.chests.forEach(chest => {
+                if (chest.opened) return;
+                const chestX = chest.x + chest.width / 2;
+                const chestY = chest.y + chest.height / 2;
+                if (!camera.isVisible(chest.x, chest.y, chest.width, chest.height)) return;
+
+                ctx.fillStyle = '#5b3a1d';
+                ctx.fillRect(chest.x, chest.y, chest.width, chest.height);
+                ctx.fillStyle = '#8b5e34';
+                ctx.fillRect(chest.x + 6, chest.y + 6, chest.width - 12, chest.height - 12);
+                ctx.fillStyle = '#26170d';
+                ctx.fillRect(chest.x + chest.width / 2 - 5, chest.y + 6, 10, 12);
+
+                const dist = Math.hypot(player.x - chestX, player.y - chestY);
+                if (dist < 55) {
+                    ctx.fillStyle = '#f1c40f';
+                    ctx.font = 'bold 12px sans-serif';
+                    ctx.fillText(chest.label || 'Skrzynia [E]', chest.x - 18, chest.y - 12);
+                }
+            });
+        };
+
+        const drawNPCs = () => {
+            this.nearNPC = null;
+            if (!loc.npcs) return;
+
             loc.npcs.forEach(npc => {
                 if (!camera.isVisible(npc.x - npc.radius, npc.y - npc.radius, npc.radius * 2, npc.radius * 2)) return;
 
@@ -416,53 +673,70 @@ const gameMap = {
                     ctx.fillText('Rozmawiaj [E]', npc.x - 28, npc.y + 28);
                 }
             });
-        }
+        };
 
-        // 8. Drzwi i przejścia
-        this.nearDoor = null;
-        loc.doors.forEach(d => {
-            if (!camera.isVisible(d.x, d.y, d.width, d.height)) return;
+        const drawDoors = () => {
+            this.nearDoor = null;
+            if (!loc.doors) return;
 
-            if (d.isStair) {
-                ctx.fillStyle = '#221208';
-                ctx.fillRect(d.x, d.y, d.width, d.height);
+            loc.doors.forEach(d => {
+                if (!camera.isVisible(d.x, d.y, d.width, d.height)) return;
 
-                const stepCount = 6;
-                const stepHeight = d.height / stepCount;
-                for (let i = 0; i < stepCount; i++) {
-                    ctx.fillStyle = i % 2 === 0 ? '#5c3517' : '#472811';
-                    ctx.fillRect(d.x + 3, d.y + (i * stepHeight), d.width - 6, stepHeight - 1);
-                }
+                if (d.isStair) {
+                    ctx.fillStyle = '#221208';
+                    ctx.fillRect(d.x, d.y, d.width, d.height);
 
-                ctx.fillStyle = '#1a0d05';
-                ctx.fillRect(d.x, d.y, 3, d.height);
-                ctx.fillRect(d.x + d.width - 3, d.y, 3, d.height);
-            } else {
-                ctx.fillStyle = '#120904';
-                ctx.fillRect(d.x - 2, d.y - 2, d.width + 4, d.height + 4);
+                    const stepCount = 6;
+                    const stepHeight = d.height / stepCount;
+                    for (let i = 0; i < stepCount; i++) {
+                        ctx.fillStyle = i % 2 === 0 ? '#5c3517' : '#472811';
+                        ctx.fillRect(d.x + 3, d.y + (i * stepHeight), d.width - 6, stepHeight - 1);
+                    }
 
-                ctx.fillStyle = '#7a4a21';
-                ctx.fillRect(d.x, d.y, d.width, d.height);
+                    ctx.fillStyle = '#1a0d05';
+                    ctx.fillRect(d.x, d.y, 3, d.height);
+                    ctx.fillRect(d.x + d.width - 3, d.y, 3, d.height);
+                } else {
+                    ctx.fillStyle = '#120904';
+                    ctx.fillRect(d.x - 2, d.y - 2, d.width + 4, d.height + 4);
 
-                ctx.fillStyle = '#f1c40f';
-                ctx.beginPath();
-                ctx.arc(d.x + d.width - 6, d.y + d.height / 2, 2.5, 0, Math.PI * 2);
-                ctx.fill();
-            }
+                    ctx.fillStyle = '#7a4a21';
+                    ctx.fillRect(d.x, d.y, d.width, d.height);
 
-            const dx = player.x - (d.x + d.width / 2);
-            const dy = player.y - (d.y + d.height / 2);
-            if (Math.hypot(dx, dy) < 45) {
-                this.nearDoor = d;
-                if (d.label) {
                     ctx.fillStyle = '#f1c40f';
-                    ctx.font = 'bold 12px sans-serif';
-                    ctx.fillText(d.label, d.x - 15, d.y - 8);
+                    ctx.beginPath();
+                    ctx.arc(d.x + d.width - 6, d.y + d.height / 2, 2.5, 0, Math.PI * 2);
+                    ctx.fill();
                 }
-            }
-        });
 
-        // 9. Efekt klimatycznego leśnego półcienia (nakładany gdy gracz jest w lesie)
+                const dx = player.x - (d.x + d.width / 2);
+                const dy = player.y - (d.y + d.height / 2);
+                if (Math.hypot(dx, dy) < 45) {
+                    this.nearDoor = d;
+                    if (d.label) {
+                        ctx.fillStyle = '#f1c40f';
+                        ctx.font = 'bold 12px sans-serif';
+                        ctx.fillText(d.label, d.x - 15, d.y - 8);
+                    }
+                }
+            });
+        };
+
+        const renderOrder = [
+            drawTerrain,
+            () => this.renderLayerList(ctx, this.getRenderLayer(loc, 'backdrop'), (item) => item.draw && item.draw(ctx, this, player)),
+            drawStructures,
+            () => this.renderLayerList(ctx, this.getRenderLayer(loc, 'flora'), (item) => item.draw && item.draw(ctx, this, player)),
+            drawHerbs,
+            drawBed,
+            drawChests,
+            drawNPCs,
+            drawDoors,
+            () => this.renderLayerList(ctx, this.getRenderLayer(loc, 'front'), (item) => item.draw && item.draw(ctx, this, player)),
+        ];
+
+        renderOrder.forEach(layerDraw => layerDraw());
+
         if (this.currentLocation === 'kruczy_dol' && player.x > 2300) {
             ctx.fillStyle = 'rgba(5, 15, 5, 0.22)';
             ctx.fillRect(camera.x, camera.y, camera.viewportWidth, camera.viewportHeight);
@@ -610,10 +884,8 @@ const gameMap = {
     },
 
     tryInteract() {
-    // 1. Zbieramy wszystkie dostępne w zasięgu obiekty do jednej tablicy
     const candidates = [];
 
-    // Zioła
     if (this.locations[this.currentLocation].herbs) {
         this.locations[this.currentLocation].herbs.forEach(herb => {
             if (!herb.picked) {
@@ -625,7 +897,6 @@ const gameMap = {
         });
     }
 
-    // NPC
     if (this.locations[this.currentLocation].npcs) {
         this.locations[this.currentLocation].npcs.forEach(npc => {
             const dist = Math.hypot(player.x - npc.x, player.y - npc.y);
@@ -636,8 +907,23 @@ const gameMap = {
         });
     }
 
-    // Drzwi
     const loc = this.getCurrentData();
+    if (loc.chests) {
+        loc.chests.forEach(chest => {
+            if (chest.opened) return;
+            const chestCenterX = chest.x + chest.width / 2;
+            const chestCenterY = chest.y + chest.height / 2;
+            const dist = Math.hypot(player.x - chestCenterX, player.y - chestCenterY);
+            if (dist < 55) candidates.push({ type: 'chest', dist, obj: chest });
+        });
+    }
+    if (loc.paperLoot && !loc.paperLoot.collected) {
+        const noteDist = Math.hypot(player.x - loc.paperLoot.x, player.y - loc.paperLoot.y);
+        if (noteDist < 36) {
+            candidates.push({ type: 'paper', dist: noteDist, obj: loc.paperLoot });
+        }
+    }
+
     loc.doors.forEach(d => {
         const doorCenterX = d.x + d.width / 2;
         const doorCenterY = d.y + d.height / 2;
@@ -647,7 +933,6 @@ const gameMap = {
         }
     });
 
-    // Łóżko
     if (this.currentLocation === 'pokoj_gracza') {
         const bed = loc.buildings.find(b => b.id === 'bed');
         if (bed) {
@@ -658,7 +943,6 @@ const gameMap = {
         }
     }
 
-    // Koń (Gdy stoi blisko na zewnątrz i gracz nie jedzie)
     if (this.currentLocation === 'kruczy_dol' && !player.isMounted && player.horse) {
         const dist = Math.hypot(player.x - player.horse.x, player.y - player.horse.y);
         if (dist < 60) {
@@ -666,14 +950,11 @@ const gameMap = {
         }
     }
 
-    // Jeśli nic nie ma w zasięgu — przerywamy
     if (candidates.length === 0) return false;
 
-    // 2. Sortujemy kandydatów od NAJBLIŻSZEGO do najdalszego
     candidates.sort((a, b) => a.dist - b.dist);
-    const closest = candidates[0]; // Wybieramy obiekt o najmniejszym dystansie
+    const closest = candidates[0];
 
-    // 3. Wykonujemy akcję na najbliższym obiekcie
     switch (closest.type) {
         case 'herb':
             const itemData = ITEMS_DB[closest.obj.type];
@@ -683,6 +964,35 @@ const gameMap = {
             }
             return false;
 
+        case 'paper': {
+            const paper = closest.obj;
+            const item = paper.item || {
+                id: 'mlyn_secret_letter',
+                name: 'List z Młyna',
+                icon: '📜',
+                type: 'document',
+                content: 'Zagubiony list z młyna.'
+            };
+            if (player.addItem(item.id, item.name, item.icon, item.type, item.weight || 0.1, item.stats || '', 1)) {
+                paper.collected = true;
+                questManager.completeObjective('Q1', 6);
+                documentViewer.open(item.name, item.content, item.monologueId || null, item.questTrigger || { questId: 'Q1', step: 7 });
+                showToast('Podnosisz zmięty list z młyna!');
+                return true;
+            }
+            return false;
+        }
+
+        case 'chest': {
+            const chest = closest.obj;
+            if (!chest) return false;
+            chest.opened = true;
+            if (typeof chestSystem !== 'undefined') {
+                chestSystem.open(chest);
+            }
+            return true;
+        }
+
         case 'npc':
             dialogueManager.start(closest.obj.dialogueId);
             return true;
@@ -690,7 +1000,7 @@ const gameMap = {
         case 'horse':
             player.isMounted = true;
             player.horse.isMounted = true;
-            showToast("Wsiadłeś na konia!");
+            showToast('Wsiadłeś na konia!');
             return true;
 
         case 'bed':
@@ -701,12 +1011,15 @@ const gameMap = {
             const door = closest.obj;
             if (door.keyRequired) {
                 if (player.hasItem(door.keyRequired)) {
-                    this.currentLocation = door.targetLocation;
+                    this.setLocation(door.targetLocation, { showBanner: true });
                     player.x = door.spawnX;
                     player.y = door.spawnY;
-                    showToast("Otworzyłeś drzwi!");
+                    if (door.targetLocation === 'mlyn_wnetrze' && typeof questManager !== 'undefined') {
+                        questManager.completeObjective('Q1', 4);
+                    }
+                    showToast('Otworzyłeś drzwi!');
                 } else {
-                    showToast(door.message || "Zamknięte!");
+                    showToast(door.message || 'Zamknięte!');
                 }
                 return true;
             }
@@ -717,11 +1030,14 @@ const gameMap = {
                     player.horse.x = player.x;
                     player.horse.y = player.y;
                 }
-                this.currentLocation = door.targetLocation;
+                this.setLocation(door.targetLocation, { showBanner: true });
                 player.x = door.spawnX;
                 player.y = door.spawnY;
 
-                // Odpalenie logicznego hooka nowej lokacji (np. piwnicy)
+                if (door.targetLocation === 'mlyn_wnetrze' && typeof questManager !== 'undefined') {
+                    questManager.completeObjective('Q1', 4);
+                }
+
                 const targetData = this.getCurrentData();
                 if (typeof targetData.onEnter === 'function') {
                     targetData.onEnter();

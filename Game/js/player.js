@@ -31,7 +31,7 @@ const player = {
         {
             id: 'potion_health',
             name: 'Mikstura Zdrowia',
-            icon: '🍷',
+            icon:'<img src="img/health_potion.png" alt="Mikstura Życia">',
             type: 'consumable',
             weight: 0.3,
             count: 3,
@@ -203,7 +203,11 @@ const player = {
     unlockRecipe(recipeId) {
         if (!this.unlockedRecipes.includes(recipeId)) {
             this.unlockedRecipes.push(recipeId);
-            showToast(`📜 Odblokowano nową recepturę!`);
+            this.lastUnlockedRecipe = recipeId;
+            const recipeLabel = (recipeId || '').startsWith('potion') || (recipeId || '').startsWith('antitoxin')
+                ? 'alchemiczną'
+                : 'rzemieślniczą';
+            showToast(`✨ Odkryłem nową recepturę ${recipeLabel}!`);
         } else {
             showToast(`Znasz już tę recepturę.`);
         }

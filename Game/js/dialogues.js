@@ -74,7 +74,57 @@ const dialogueManager = {
                 }
             }
         },
+        zielarz_intro: {
+            speaker: "Mira Zielarka",
+            nodes: {
+                start: {
+                    text: "Witaj, przybyszu. Mogę pomóc przygotować tylko mikstury i wywary z ziół.",
+                    choices: [
+                        { text: "Pokaż mi towary zielarskie 🌿", next: "exit", type: "trade", onSelect: () => shopSystem.openShop('zielarz_shop') },
+                        { text: "Pokaż mi receptury i mikstury 🧪", next: "exit", type: "craft", onSelect: () => openHerbalistCrafting() },
+                        { text: "Dzięki, wracam do lasu.", next: "exit" }
+                    ]
+                }
+            }
+        },
+        kowal_intro: {
+            speaker: "Tomasz Kowal",
+            nodes: {
+                start: {
+                    text: "Żelazo nie znosi pośpiechu. W tej kuźni robimy wyłącznie broń i ostrza.",
+                    choices: [
+                        { text: "Pokaż mi towary kuźni ⚒️", next: "exit", type: "trade", onSelect: () => shopSystem.openShop('kowal_shop') },
+                        { text: "Pokaż mi broń i receptury ⚒️", next: "exit", type: "craft", onSelect: () => openSmithCrafting() },
+                        { text: "Dobrze, zobaczę się później.", next: "exit" }
+                    ]
+                }
+            }
+        }
     },
+    getRecipeNoticeChoice() {
+        if (!player || !player.lastUnlockedRecipe) return null;
+
+        const recipeId = player.lastUnlockedRecipe;
+        const recipeItem = Object.values(ITEMS_DB || {}).find(item => item && item.unlocksRecipe === recipeId);
+        const label = recipeId.startsWith('potion') || recipeId.startsWith('antitoxin') ? 'alchemiczną' : 'rzemieślniczą';
+        const choice = {
+            text: `✨ Odkryłem nową recepturę ${label}: ${recipeItem ? recipeItem.name : recipeId}`,
+            type: 'special',
+            color: '#ffd76a',
+            next: 'exit',
+            onSelect: () => {
+                if (this.currentTree && this.currentTree.speaker === 'Mira Zielarka') {
+                    openHerbalistCrafting();
+                }
+                if (this.currentTree && this.currentTree.speaker === 'Tomasz Kowal') {
+                    openSmithCrafting();
+                }
+                player.lastUnlockedRecipe = null;
+            }
+        };
+        return choice;
+    },
+
     start(treeId) {
         if (!this.trees[treeId]) return;
         this.isActive = true;
@@ -98,6 +148,21 @@ const dialogueManager = {
         document.getElementById('dialogue-text').innerText = textContent;
         const optionsDiv = document.getElementById('dialogue-options');
         optionsDiv.innerHTML = '';
+
+        const recipeNotice = this.getRecipeNoticeChoice();
+        if (recipeNotice) {
+            const noticeBtn = document.createElement('button');
+            noticeBtn.className = 'dialogue-btn special';
+            noticeBtn.style.color = recipeNotice.color;
+            noticeBtn.style.borderColor = recipeNotice.color;
+            noticeBtn.style.background = 'rgba(255, 215, 106, 0.1)';
+            noticeBtn.innerText = recipeNotice.text;
+            noticeBtn.onclick = () => {
+                if (recipeNotice.onSelect) recipeNotice.onSelect();
+                this.showNode(recipeNotice.next);
+            };
+            optionsDiv.appendChild(noticeBtn);
+        }
 
         node.choices.forEach(choice => {
             if (choice.condition && !choice.condition()) return;

@@ -125,6 +125,22 @@ const ENEMY_CONFIG = {
         weaponDropChance: 1,      // 20% szans na szpadę
         armorDropChance: 0
     },
+    ruin_guardian: {
+        name: 'Widmo Rycerza',
+        maxHp: 3100,
+        armor: 60,
+        speed: 78,
+        damage: 30,
+        radius: 20,
+        color: '#8f9dff',
+        attackRange: 82,
+        attackCooldown: 1.1,
+        rewardGold: 120,
+        weaponId: 'miecz_rozpadlina',
+        armorDropChance: 0,
+        weaponDropChance: 1.0,
+        isBoss: true
+    },
     z2: {
         name: 'Zbir',
         maxHp: 1150,
@@ -201,20 +217,120 @@ const ITEMS_DB = {
     jagody: { name: 'Leśne Jagody', icon: '🫐', type: 'misc', weight: 0.1, stats: 'Leczy 10 HP' },
     surowe_mieso: { name: 'Surowe Mięso', icon: '🥩', type: 'misc', weight: 1.0, stats: 'Jedzenie' },
     ziolo_czerwone: { name: 'Czerwone Zioło', icon: '🌿', type: 'misc', weight: 0.1, value: 4, stats: 'Składnik alchemiczny' },
+    herb_blue: { id: 'herb_blue', name: 'Niebieskie Zioło', icon: '🍃', type: 'misc', weight: 0.2, value: 6, stats: 'Składnik alchemiczny' },
     woda_butelka: { name: 'Woda w Butelce', icon: '🧴', type: 'misc', weight: 0.5, value: 2, stats: 'Czysta woda' },
     korzen_zycia: { name: 'Korzeń Życia', icon: '🌱', type: 'misc', weight: 0.2, value: 8, stats: 'Rzadki korzeń' },
-    potion_hp_small: { name: 'Mała Mikstura Zdrowia', icon: '🍷', type: 'consumable', weight: 0.4, value: 15, stats: '+30 HP' },
+    moon_lichen: { id: 'moon_lichen', name: 'Porost Księżycowy', icon: '🌙', type: 'material', weight: 0.2, value: 8, stats: 'Lśniący porost z podziemnych jaskiń' },
+    crimson_pollen: { id: 'crimson_pollen', name: 'Szkarłatny Pyłek', icon: '✨', type: 'material', weight: 0.1, value: 7, stats: 'Pyłek z rzadkiej rośliny' },
+    ashwood_bark: { id: 'ashwood_bark', name: 'Kora Jesionu', icon: '🌳', type: 'material', weight: 0.4, value: 6, stats: 'Wytrzymała kora do rzemiosła' },
+    iron_sand: { id: 'iron_sand', name: 'Piasek Żelazny', icon: '🪨', type: 'material', weight: 0.9, value: 9, stats: 'Drobny żelazny piasek' },
+    ember_amber: { id: 'ember_amber', name: 'Żarliwy Bursztyn', icon: '🟠', type: 'material', weight: 0.3, value: 11, stats: 'Płonąca żywica o nieprzewidywalnym smaku' },
+    ruined_iron: { id: 'ruined_iron', name: 'Zniszczone Żelazo', icon: '🧱', type: 'material', weight: 1.0, value: 12, stats: 'Wyszczerbione żelazo z dawnej fortyfikacji' },
+    ancient_ash: { id: 'ancient_ash', name: 'Pradawne Drewno', icon: '🪵', type: 'material', weight: 0.8, value: 13, stats: 'Twarde drewno z zaginionej ruinowej bramy' },
+    storm_glass: { id: 'storm_glass', name: 'Burzowe Szkło', icon: '🔷', type: 'material', weight: 0.5, value: 16, stats: 'Przejrzyste szkło z piorunującej wysepki' },
+    sun_amber: { id: 'sun_amber', name: 'Słoneczny Bursztyn', icon: '🌞', type: 'material', weight: 0.3, value: 14, stats: 'Lśniąca żywica z niszczących się ruin' },
+    runic_clay: { id: 'runic_clay', name: 'Runiczna Glina', icon: '🟫', type: 'material', weight: 0.7, value: 11, stats: 'Mocno wypalona glina z dawnych znaków' },
+    ruin_steel: { id: 'ruin_steel', name: 'Ruina Stal', icon: '🪓', type: 'material', weight: 1.4, value: 18, stats: 'Twarda stal z dawnych murów' },
+    moonsteel_scrap: { id: 'moonsteel_scrap', name: 'Odcinek Księżycowej Stali', icon: '🌙', type: 'material', weight: 1.1, value: 20, stats: 'Przebijany blask księżyca i starej obróbki' },
+    potion_hp_small: { name: 'Mała Mikstura Zdrowia', icon:'<img src="img/health_potion.png" alt="Mikstura Życia">', type: 'consumable', weight: 0.4, value: 15, stats: '+30 HP' },
     // === MIKSTURY ===
     potion_health: {
         id: 'potion_health',
         name: 'Mikstura Zdrowia',
-        icon: '🍷',
+        icon:'<img src="img/health_potion.png" alt="Mikstura Życia">',
         type: 'consumable',
         weight: 0.3,
         stats: 'Przywraca 45 HP w czasie 15s',
         effects: [
             { id: 'heal_potion', name: 'Regeneracja', icon: '💚', type: 'heal', value: 45, duration: 15 }
         ]
+    },
+    herb_green: {
+        id: 'herb_green',
+        name: 'Zielone Zioło',
+        icon: '🌱',
+        type: 'misc',
+        weight: 0.2,
+        stats: 'Składnik alchemiczny'
+    },
+    iron_ore: {
+        id: 'iron_ore',
+        name: 'Ruda Żelaza',
+        icon: '⛏️',
+        type: 'material',
+        weight: 1.5,
+        stats: 'Surowiec do wytopu i kuźni'
+    },
+    iron_ingot: {
+        id: 'iron_ingot',
+        name: 'Sztabka Żelaza',
+        icon: '⛓️',
+        type: 'material',
+        weight: 1.2,
+        stats: 'Podstawowy materiał kowalski'
+    },
+    wood_handle: {
+        id: 'wood_handle',
+        name: 'Drewniana Rękojeść',
+        icon: '🪵',
+        type: 'material',
+        weight: 0.4,
+        stats: 'Rękojeść do noży i mieczy'
+    },
+    leather_strips: {
+        id: 'leather_strips',
+        name: 'Skórzane Pasma',
+        icon: '🧵',
+        type: 'material',
+        weight: 0.3,
+        stats: 'Materiały do obramowania zbroi'
+    },
+    iron_knife: {
+        id: 'iron_knife',
+        name: 'Żelazny Nóż',
+        icon: '🗡️',
+        type: 'weapon',
+        weight: 1.8,
+        damage: 18,
+        stats: 'Obrażenia: 18'
+    },
+    iron_sword: {
+        id: 'iron_sword',
+        name: 'Żelazny Miecz',
+        icon: '⚔️',
+        type: 'weapon',
+        weight: 3.4,
+        damage: 32,
+        stats: 'Obrażenia: 32'
+    },
+    iron_helmet: {
+        id: 'iron_helmet',
+        name: 'Żelazny Hełm',
+        icon: '⛑️',
+        type: 'head',
+        weight: 2.2,
+        armor: 4,
+        stats: 'Pancerz: +4'
+    },
+    ruinbreaker_blade: {
+        id: 'ruinbreaker_blade',
+        name: 'Roztrzaskiwacz Ruin',
+        icon: '🗡️',
+        type: 'weapon',
+        weight: 4.1,
+        damage: 82,
+        critChance: 0.12,
+        stats: 'Obrażenia: 82'
+    },
+    moonfang_axe: {
+        id: 'moonfang_axe',
+        name: 'Topór Księżycowego Kła',
+        icon: '🪓',
+        type: 'weapon',
+        weight: 4.6,
+        damage: 76,
+        critChance: 0.1,
+        stats: 'Obrażenia: 76'
     },
     potion_strength: {
         id: 'potion_strength',
@@ -238,6 +354,33 @@ const ITEMS_DB = {
             { id: 'buff_armor', name: 'Żelazna Skóra', icon: '🛡️', type: 'stat_buff', stat: 'armor', value: 25, duration: 45 }
         ]
     },
+    potion_guard: {
+        id: 'potion_guard',
+        name: 'Mikstura Ochronna',
+        icon: '🛡️',
+        type: 'consumable',
+        weight: 0.4,
+        stats: '+18 pancerza na 30s',
+        effects: [
+            { id: 'buff_guard', name: 'Tarcza Roślin', icon: '🛡️', type: 'stat_buff', stat: 'armor', value: 18, duration: 30 }
+        ]
+    },
+    potion_swiftness: {
+        id: 'potion_swiftness',
+        name: 'Mikstura Szybkości',
+        icon: '💨',
+        type: 'consumable',
+        weight: 0.35,
+        stats: '+20% szybkości na 20s',
+        effects: [
+            { id: 'buff_speed', name: 'Błyskawiczny Krok', icon: '💨', type: 'stat_buff', stat: 'speedMultiplier', value: 0.20, duration: 20 }
+        ]
+    },
+    ruin_steel: { id: 'ruin_steel', name: 'Ruina Stal', icon: '🪓', type: 'material', weight: 1.4, value: 18, stats: 'Twarda stal z dawnych murów' },
+    moonsteel_scrap: { id: 'moonsteel_scrap', name: 'Odcinek Księżycowej Stali', icon: '🌙', type: 'material', weight: 1.1, value: 20, stats: 'Przebijany blask księżyca i starej obróbki' },
+    sun_amber: { id: 'sun_amber', name: 'Słoneczny Bursztyn', icon: '🌞', type: 'material', weight: 0.3, value: 14, stats: 'Lśniąca żywica z niszczących się ruin' },
+    runic_clay: { id: 'runic_clay', name: 'Runiczna Glina', icon: '🟫', type: 'material', weight: 0.7, value: 11, stats: 'Mocno wypalona glina z dawnych znaków' },
+    ancient_ash: { id: 'ancient_ash', name: 'Pradawne Drewno', icon: '🪵', type: 'material', weight: 0.8, value: 13, stats: 'Twarde drewno z zaginionej ruinowej bramy' },
 
     // === ZWOJE RECEPTUR (PRZEDMIOTY) ===
     recipe_potion_strength: {
@@ -261,6 +404,98 @@ const ITEMS_DB = {
         monologueId: 'read_recipe_fort',
         unlocksRecipe: 'potion_fortification',
         content: '<b>Receptura: Mikstura Wzmocnienia</b><br><br>Sproszkowana ruda w połączeniu z niebieskim zielem utwardza skórę na ciosy.'
+    },
+    recipe_potion_guard: {
+        id: 'recipe_potion_guard',
+        name: 'Receptura: Mikstura Ochronna',
+        icon: '📜',
+        type: 'document',
+        weight: 0.1,
+        stats: 'Użyj, aby nauczyć się receptury',
+        monologueId: 'read_recipe_guard',
+        unlocksRecipe: 'potion_guard',
+        content: '<b>Receptura: Mikstura Ochronna</b><br><br>Porost księżycowy z pyłkiem szkarłatu i wodą z górskiego źródła tworzy tarczę z roślin.'
+    },
+    recipe_potion_swiftness: {
+        id: 'recipe_potion_swiftness',
+        name: 'Receptura: Mikstura Szybkości',
+        icon: '📜',
+        type: 'document',
+        weight: 0.1,
+        stats: 'Użyj, aby nauczyć się receptury',
+        monologueId: 'read_recipe_swiftness',
+        unlocksRecipe: 'potion_swiftness',
+        content: '<b>Receptura: Mikstura Szybkości</b><br><br>Niebieskie ziele z korą jesionu daje ruchowi lekkość i prędkość.'
+    },
+    recipe_hunter_axe: {
+        id: 'recipe_hunter_axe',
+        name: 'Receptura: Topór Myśliwski',
+        icon: '📜',
+        type: 'document',
+        weight: 0.1,
+        stats: 'Użyj, aby nauczyć się receptury',
+        monologueId: 'read_recipe_axe',
+        unlocksRecipe: 'hunter_axe',
+        content: '<b>Receptura: Topór Myśliwski</b><br><br>Dwukrotnie przetopiona sztabka żelaza z korą jesionu i piaskiem żelaznym daje ostrze zdolne do szybkiego cięcia.'
+    },
+    recipe_steel_spear: {
+        id: 'recipe_steel_spear',
+        name: 'Receptura: Włócznia Żelazna',
+        icon: '📜',
+        type: 'document',
+        weight: 0.1,
+        stats: 'Użyj, aby nauczyć się receptury',
+        monologueId: 'read_recipe_spear',
+        unlocksRecipe: 'steel_spear',
+        content: '<b>Receptura: Włócznia Żelazna</b><br><br>Żarliwy bursztyn i drewniana rękojeść rozgrzeją ostrze, a żelazny rdzeń zachowa ostrą głownię.'
+    },
+    recipe_ruinbreaker_blade: {
+        id: 'recipe_ruinbreaker_blade',
+        name: 'Receptura: Roztrzaskiwacz Ruin',
+        icon: '📜',
+        type: 'document',
+        weight: 0.1,
+        stats: 'Użyj, aby nauczyć się receptury',
+        monologueId: 'read_recipe_ruinbreaker',
+        unlocksRecipe: 'ruinbreaker_blade',
+        content: '<b>Receptura: Roztrzaskiwacz Ruin</b><br><br>Połącz runiczną glinę, odłamki księżycowej stali i rozpalony bursztyn z ostrym rdzeniem żelaza. Gdy wszystko zwiąże się w ogniu, powstaje ostrze zdolne do kruszenia dawnych murów.'
+    },
+    recipe_moonfang_axe: {
+        id: 'recipe_moonfang_axe',
+        name: 'Receptura: Topór Księżycowego Kła',
+        icon: '📜',
+        type: 'document',
+        weight: 0.1,
+        stats: 'Użyj, aby nauczyć się receptury',
+        monologueId: 'read_recipe_moonfang',
+        unlocksRecipe: 'moonfang_axe',
+        content: '<b>Receptura: Topór Księżycowego Kła</b><br><br>Przerób żelazną rudę z runiczną gliną, a następnie zwiąż ją odłamkami księżycowej stali i niewielkim strumieniem bursztynu, by wykuć broń niosącą nocny rozłam.'
+    },
+    dlugi_miecz: {
+        id: 'dlugi_miecz',
+        name: 'Długi Miecz',
+        type: 'weapon',
+        icon: '🗡️',
+        damage: 120,
+        critChance: 0.08,
+        weight: 4.6,
+        value: 180,
+        footprint: { width: 1, height: 2 },
+        stats: 'Obrażenia: 120',
+        description: 'Długa, rozłożysta broń o dużej zasięgu i mocnym cięciu.'
+    },
+    miecz_rozpadlina: {
+        id: 'miecz_rozpadlina',
+        name: 'Miecz Rozpadlina',
+        type: 'weapon',
+        icon: '🗡️',
+        damage: 165,
+        critChance: 0.14,
+        weight: 5.2,
+        value: 320,
+        footprint: { width: 1, height: 2 },
+        stats: 'Obrażenia: 165',
+        description: 'Mocny miecz wydobyty z serca ruiny, który rozcina nawet starą żelazną zbroję.'
     },
     miecz_stalowy: {
         id: 'miecz_stalowy',
@@ -286,6 +521,19 @@ const ITEMS_DB = {
         stats: 'Obrażenia: 85',
         description: 'Masywna broń drugiego z opryszków.'
     },
+    miecz_rozpadlina: {
+        id: 'miecz_rozpadlina',
+        name: 'Miecz Rozpadlina',
+        type: 'weapon',
+        icon: '🗡️',
+        damage: 165,
+        critChance: 0.14,
+        weight: 5.2,
+        value: 320,
+        footprint: { width: 1, height: 2 },
+        stats: 'Obrażenia: 165',
+        description: 'Mocny miecz wydobyty z serca ruin, rozcinający starą stal i ciemność.'
+    },
 };
 
 const LOOT_TABLES = {
@@ -306,6 +554,14 @@ const LOOT_TABLES = {
     ],
     jelen: [
         { id: 'surowe_mieso', min: 2, max: 4, chance: 1.0 }
+    ],
+    ruin_guardian: [
+        { id: 'gold_coins', min: 35, max: 70, chance: 1.0 },
+        { id: 'moonsteel_scrap', min: 1, max: 2, chance: 0.9 },
+        { id: 'ruin_steel', min: 1, max: 3, chance: 0.85 },
+        { id: 'sun_amber', min: 1, max: 2, chance: 0.75 },
+        { id: 'runic_clay', min: 1, max: 2, chance: 0.8 },
+        { id: 'miecz_rozpadlina', min: 1, max: 1, chance: 0.2 }
     ]
 };
 
