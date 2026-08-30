@@ -173,8 +173,8 @@ function getInventoryCategoryConfigForItem(item) {
 const menuSystem = {
     isOpen: false,
     activeTab: 'quests',
-    inventoryCategory: 'alchemy',
-    inventorySubcategory: 'ingredients',
+    inventoryCategory: 'food',
+    inventorySubcategory: 'all',
     hoveredSlot: null,
     toggle(tabName) {
         if (this.isOpen && this.activeTab === tabName) {
@@ -269,25 +269,23 @@ const menuSystem = {
                 button.className = `inv-filter-btn ${this.inventoryCategory === key ? 'active' : ''}`;
                 button.title = key;
                 button.dataset.label = cfg.label || key;
-                button.innerHTML = renderInventoryTabIcon(cfg.icon, '📦', 22);
+                button.innerHTML = renderInventoryTabIcon(cfg.icon, '📦', 40);
                 button.onmouseenter = (e) => {
-                    const tooltip = document.getElementById('item-tooltip');
-                    if (tooltip) {
-                        tooltip.classList.remove('hidden');
-                        tooltip.innerHTML = `<div class="tooltip-header"><span class="tooltip-icon">${renderInventoryTabIcon(cfg.icon, '📦', 18)}</span><div><div class="tooltip-title">${cfg.label || key}</div><div class="tooltip-type">Zakładka ekwipunku</div></div></div>`;
-                        const rect = e.currentTarget.getBoundingClientRect();
-                        tooltip.style.left = `${rect.left + rect.width / 2}px`;
-                        tooltip.style.top = `${rect.top - 18}px`;
-                    }
+                    showTooltip({
+                        name: cfg.label || key,
+                        type: 'misc',
+                        icon: cfg.icon,
+                        weight: 0,
+                        value: 0,
+                        stats: 'Zakładka ekwipunku'
+                    }, e);
                 };
                 button.onmouseleave = () => {
-                    const tooltip = document.getElementById('item-tooltip');
-                    if (tooltip) tooltip.classList.add('hidden');
+                    showTooltip(null);
                 };
                 button.onclick = () => {
                     this.inventoryCategory = key;
-                    const firstSub = Object.keys(cfg.subcategories)[0];
-                    this.inventorySubcategory = firstSub;
+                    this.inventorySubcategory = 'all';
                     this.renderInventoryTab();
                 };
                 filterBar.appendChild(button);
@@ -310,7 +308,8 @@ const menuSystem = {
             .map((item, index) => ({ item, index }))
             .filter(({ item }) => {
                 const cfg = getInventoryCategoryConfigForItem(item);
-                return cfg.main === this.inventoryCategory && cfg.sub === this.inventorySubcategory;
+                if (cfg.main !== this.inventoryCategory) return false;
+                return this.inventorySubcategory === 'all' || cfg.sub === this.inventorySubcategory;
             });
 
         const totalSlots = Math.max(16, visibleItems.length);
@@ -1459,18 +1458,27 @@ function showTooltip(item, event) {
         misc: 'Różności'
     };
 
-    setItemIconElement(document.getElementById('tooltip-icon'), item.icon, '📦', 42);
-    document.getElementById('tooltip-name').innerText = item.name;
-    document.getElementById('tooltip-type').innerText = typeNames[item.type] || 'Przedmiot';
-    document.getElementById('tooltip-weight').innerText = `${item.weight || 0.1} kg`;
-    document.getElementById('tooltip-value').innerText = `${item.value || 0} 🪙`;
+    const nameEl = document.getElementById('tooltip-name');
+    const typeEl = document.getElementById('tooltip-type');
+    const weightEl = document.getElementById('tooltip-weight');
+    const valueEl = document.getElementById('tooltip-value');
+    const statsEl = document.getElementById('tooltip-stats');
+    const iconEl = document.getElementById('tooltip-icon');
 
-    // Dynamiczne generowanie tekstu statystyk
+    if (!nameEl || !typeEl || !weightEl || !valueEl || !statsEl || !iconEl) return;
+
+    setItemIconElement(iconEl, item.icon, '📦', 42);
+    nameEl.innerText = item.name || 'Przedmiot';
+    typeEl.innerText = typeNames[item.type] || item.type || 'Przedmiot';
+    weightEl.innerText = item.weight !== undefined ? `${item.weight} kg` : '0.1 kg';
+    valueEl.innerText = item.value !== undefined ? `${item.value} 🪙` : '0 🪙';
+
     let statsText = item.stats || '';
     if (item.damage) statsText = `⚔️ Obrażenia: +${item.damage}`;
     if (item.armor) statsText = `🛡️ Pancerz: +${item.armor}`;
+    if (!statsText && item.type === 'misc' && item.name) statsText = 'Zakładka ekwipunku';
 
-    document.getElementById('tooltip-stats').innerText = statsText || 'Brak dodatkowych właściwości.';
+    statsEl.innerText = statsText || 'Brak dodatkowych właściwości.';
 
     if (event) {
         tooltip.style.left = `${event.clientX + 15}px`;

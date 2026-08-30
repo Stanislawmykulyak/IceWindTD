@@ -295,7 +295,7 @@ canvas {
     object-fit: contain;
     flex: 0 0 auto;
     line-height: 1;
-    font-size: 20px;
+    font-size: 40px;
     text-align: center;
     filter: drop-shadow(0 0 10px rgba(255, 215, 122, 0.418)) drop-shadow(0 0 12px rgba(255, 191, 72, 0.479));
     background: radial-gradient(circle at center, rgba(255, 231, 175, 0.22), rgba(255, 231, 175, 0) 60%);
@@ -1934,10 +1934,10 @@ canvas#gameCanvas {
 }
 
 .alc-slot.result-slot img {
-    max-width: 75px;
-    max-height: 75px;
-    width: 75px;
-    height: 75px;
+    max-width: 50px;
+    max-height: 50px;
+    width: 50px;
+    height: 50px;
 }
 
 /* Licznik w rogu slotu (np. x3) */
