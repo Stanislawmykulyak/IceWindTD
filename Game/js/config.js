@@ -232,12 +232,12 @@ const ITEMS_DB = {
     runic_clay: { id: 'runic_clay', name: 'Runiczna Glina', icon: '🟫', type: 'material', weight: 0.7, value: 11, stats: 'Mocno wypalona glina z dawnych znaków' },
     ruin_steel: { id: 'ruin_steel', name: 'Ruina Stal', icon: '🪓', type: 'material', weight: 1.4, value: 18, stats: 'Twarda stal z dawnych murów' },
     moonsteel_scrap: { id: 'moonsteel_scrap', name: 'Odcinek Księżycowej Stali', icon: '🌙', type: 'material', weight: 1.1, value: 20, stats: 'Przebijany blask księżyca i starej obróbki' },
-    potion_hp_small: { name: 'Mała Mikstura Zdrowia', icon:'<img src="img/health_potion.png" alt="Mikstura Życia">', type: 'consumable', weight: 0.4, value: 15, stats: '+30 HP' },
+    potion_hp_small: { name: 'Mała Mikstura Zdrowia',icon: '<img src="img/health_potion.png" alt="Mikstura Życia" width="100" height="100">', type: 'consumable', weight: 0.4, value: 15, stats: '+30 HP' },
     // === MIKSTURY ===
     potion_health: {
         id: 'potion_health',
         name: 'Mikstura Zdrowia',
-        icon:'<img src="img/health_potion.png" alt="Mikstura Życia">',
+        icon:'<img src="img/health_potion.png" alt="Mikstura Życia" width="100" height="100">',
         type: 'consumable',
         weight: 0.3,
         stats: 'Przywraca 45 HP w czasie 15s',

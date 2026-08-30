@@ -19,7 +19,7 @@ const ALCHEMY_RECIPES_DB = {
         name: 'Mikstura Zdrowia',
         category: 'heals',
         station: 'herbalist',
-        icon:'<img src="img/health_potion.png" alt="Mikstura Życia">',
+        icon:'<img src="img/health_potion.png" alt="Mikstura Życia" width="100" height="100">',
         yieldCount: 3,
         description: 'Przywraca punkty życia w czasie.',
         effect: '+45 HP w ciągu 15s',

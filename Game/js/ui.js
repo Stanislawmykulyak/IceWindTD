@@ -19,6 +19,35 @@ function applyItemFootprint(slot, item) {
     if (isLarge) slot.classList.add('item-large');
 }
 
+function renderItemIconMarkup(icon, fallback = '📦', size = 30) {
+    const safeSize = Math.max(16, Number(size) || 30);
+    const raw = typeof icon === 'string' ? icon.trim() : '';
+
+    if (!raw) {
+        return `<span class="item-icon-emoji" style="font-size:${Math.max(14, safeSize * 0.8)}px;">${fallback}</span>`;
+    }
+
+    if (/<img|<svg|src=/.test(raw)) {
+        let normalized = raw.replace(/width\s*=\s*["'][^"']*["']/i, `width="${safeSize}"`);
+        normalized = normalized.replace(/height\s*=\s*["'][^"']*["']/i, `height="${safeSize}"`);
+
+        if (/style\s*=/.test(normalized)) {
+            normalized = normalized.replace(/style\s*=\s*["'][^"']*["']/i, `style="width:${safeSize}px; height:${safeSize}px; object-fit:contain; display:block;"`);
+        } else {
+            normalized = normalized.replace(/<img\b/i, `<img style="width:${safeSize}px; height:${safeSize}px; object-fit:contain; display:block;"`);
+        }
+
+        return `<span class="item-icon-image" style="width:${safeSize}px; height:${safeSize}px; display:inline-flex; align-items:center; justify-content:center;">${normalized}</span>`;
+    }
+
+    return `<span class="item-icon-emoji" style="font-size:${Math.max(14, safeSize * 0.8)}px;">${raw}</span>`;
+}
+
+function setItemIconElement(element, icon, fallback = '📦', size = 30) {
+    if (!element) return;
+    element.innerHTML = renderItemIconMarkup(icon, fallback, size);
+}
+
 const menuSystem = {
     isOpen: false,
     activeTab: 'quests',
@@ -124,7 +153,7 @@ const menuSystem = {
                 slot.ondragstart = (e) => dragDropManager.onDragStart(e, 'inventory', i);
 
                 const countBadge = (item.count && item.count > 1) ? `<span class="slot-count">${item.count}</span>` : '';
-                slot.innerHTML = `${item.icon || '📦'}${countBadge}`;
+                slot.innerHTML = `${renderItemIconMarkup(item.icon, '📦')}${countBadge}`;
                 slot.onmouseenter = (e) => showTooltip(item, e);
                 slot.onmouseleave = () => showTooltip(null);
                 applyItemFootprint(slot, item);
@@ -172,7 +201,7 @@ const menuSystem = {
                 elem.className = 'eq-slot equipped';
                 elem.setAttribute('draggable', 'true');
                 elem.ondragstart = (e) => dragDropManager.onDragStart(e, 'equipment', cfg.key);
-                elem.innerHTML = `<span class="slot-icon">${item.icon}</span>`;
+                elem.innerHTML = `<span class="slot-icon">${renderItemIconMarkup(item.icon, '📦')}</span>`;
 
                 elem.onmouseenter = (e) => showTooltip(item, e);
                 elem.onmouseleave = () => showTooltip(null);
@@ -412,7 +441,7 @@ const shopSystem = {
                 { id: 'ashwood_bark', name: 'Kora Jesionu', icon: '🌳', type: 'material', weight: 0.4, value: 6, count: 5, restock: true },
                 { id: 'woda_butelka', name: 'Woda w Butelce', icon: '🧴', type: 'misc', weight: 0.5, value: 2, count: 8, restock: true },
                 { id: 'korzen_zycia', name: 'Korzeń Życia', icon: '🌱', type: 'misc', weight: 0.2, value: 8, count: 5, restock: true },
-                { id: 'potion_health', name: 'Mikstura Zdrowia', icon:'<img src="img/health_potion.png" alt="Mikstura Życia">', type: 'consumable', weight: 0.3, value: 18, count: 3, restock: true },
+                { id: 'potion_health', name: 'Mikstura Zdrowia',icon:'<img src="img/health_potion.png" alt="Mikstura Życia" width="100" height="100">', type: 'consumable', weight: 0.3, value: 18, count: 3, restock: true },
                 { id: 'recipe_potion_guard', name: 'Receptura: Mikstura Ochronna', icon: '📜', type: 'document', weight: 0.1, value: 24, count: 1, restock: false, unlocksRecipe: 'potion_guard' },
                 { id: 'recipe_potion_swiftness', name: 'Receptura: Mikstura Szybkości', icon: '📜', type: 'document', weight: 0.1, value: 26, count: 1, restock: false, unlocksRecipe: 'potion_swiftness' }
             ]
@@ -609,7 +638,7 @@ const shopSystem = {
                     const countBadge = (item.count && item.count > 1) ? `<span class="slot-count">${item.count}</span>` : '';
                     slot.className = 'grid-slot occupied';
                     slot.setAttribute('draggable', 'true');
-                    slot.innerHTML = `${item.icon || '📦'}${countBadge}`;
+                    slot.innerHTML = `${renderItemIconMarkup(item.icon, '📦')}${countBadge}`;
                     applyItemFootprint(slot, item);
 
                     slot.ondragstart = (e) => this.onDragStart(e, 'player', i);
@@ -639,7 +668,7 @@ const shopSystem = {
                     const countBadge = (item.count && item.count > 1) ? `<span class="slot-count">${item.count}</span>` : '';
                     slot.className = 'grid-slot occupied';
                     slot.setAttribute('draggable', 'true');
-                    slot.innerHTML = `${item.icon || '📦'}${countBadge}`;
+                    slot.innerHTML = `${renderItemIconMarkup(item.icon, '📦')}${countBadge}`;
                     applyItemFootprint(slot, item);
 
                     slot.ondragstart = (e) => this.onDragStart(e, 'shop', i);
@@ -755,7 +784,7 @@ const lootBagSystem = {
                 position:relative; cursor:pointer; font-size:20px;
             `;
             const countBadge = item.count > 1 ? `<span style="position:absolute; bottom:2px; right:4px; font-size:10px; color:#fff; font-weight:bold;">${item.count}</span>` : '';
-            slot.innerHTML = `${item.icon || '📦'}${countBadge}`;
+            slot.innerHTML = `${renderItemIconMarkup(item.icon, '📦')}${countBadge}`;
 
             slot.onclick = () => this.takeItem(index);
             itemsGrid.appendChild(slot);
@@ -895,7 +924,10 @@ function drawCombatHUD(ctx) {
         const itemId = player.quickSlots[i];
         const item = itemId ? (player.inventory.find(inv => inv.id === itemId) || (typeof ITEMS_DB !== 'undefined' ? ITEMS_DB[itemId] : null)) : null;
         const countText = (item && item.count && item.count > 1) ? ` (x${item.count})` : '';
-        const itemText = item ? `${item.icon || ''} ${item.name}${countText}`.trim() : '';
+        const iconText = typeof item?.icon === 'string' && /<img|src=/.test(item.icon)
+            ? '🧪'
+            : (item?.icon || '📦');
+        const itemText = item ? `${iconText} ${item.name}${countText}`.trim() : '';
         const lineY = startY + (i * 36);
 
         // Numeracja slotu
@@ -1097,7 +1129,7 @@ const chestSystem = {
                     const countBadge = (item.count && item.count > 1) ? `<span class="slot-count">${item.count}</span>` : '';
                     slot.className = 'grid-slot occupied';
                     slot.setAttribute('draggable', 'true');
-                    slot.innerHTML = `${item.icon || '📦'}${countBadge}`;
+                    slot.innerHTML = `${renderItemIconMarkup(item.icon, '📦')}${countBadge}`;
                     slot.ondragstart = (e) => this.onDragStart(e, source, i);
                     slot.onclick = (e) => {
                         if (e.shiftKey) {
@@ -1200,7 +1232,7 @@ function showShopTooltip(item, event, mode = 'buy') {
 
     const priceLabel = mode === 'sell' ? 'Cena sprzedaży' : 'Cena zakupu';
 
-    document.getElementById('shop-tooltip-icon').textContent = item.icon || '📦';
+    setItemIconElement(document.getElementById('shop-tooltip-icon'), item.icon, '📦', 42);
     document.getElementById('shop-tooltip-name').textContent = item.name || 'Przedmiot';
     document.getElementById('shop-tooltip-type').textContent = item.type || 'Różne';
     document.getElementById('shop-tooltip-price').textContent = `${price} 🪙 (${priceLabel})`;
@@ -1243,7 +1275,7 @@ function showTooltip(item, event) {
         misc: 'Różności'
     };
 
-    document.getElementById('tooltip-icon').innerText = item.icon || '📦';
+    setItemIconElement(document.getElementById('tooltip-icon'), item.icon, '📦', 42);
     document.getElementById('tooltip-name').innerText = item.name;
     document.getElementById('tooltip-type').innerText = typeNames[item.type] || 'Przedmiot';
     document.getElementById('tooltip-weight').innerText = `${item.weight || 0.1} kg`;

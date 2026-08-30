@@ -31,7 +31,7 @@ const player = {
         {
             id: 'potion_health',
             name: 'Mikstura Zdrowia',
-            icon:'<img src="img/health_potion.png" alt="Mikstura Życia">',
+            icon:'<img src="img/health_potion.png" alt="Mikstura Życia" width="100" height="100">',
             type: 'consumable',
             weight: 0.3,
             count: 3,

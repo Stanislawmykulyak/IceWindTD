@@ -908,34 +908,33 @@ function updateQuickSlotsHUD() {
         const eqName = document.getElementById(`eq-qs-name-${i}`);
 
         if (!itemId) {
-            if (hudIcon) hudIcon.innerText = '➖';
+            if (hudIcon) setItemIconElement(hudIcon, '➖', '➖');
             if (hudName) hudName.innerText = 'Puste';
             if (hudCount) hudCount.innerText = '';
 
-            if (eqIcon) eqIcon.innerText = '➖';
+            if (eqIcon) setItemIconElement(eqIcon, '➖', '➖');
             if (eqName) eqName.innerText = 'Puste';
             continue;
         }
 
         const item = player.inventory.find(it => it && it.id === itemId);
         if (item) {
-            const iconText = item.icon || '📦';
             const countText = item.count ? `x${item.count}` : '';
 
-            if (hudIcon) hudIcon.innerText = iconText;
+            if (hudIcon) setItemIconElement(hudIcon, item.icon, '📦');
             if (hudName) hudName.innerText = item.name;
             if (hudCount) hudCount.innerText = countText;
 
-            if (eqIcon) eqIcon.innerText = iconText;
+            if (eqIcon) setItemIconElement(eqIcon, item.icon, '📦');
             if (eqName) eqName.innerText = `${item.name} ${countText}`;
         } else {
             // Przedmiot został całkowicie zużyty
             player.quickSlots[i] = null;
-            if (hudIcon) hudIcon.innerText = '➖';
+            if (hudIcon) setItemIconElement(hudIcon, '➖', '➖');
             if (hudName) hudName.innerText = 'Puste';
             if (hudCount) hudCount.innerText = '';
 
-            if (eqIcon) eqIcon.innerText = '➖';
+            if (eqIcon) setItemIconElement(eqIcon, '➖', '➖');
             if (eqName) eqName.innerText = 'Puste';
         }
     }
