@@ -364,12 +364,32 @@ window.addEventListener('keyup', (e) => { keys[e.key.toLowerCase()] = false; });
 // ==========================================
 // 8. START I PĘTLA GRY
 // ==========================================
+function updateLoadingScreen(progress, status) {
+    const progressBar = document.getElementById('loading-progress');
+    const percent = document.getElementById('loading-percent');
+    const statusText = document.getElementById('loading-status');
+    if (progressBar) progressBar.style.width = `${progress}%`;
+    if (percent) percent.textContent = `${progress}%`;
+    if (statusText) statusText.textContent = status;
+}
+
+function finishLoadingScreen() {
+    const loadingScreen = document.getElementById('loading-screen');
+    if (loadingScreen) loadingScreen.classList.add('is-ready');
+}
+
+updateLoadingScreen(10, 'Przygotowywanie swiata...');
 resizeCanvas();
+updateLoadingScreen(35, 'Rozmieszczanie mieszkancow...');
 gameMap.spawnVillageNPCs();
+updateLoadingScreen(55, 'Ladowanie roslinnosci...');
+gameMap.initializeWorldGrass();
+updateLoadingScreen(75, 'Ladowanie zadan...');
 questManager.init();
 if (typeof showLocationBanner === 'function') {
     showLocationBanner(gameMap.getCurrentData()?.name || 'Kruczy Dół');
 }
+updateLoadingScreen(90, 'Przygotowywanie renderera...');
 
 const mouse = { x: 0, y: 0 };
 
@@ -448,5 +468,10 @@ function gameLoop() {
     requestAnimationFrame(gameLoop);
 }
 
-// Uruchomienie pętli
-gameLoop();
+// Start the world loop immediately and let the terrain texture finish in the background.
+// This avoids a full startup stall while keeping the grass texture quality intact.
+requestAnimationFrame(() => {
+    updateLoadingScreen(100, 'Gotowe');
+    gameLoop();
+    requestAnimationFrame(finishLoadingScreen);
+});

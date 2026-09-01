@@ -1,6 +1,139 @@
 // ==========================================
 // MAP.JS - BEZSZWOWA MAPA Z POLANAMI I KLASTRAI ZIÓŁ
 // ==========================================
+
+// Grass accent variants for each color (preload all images)
+const GRASS_VARIANTS = {
+    0: [], // Dark green variants
+    1: [], // Medium green variants
+    2: []  // Light green variants
+};
+
+// Initialize grass images with proper biome variants. The old version loaded
+// every shade from the light folder, which is why the forest region never
+// visually stood out and all patches looked like the same stale grass.
+function initGrassVariants() {
+    const variantPaths = {
+        0: 'img/textures/grass/dark-variant',
+        1: 'img/textures/grass/mid-variant',
+        2: 'img/textures/grass/light-variant'
+    };
+
+    Object.keys(variantPaths).forEach((key) => {
+        const index = Number(key);
+        const basePath = variantPaths[index];
+        const files = Array.from({ length: 10 }, (_, i) => `${basePath}/grass${i + 1}.png`);
+
+        GRASS_VARIANTS[index] = files.map((src) => {
+            const image = loadGrassImage(src);
+            const fallback = loadGrassImage('img/textures/grass/light-variant/grass1.png');
+            return image && image.naturalWidth > 0 ? image : fallback;
+        });
+    });
+}
+
+function loadGrassImage(src) {
+    const img = new Image();
+    img.src = src;
+    return img;
+}
+
+const FLOOR_TEXTURES = {
+    wood: new Image(),
+    stone: new Image()
+};
+
+FLOOR_TEXTURES.wood.src = 'img/textures/floors/wooden-floor.jpg';
+FLOOR_TEXTURES.stone.src = 'img/textures/floors/cracked-stone-floor.jpg';
+
+function drawTexturedFloor(ctx, x, y, width, height, texture, tileSize = 64, alpha = 1) {
+    if (!texture || !texture.complete || texture.naturalWidth === 0) return;
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(x, y, width, height);
+    ctx.clip();
+
+    const pattern = ctx.createPattern(texture, 'repeat');
+    if (!pattern) {
+        ctx.restore();
+        return;
+    }
+
+    pattern.setTransform(new DOMMatrix().scale(0.75, 0.75));
+    ctx.globalAlpha = alpha;
+    ctx.fillStyle = pattern;
+    ctx.fillRect(x, y, width, height);
+    ctx.restore();
+}
+
+function drawRuinsGroundPatch(ctx, x, y, width, height) {
+    const stoneBase = '#6b6b6b';
+    const stoneDark = '#545454';
+    const stoneLight = '#8a8a8a';
+
+    ctx.fillStyle = stoneBase;
+    ctx.fillRect(x, y, width, height);
+
+    const cell = 14;
+    for (let row = 0; row < height; row += cell) {
+        for (let col = 0; col < width; col += cell) {
+            const blockX = x + col + ((row / cell) % 2) * 4;
+            const blockY = y + row + ((col / cell) % 3) * 3;
+            const blockW = cell - 2 + ((row + col) % 3);
+            const blockH = cell - 2 + ((row * 2 + col) % 3);
+            ctx.fillStyle = (row + col) % 2 === 0 ? stoneDark : stoneLight;
+            ctx.fillRect(blockX, blockY, blockW, blockH);
+        }
+    }
+
+    ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+    ctx.lineWidth = 1;
+    for (let i = 0; i < 12; i++) {
+        const px = x + ((i * 37) % width);
+        const py = y + ((i * 43) % height);
+        ctx.strokeRect(px, py, 8, 8);
+    }
+
+}
+
+class GrassAccent {
+    constructor(x, y, colorIndex, variantIndex) {
+        this.x = x;
+        this.y = y;
+        this.colorIndex = colorIndex;
+        this.variantIndex = variantIndex;
+        
+        // Scale: więcej na jasnych terenach, mniej na ciemnych
+        const baseScale = 0.7 + (colorIndex * 0.15); // 0.7-1.0 base
+        this.scale = baseScale + Math.random() * 0.7; // 0.7-1.7
+        
+        this.flipX = Math.random() < 0.6 ? -1 : 1; // 60% szansy na lustrzane odbicie
+        this.offsetY = Math.random() * 3; // 0-3 piksele w dół
+        this.width = 18;
+        this.height = 18;
+    }
+
+    draw(ctx, bounds) {
+        if (this.x < bounds.left || this.x > bounds.right ||
+            this.y < bounds.top || this.y > bounds.bottom) return;
+
+        const image = GRASS_VARIANTS[this.colorIndex][this.variantIndex];
+        if (!image || !image.complete || image.naturalWidth === 0) return;
+
+        const scaledW = this.width * this.scale;
+        const scaledH = this.height * this.scale;
+        const halfW = scaledW / 2;
+        const halfH = scaledH / 2;
+
+        ctx.save();
+        ctx.translate(this.x, this.y + this.offsetY);
+        ctx.scale(this.flipX, 1);
+        ctx.drawImage(image, -halfW, -halfH, scaledW, scaledH);
+        ctx.restore();
+    }
+}
+
 const minimapCanvas = document.getElementById('minimapCanvas');
 const minimapCtx = minimapCanvas ? minimapCanvas.getContext('2d') : null;
 
@@ -24,6 +157,570 @@ function createHerbCluster(clusterId, type, centerX, centerY) {
         });
     }
     return herbs;
+}
+
+function findBladeSplitIndex(arr, targetY) {
+    let low = 0, high = arr.length;
+    while (low < high) {
+        const mid = (low + high) >>> 1;
+        if (arr[mid].y <= targetY) low = mid + 1;
+        else high = mid;
+    }
+    return low;
+}
+
+const GRASS_BIOME_PALETTES = {
+    plains: [
+        '#3b6514',
+        '#4d7f1d',
+        '#6a982d',
+        '#82b63d',
+        '#9ccf5a',
+        '#b7df7f'
+    ],
+    forest: [
+        '#143d24',
+        '#285d36',
+        '#3d7b4a',
+        '#5e9a5d',
+        '#7eb36f',
+        '#9cc98a'
+    ]
+};
+const GRASS_PALETTE = GRASS_BIOME_PALETTES.plains;
+const GRASS_RGB = GRASS_PALETTE.map(hexToRgb);
+
+function grassBiomeMask(x, y, seed) {
+    const forestStartX = 2300;
+    const forestEndX = 5500;
+    const xBand = clamp((x - forestStartX) / (forestEndX - forestStartX), 0, 1);
+    const broadForest = xBand * xBand * (3 - 2 * xBand);
+
+    const s1 = fbm(x * 0.0018 + seed * 0.22, y * 0.0017 - seed * 0.18, 3) - 0.5;
+    const s2 = fbm(x * 0.0036 - seed * 0.13, y * 0.0031 + seed * 0.17, 2) - 0.5;
+    const forestPattern = clamp(0.65 + s1 * 0.55 + s2 * 0.35, 0, 1);
+
+    return clamp(broadForest * 0.8 + forestPattern * 0.2, 0, 1);
+}
+
+function grassBiomeBlend(x, y, seed) {
+    return grassBiomeMask(x, y, seed);
+}
+
+function grassColorFromValue(value, biomeBlend = 0) {
+    const plains = GRASS_BIOME_PALETTES.plains.map(hexToRgb);
+    const forest = GRASS_BIOME_PALETTES.forest.map(hexToRgb);
+    const band = Math.min(plains.length - 1, Math.floor(value * plains.length));
+    const plainColor = plains[band];
+    const forestColor = forest[band] || forest[forest.length - 1];
+
+    return {
+        r: Math.round(plainColor.r + (forestColor.r - plainColor.r) * biomeBlend),
+        g: Math.round(plainColor.g + (forestColor.g - plainColor.g) * biomeBlend),
+        b: Math.round(plainColor.b + (forestColor.b - plainColor.b) * biomeBlend)
+    };
+}
+const GRASS_TILE_SIZE = 192;
+const GRASS_TILE_CACHE_LIMIT = 256;
+const grassTileCache = new Map();
+const grassViewportCache = new Map();
+const grassChunkGenerationQueue = new Map();
+const grassChunkPending = new Set();
+const grassVectorMapCache = new Map();
+let grassChunkProcessingTimer = null;
+const GRASS_ZOOM_SCALE = (CONFIG.ZOOM || 1) * 1.15;
+const GRASS_RENDER_SCALE = 1;
+const GRASS_MAX_QUEUE = 24;
+let grassGenerationWorker = null;
+let grassWorkerBusy = false;
+let grassMapReadyKey = null;
+let grassMapReadyPromise = null;
+let grassMapReadyResolve = null;
+
+try {
+    grassGenerationWorker = new Worker('js/grass-worker.js');
+} catch (error) {
+    grassGenerationWorker = null;
+}
+
+function queueGrassChunk(seed, chunkX, chunkY) {
+    const key = `${seed}:${chunkX}:${chunkY}`;
+    if (grassTileCache.has(key) || grassChunkGenerationQueue.has(key) || grassChunkPending.has(key)) return;
+    if (grassChunkGenerationQueue.size >= GRASS_MAX_QUEUE) return;
+    grassChunkGenerationQueue.set(key, { seed, chunkX, chunkY });
+}
+
+function processGrassChunkQueue(limit = 6, timeBudgetMs = 8) {
+    if (grassChunkGenerationQueue.size === 0) return 0;
+    if (grassGenerationWorker && grassWorkerBusy) return 0;
+
+    const startTime = performance.now();
+    const cameraCenterX = camera.x + (camera.viewportWidth / (CONFIG.ZOOM || 1)) / 2;
+    const cameraCenterY = camera.y + (camera.viewportHeight / (CONFIG.ZOOM || 1)) / 2;
+    let generated = 0;
+
+    while (generated < limit && grassChunkGenerationQueue.size > 0) {
+        if (generated >= limit) break;
+        if (performance.now() - startTime > timeBudgetMs) break;
+
+        let nearestKey = null;
+        let nearestEntry = null;
+        let nearestDistance = Infinity;
+
+        for (const [key, entry] of grassChunkGenerationQueue.entries()) {
+            const chunkCenterX = (entry.chunkX + 0.5) * GRASS_CHUNK_SIZE;
+            const chunkCenterY = (entry.chunkY + 0.5) * GRASS_CHUNK_SIZE;
+            const distance = Math.hypot(chunkCenterX - cameraCenterX, chunkCenterY - cameraCenterY);
+            if (distance < nearestDistance) {
+                nearestKey = key;
+                nearestEntry = entry;
+                nearestDistance = distance;
+            }
+        }
+
+        grassChunkGenerationQueue.delete(nearestKey);
+        getGrassChunkCanvas(nearestEntry.seed, nearestEntry.chunkX, nearestEntry.chunkY);
+        generated++;
+        if (grassGenerationWorker) break;
+    }
+
+    return generated;
+}
+
+function scheduleGrassChunkProcessing() {
+    if (grassChunkGenerationQueue.size === 0) return;
+    if (grassChunkProcessingTimer !== null) return;
+
+    grassChunkProcessingTimer = setTimeout(() => {
+        grassChunkProcessingTimer = null;
+        processGrassChunkQueue(6, 8);
+
+        if (grassChunkGenerationQueue.size > 0) {
+            scheduleGrassChunkProcessing();
+        }
+    }, 16);
+}
+
+function hash2D(x, y) {
+    const value = Math.sin(x * 127.1 + y * 311.7) * 43758.5453123;
+    return value - Math.floor(value);
+}
+
+function smoothNoise2D(x, y) {
+    const x0 = Math.floor(x);
+    const y0 = Math.floor(y);
+    const xf = x - x0;
+    const yf = y - y0;
+
+    const a = hash2D(x0, y0);
+    const b = hash2D(x0 + 1, y0);
+    const c = hash2D(x0, y0 + 1);
+    const d = hash2D(x0 + 1, y0 + 1);
+
+    const u = xf * xf * (3 - 2 * xf);
+    const v = yf * yf * (3 - 2 * yf);
+    const ab = a + (b - a) * u;
+    const cd = c + (d - c) * u;
+    return ab + (cd - ab) * v;
+}
+
+function hexToRgb(hex) {
+    const clean = hex.replace('#', '');
+    const full = clean.length === 3
+        ? clean.split('').map(ch => ch + ch).join('')
+        : clean;
+    const num = parseInt(full, 16);
+    return {
+        r: (num >> 16) & 255,
+        g: (num >> 8) & 255,
+        b: num & 255
+    };
+}
+
+function fbm(x, y, octaves = 4) {
+    let total = 0;
+    let amp = 0.5;
+    let freq = 1;
+    let norm = 0;
+
+    for (let i = 0; i < octaves; i++) {
+        total += smoothNoise2D(x * freq, y * freq) * amp;
+        norm += amp;
+        freq *= 2;
+        amp *= 0.5;
+    }
+
+    return total / norm;
+}
+
+function clamp(value, min, max) {
+    return Math.min(max, Math.max(min, value));
+}
+
+function smoothstep(edge0, edge1, value) {
+    const t = clamp((value - edge0) / (edge1 - edge0), 0, 1);
+    return t * t * (3 - 2 * t);
+}
+
+function grassFieldValue(x, y, seed) {
+    const scaledX = x * GRASS_ZOOM_SCALE;
+    const scaledY = (y + Math.sin(x * 0.008 + seed * 0.03) * 4) * GRASS_ZOOM_SCALE;
+    const warpX = (smoothNoise2D(scaledX * 0.0018 + seed, scaledY * 0.0016 - seed) - 0.5) * 130;
+    const warpY = (smoothNoise2D(scaledX * 0.0016 - seed, scaledY * 0.0021 + seed) - 0.5) * 82;
+    const edgeWarpX = (smoothNoise2D(scaledX * 0.085 + seed * 2, scaledY * 0.085 - seed * 2) - 0.5) * 15;
+    const edgeWarpY = (smoothNoise2D(scaledX * 0.11 - seed * 2, scaledY * 0.11 + seed * 2) - 0.5) * 10;
+    const clumpNoise = smoothNoise2D(scaledX * 0.040 + seed * 3, scaledY * 0.040 - seed * 3) - 0.5;
+    const warpedX = scaledX + warpX + edgeWarpX;
+    const warpedY = scaledY + warpY + edgeWarpY;
+
+    const broad = fbm(warpedX * 0.0080 + seed * 0.11, warpedY * 0.0086 - seed * 0.08, 4);
+    const medium = fbm(warpedX * 0.0100 - seed * 0.17, warpedY * 0.013 + seed * 0.13, 3);
+    const raw = broad * 0.72 + medium * 0.20 + (clumpNoise + 0.5) * 0.08;
+    return clamp((raw - 0.28) * 2.17, 0, 1);
+}
+
+function colorFromBand(value, biomeBlend = 0) {
+    return grassColorFromValue(value, biomeBlend);
+}
+
+function grassColorIndexAtWorld(x, y, seed) {
+    const base = grassFieldValue(x, y, seed);
+    const scaledX = x * GRASS_ZOOM_SCALE;
+    const scaledY = y * GRASS_ZOOM_SCALE;
+    const colorTextures = [
+        fbm(scaledX * 0.0058 + seed * 1.7, scaledY * 0.014 - seed * 0.9, 3),
+        fbm(scaledX * 0.0066 - seed * 1.1, scaledY * 0.016 + seed * 1.4, 3),
+        fbm(scaledX * 0.0074 + seed * 0.6, scaledY * 0.018 + seed * 1.9, 3)
+    ];
+    const phase = base * GRASS_RGB.length;
+    const phasePart = phase - Math.floor(phase);
+    const edgeDetail = 1 - clamp(Math.min(phasePart, 1 - phasePart) / 0.18, 0, 1);
+    let bestIndex = 0;
+    let bestScore = -Infinity;
+
+    for (let index = 0; index < colorTextures.length; index++) {
+        const texture = colorTextures[index];
+        const center = 0.17 + index * 0.33;
+        const baseAffinity = 1 - Math.abs(base - center) * 2.7;
+        const textureInfluence = 0.08 + edgeDetail * 0.30;
+        const highlightPenalty = 0;
+        const score = baseAffinity * (1 - textureInfluence) + texture * textureInfluence - highlightPenalty;
+        if (score > bestScore) {
+            bestScore = score;
+            bestIndex = index;
+        }
+    }
+
+    return bestIndex;
+}
+
+const GRASS_CHUNK_SIZE = 1024; // Rozmiar pojedynczego fragmentu w świecie gry
+
+function storeGrassChunkCanvas(key, canvas) {
+    if (grassTileCache.size > GRASS_TILE_CACHE_LIMIT) {
+        const firstKey = grassTileCache.keys().next().value;
+        grassTileCache.delete(firstKey);
+    }
+    grassTileCache.set(key, canvas);
+}
+
+if (grassGenerationWorker) {
+    grassGenerationWorker.onmessage = ({ data }) => {
+        const { key, renderW, renderH, pixels } = data;
+        if (data.mode === 'vector-map') {
+            const makePath = (loop) => {
+                const path = new Path2D();
+                if (!loop || loop.length < 3) return path;
+                const first = loop[0];
+                const last = loop[loop.length - 1];
+                path.moveTo((last[0] + first[0]) / 2, (last[1] + first[1]) / 2);
+                for (let index = 0; index < loop.length; index++) {
+                    const point = loop[index];
+                    const next = loop[(index + 1) % loop.length];
+                    path.quadraticCurveTo(
+                        point[0],
+                        point[1],
+                        (point[0] + next[0]) / 2,
+                        (point[1] + next[1]) / 2
+                    );
+                }
+                path.closePath();
+                return path;
+            };
+            grassVectorMapCache.set(key, data.contours.map(contour => contour.map(makePath)));
+            grassChunkPending.delete(key);
+            grassWorkerBusy = false;
+            if (key === grassMapReadyKey && grassMapReadyResolve) {
+                grassMapReadyResolve(grassVectorMapCache.get(key));
+                grassMapReadyResolve = null;
+            }
+            return;
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = renderW;
+        canvas.height = renderH;
+        const context = canvas.getContext('2d', { alpha: false });
+        context.putImageData(new ImageData(new Uint8ClampedArray(pixels), renderW, renderH), 0, 0);
+        storeGrassChunkCanvas(key, canvas);
+        grassChunkPending.delete(key);
+        grassWorkerBusy = false;
+        if (key === grassMapReadyKey && grassMapReadyResolve) {
+            grassMapReadyResolve(canvas);
+            grassMapReadyResolve = null;
+        }
+    };
+
+    grassGenerationWorker.onerror = () => {
+        grassChunkPending.clear();
+        grassGenerationWorker.terminate();
+        grassGenerationWorker = null;
+    };
+}
+
+function generateGrassChunkOnMainThread(seed, chunkX, chunkY) {
+    const key = `${seed}:${chunkX}:${chunkY}`;
+    if (grassTileCache.has(key)) {
+        return grassTileCache.get(key);
+    }
+
+    const canvas = document.createElement('canvas');
+    const renderW = Math.ceil(GRASS_CHUNK_SIZE / GRASS_RENDER_SCALE);
+    const renderH = Math.ceil(GRASS_CHUNK_SIZE / GRASS_RENDER_SCALE);
+    canvas.width = renderW;
+    canvas.height = renderH;
+
+    const stepX = GRASS_CHUNK_SIZE / renderW;
+    const stepY = GRASS_CHUNK_SIZE / renderH;
+
+    const context = canvas.getContext('2d', { alpha: false });
+    const image = context.createImageData(renderW, renderH);
+    const data = image.data;
+
+    const startX = chunkX * GRASS_CHUNK_SIZE;
+    const startY = chunkY * GRASS_CHUNK_SIZE;
+
+    for (let y = 0; y < renderH; y++) {
+        const worldY = startY + y * stepY;
+        for (let x = 0; x < renderW; x++) {
+            const worldX = startX + x * stepX;
+            const rgb = getGrassPixelColorAtWorld(worldX, worldY, seed);
+            const index = (y * renderW + x) * 4;
+            data[index] = rgb.r;
+            data[index + 1] = rgb.g;
+            data[index + 2] = rgb.b;
+            data[index + 3] = 255;
+        }
+    }
+
+    context.putImageData(image, 0, 0);
+
+    // Zarządzanie pamięcią bufora
+    storeGrassChunkCanvas(key, canvas);
+    return canvas;
+}
+
+function getGrassChunkCanvas(seed, chunkX, chunkY) {
+    const key = `${seed}:${chunkX}:${chunkY}`;
+    if (grassTileCache.has(key) || grassChunkPending.has(key)) {
+        return grassTileCache.get(key) || null;
+    }
+
+    const renderW = Math.ceil(GRASS_CHUNK_SIZE / GRASS_RENDER_SCALE);
+    const renderH = Math.ceil(GRASS_CHUNK_SIZE / GRASS_RENDER_SCALE);
+    if (!grassGenerationWorker) {
+        return generateGrassChunkOnMainThread(seed, chunkX, chunkY);
+    }
+
+    grassChunkPending.add(key);
+    grassWorkerBusy = true;
+    grassGenerationWorker.postMessage({
+        key,
+        seed,
+        chunkX,
+        chunkY,
+        chunkSize: GRASS_CHUNK_SIZE,
+        renderW,
+        renderH
+    });
+    return null;
+}
+
+const GRASS_MAP_RENDER_SCALE = 1;
+const GRASS_MAP_GRID_STEP = 3;
+
+function getGrassMapCanvas(seed, loc) {
+    const key = `grass-map:${seed}:${loc.width}:${loc.height}`;
+    if (grassTileCache.has(key) || grassChunkPending.has(key)) {
+        return grassTileCache.get(key) || null;
+    }
+    if (!grassGenerationWorker) return null;
+
+    grassChunkPending.add(key);
+    grassWorkerBusy = true;
+    grassMapReadyKey = key;
+    grassMapReadyPromise = new Promise(resolve => {
+        grassMapReadyResolve = resolve;
+    });
+    grassGenerationWorker.postMessage({
+        mode: 'map',
+        key,
+        seed,
+        worldWidth: loc.width,
+        worldHeight: loc.height,
+        renderScale: GRASS_MAP_RENDER_SCALE,
+        gridStep: GRASS_MAP_GRID_STEP
+    });
+    return null;
+}
+
+function getGrassVectorMap(seed, loc) {
+    const key = `grass-vector-map:${seed}:${loc.width}:${loc.height}`;
+    if (grassVectorMapCache.has(key) || grassChunkPending.has(key)) {
+        return grassVectorMapCache.get(key) || null;
+    }
+    if (!grassGenerationWorker) return null;
+
+    grassChunkPending.add(key);
+    grassWorkerBusy = true;
+    grassMapReadyKey = key;
+    grassMapReadyPromise = new Promise(resolve => {
+        grassMapReadyResolve = resolve;
+    });
+    grassGenerationWorker.postMessage({
+        mode: 'vector-map',
+        key,
+        seed,
+        worldWidth: loc.width,
+        worldHeight: loc.height,
+        gridStep: 4
+    });
+    return null;
+}
+
+function drawGrassTexture(ctx, loc) {
+    const texture = makeGrassTextureForLocation(loc);
+    if (!texture) return;
+
+    const previousSmoothing = ctx.imageSmoothingEnabled;
+    const previousSmoothingQuality = ctx.imageSmoothingQuality;
+    const previousShadowBlur = ctx.shadowBlur;
+    const previousShadowColor = ctx.shadowColor;
+    const previousFilter = ctx.filter;
+    ctx.imageSmoothingEnabled = false;
+    ctx.imageSmoothingQuality = 'low';
+    ctx.filter = 'none';
+    ctx.shadowBlur = 0;
+    ctx.shadowColor = 'transparent';
+
+    const mapCanvas = getGrassMapCanvas(texture.seed, loc);
+    if (mapCanvas) ctx.drawImage(mapCanvas, 0, 0, loc.width, loc.height);
+
+    ctx.imageSmoothingEnabled = previousSmoothing;
+    ctx.imageSmoothingQuality = previousSmoothingQuality;
+    ctx.filter = previousFilter;
+    ctx.shadowBlur = previousShadowBlur;
+    ctx.shadowColor = previousShadowColor;
+}
+
+function getGrassColorIndexAtWorld(worldX, worldY, seed) {
+    return getConnectedGrassLabelAtWorld(worldX, worldY, seed);
+}
+
+function getGrassColorAtWorld(worldX, worldY, seed) {
+    const biomeBlend = grassBiomeBlend(worldX, worldY, seed);
+    return colorFromBand(grassFieldValue(worldX, worldY, seed), biomeBlend);
+}
+
+function getGrassPixelColorAtWorld(worldX, worldY, seed) {
+    const biomeBlend = grassBiomeBlend(worldX, worldY, seed);
+    const colorIndex = getGrassColorIndexAtWorld(worldX, worldY, seed);
+    const biomePalette = GRASS_BIOME_PALETTES.plains.map(hexToRgb).map((color, index) => {
+        const forestColor = GRASS_BIOME_PALETTES.forest.map(hexToRgb)[index] || GRASS_BIOME_PALETTES.forest.map(hexToRgb)[GRASS_BIOME_PALETTES.forest.length - 1];
+        return {
+            r: Math.round(color.r + (forestColor.r - color.r) * biomeBlend),
+            g: Math.round(color.g + (forestColor.g - color.g) * biomeBlend),
+            b: Math.round(color.b + (forestColor.b - color.b) * biomeBlend)
+        };
+    });
+
+    const textureScales = [[0.016, 0.038], [0.02, 0.046], [0.024, 0.054]];
+    const [scaleX, scaleY] = textureScales[colorIndex];
+    const texture = smoothNoise2D(
+        worldX * scaleX + seed * (colorIndex + 1) * 0.18,
+        worldY * scaleY - seed * (colorIndex + 2) * 0.14
+    );
+    const forestPattern = fbm(worldX * 0.006 + seed * 0.25, worldY * 0.006 - seed * 0.2, 2);
+    const micro = smoothNoise2D(worldX * 0.06 + seed * 0.3, worldY * 0.06 - seed * 0.3);
+    const bladeStreak = smoothNoise2D(worldX * 0.02 + worldY * 0.008 + seed, worldY * 0.04 - seed);
+
+    const forestBias = biomeBlend * 0.65;
+    const shade = (texture - 0.5) * 2.8 + (micro - 0.5) * 1.3 + (bladeStreak - 0.5) * 1.5 + (forestPattern - 0.5) * 8 * forestBias;
+    const base = biomePalette[colorIndex];
+
+    return {
+        r: clamp(Math.round(base.r + shade), 0, 255),
+        g: clamp(Math.round(base.g + shade), 0, 255),
+        b: clamp(Math.round(base.b + shade), 0, 255)
+    };
+}
+
+const GRASS_CELL_WIDTH = 160;
+const GRASS_CELL_HEIGHT = 92;
+
+function getConnectedGrassLabelAtWorld(worldX, worldY, seed) {
+    const broadWarpX = (smoothNoise2D(worldX * 0.0125 + seed, worldY * 0.009 - seed) - 0.5) * 56;
+    const broadWarpY = (smoothNoise2D(worldX * 0.009 - seed, worldY * 0.0125 + seed) - 0.5) * 52;
+    const fineWarpX = (smoothNoise2D(worldX * 0.055 - seed, worldY * 0.045 + seed) - 0.5) * 36;
+    const fineWarpY = (smoothNoise2D(worldX * 0.045 + seed, worldY * 0.055 - seed) - 0.5) * 28;
+    const flowWarpX = Math.sin(worldY * 0.016 + seed) * 9;
+    const flowWarpY = Math.sin(worldX * 0.012 - seed * 0.7) * 6;
+    const toothWarpX = (smoothNoise2D(worldX * 0.56 + seed * 2, worldY * 0.68 - seed * 2) - 0.5) * 9;
+    const toothWarpY = (smoothNoise2D(worldX * 0.82 - seed * 2, worldY * 0.50 + seed * 2) - 0.5) * 6;
+    const warpX = broadWarpX + fineWarpX + toothWarpX + flowWarpX;
+    const warpY = broadWarpY + fineWarpY + toothWarpY + flowWarpY;
+    const cellX = Math.floor((worldX + warpX) / GRASS_CELL_WIDTH);
+    const cellY = Math.floor((worldY + warpY) / GRASS_CELL_HEIGHT);
+    let nearestDistance = Infinity;
+    let nearestLabel = 1;
+
+    for (let offsetY = -1; offsetY <= 1; offsetY++) {
+        for (let offsetX = -1; offsetX <= 1; offsetX++) {
+            const candidateX = cellX + offsetX;
+            const candidateY = cellY + offsetY;
+            const cellSeed = hash2D(candidateX * 6.3 + seed, candidateY * 9.1 - seed);
+            const sizeX = 0.50 + hash2D(candidateX * 3.4 - seed, candidateY * 5.7 + seed) * 0.76;
+            const sizeY = 0.58 + hash2D(candidateX * 5.9 + seed, candidateY * 2.4 - seed) * 0.62;
+            const jitterX = (hash2D(candidateX + seed * 0.02, candidateY - seed * 0.018) - 0.5) * 1.15;
+            const jitterY = (hash2D(candidateX - seed * 0.018, candidateY + seed * 0.02) - 0.5) * 1.05;
+            const centerX = candidateX + 0.5 + jitterX;
+            const centerY = candidateY + 0.5 + jitterY;
+            const distanceX = ((worldX + warpX) / GRASS_CELL_WIDTH - centerX) / sizeX;
+            const distanceY = ((worldY + warpY) / GRASS_CELL_HEIGHT - centerY) / sizeY;
+            const shear = (hash2D(candidateX * 8.1 + seed, candidateY * 4.7 - seed) - 0.5) * 0.48;
+            const shapedDistanceX = distanceX + distanceY * shear;
+            const localBreakup = smoothNoise2D(
+                worldX * 0.055 + candidateX * 1.7,
+                worldY * 0.075 + candidateY * 1.3
+            ) - 0.5;
+            const distance = shapedDistanceX * shapedDistanceX + distanceY * distanceY + localBreakup * 0.18;
+
+            if (distance < nearestDistance) {
+                nearestDistance = distance;
+                const alternatingLabel = Math.abs(candidateX + candidateY * 2) % 3;
+                const highlightBoost = cellSeed > 0.76 && alternatingLabel !== 2 ? 1 : 0;
+                const variation = cellSeed > 0.93 ? 1 : 0;
+                nearestLabel = (alternatingLabel + highlightBoost + variation) % 3;
+            }
+        }
+    }
+
+    return nearestLabel;
+}
+
+function makeGrassTextureForLocation(loc) {
+    if (!loc) return null;
+    const seed = 1300 + Math.floor(loc.width * 0.13) + Math.floor(loc.height * 0.09);
+    return { seed, tileCache: grassTileCache };
 }
 
 const camera = {
@@ -188,11 +885,10 @@ const gameMap = {
     locations: {
         kruczy_dol: {
             name: 'Kruczy Dół',
-            width: 5500, 
-            height: 3500, 
+            width: 5500,
+            height: 3500,
             bgColor: CONFIG.COLOR_GRASS,
-            
-            // Polany w lesie z jaśniejszym podłożem
+
             clearings: [
                 { x: 3100, y: 900, radius: 240 },
                 { x: 4200, y: 1500, radius: 200 }
@@ -235,7 +931,6 @@ const gameMap = {
                 ]
             }],
 
-            // Zioła generowane blisko obrzeża lasu oraz na polanach w pęczkach 1-3 szt.
             herbs: [
                 ...createHerbCluster('c1', 'lecznicze_ziele', 2500, 550),
                 ...createHerbCluster('c2', 'jagody', 2650, 1100),
@@ -297,7 +992,7 @@ const gameMap = {
             ],
             doors: [
                 { x: 380, y: 520, width: 40, height: 20, targetLocation: 'kruczy_dol', spawnX: 830, spawnY: 620, label: 'Wyjdź [E]' },
-                { x: 710, y: 100, width: 50, height: 70, targetLocation: 'karczma_pietro', spawnX: 85, spawnY: 310, isStair: true, dir: 'w' ,label: 'Wejdż po schodach [E]'}
+                { x: 710, y: 100, width: 50, height: 70, targetLocation: 'karczma_pietro', spawnX: 85, spawnY: 310, isStair: true, dir: 'w', label: 'Wejdż po schodach [E]' }
             ],
             npcs: [{
                 id: 'innkeeper', name: 'Karczmarz Barnaba', x: 400, y: 115,
@@ -311,7 +1006,7 @@ const gameMap = {
                 { id: 'wall_top', name: '', x: 0, y: 0, width: 1000, height: 120, color: '#23150b' }
             ],
             doors: [
-                { x: 60, y: 220, width: 50, height: 70, targetLocation: 'karczma_wnetrze', spawnX: 735, spawnY: 190, isStair: true, dir: 's',label: 'Zejdż po schodach [E]' },
+                { x: 60, y: 220, width: 50, height: 70, targetLocation: 'karczma_wnetrze', spawnX: 735, spawnY: 190, isStair: true, dir: 's', label: 'Zejdż po schodach [E]' },
                 { x: 250, y: 110, width: 40, height: 20, keyRequired: 'room_1', label: 'Pokój #1 [E]', message: 'Pokój #1: Zamknięte.' },
                 { x: 420, y: 110, width: 40, height: 20, keyRequired: 'room_2', label: 'Pokój #2 [E]', message: 'Pokój #2: Słychać chrapanie...' },
                 { x: 590, y: 110, width: 40, height: 20, keyRequired: 'room_3', label: 'Pokój #3 [E]', message: 'Pokój #3: Zamknięte.' },
@@ -403,8 +1098,52 @@ const gameMap = {
         }
     },
 
-    getCurrentData() { 
-        return this.locations[this.currentLocation] || this.locations['kruczy_dol']; 
+    initializeWorldGrass() {
+        initGrassVariants();
+
+        const loc = this.getCurrentData();
+        if (!loc || !loc.width || !loc.height) return;
+
+        makeGrassTextureForLocation(loc);
+        if (!loc.renderLayers || !loc.renderLayers.flora || !loc.renderLayers.flora.length) {
+            this.generateGrassBlades(loc);
+        }
+
+        this.preloadVisibleChunks();
+    },
+
+    getRenderingContextData() {
+        const zoom = CONFIG.ZOOM || 1;
+        const margin = 100;
+        return {
+            windTime: Date.now() * 0.0025,
+            bounds: {
+                left: camera.x - margin,
+                right: camera.x + (camera.viewportWidth / zoom) + margin,
+                top: camera.y - margin,
+                bottom: camera.y + (camera.viewportHeight / zoom) + margin
+            }
+        };
+    },
+    preloadVisibleChunks() {
+        const loc = this.getCurrentData();
+        const seed = 1300 + Math.floor(loc.width * 0.13) + Math.floor(loc.height * 0.09);
+        getGrassMapCanvas(seed, loc);
+    },
+    waitForGrassMap() {
+        const loc = this.getCurrentData();
+        if (!loc || !loc.width || !loc.height) return Promise.resolve(null);
+
+        const seed = 1300 + Math.floor(loc.width * 0.13) + Math.floor(loc.height * 0.09);
+        const mapCanvas = getGrassMapCanvas(seed, loc);
+        if (mapCanvas) return Promise.resolve(mapCanvas);
+        if (!grassGenerationWorker) return Promise.resolve(null);
+        if (grassMapReadyPromise) return grassMapReadyPromise;
+        const pendingCanvas = getGrassMapCanvas(seed, loc);
+        return pendingCanvas ? Promise.resolve(pendingCanvas) : (grassMapReadyPromise || Promise.resolve(null));
+    },
+    getCurrentData() {
+        return this.locations[this.currentLocation] || this.locations['kruczy_dol'];
     },
 
     getLocationBannerArt(locationName) {
@@ -419,9 +1158,92 @@ const gameMap = {
         return artMap[locationName] || null;
     },
 
+    generateGrassBlades(loc) {
+        const seed = 1300 + Math.floor(loc.width * 0.13) + Math.floor(loc.height * 0.09);
+        const step = 80; // Trawy bardziej oddalone od siebie
+        const grassList = [];
+
+        const isBlockedByRoadOrBuilding = (x, y, margin = 18) => {
+            if (loc.buildings) {
+                for (const b of loc.buildings) {
+                    const safeX = b.x - margin;
+                    const safeY = b.y - margin;
+                    const safeW = b.width + margin * 2;
+                    const safeH = b.height + margin * 2;
+                    if (x >= safeX && x <= safeX + safeW && y >= safeY && y <= safeY + safeH) {
+                        return true;
+                    }
+                }
+            }
+
+            if (loc === this.locations.kruczy_dol) {
+                const roadRects = [
+                    { x: -20, y: 500, w: 2320, h: 120 },
+                    { x: 780, y: 560, w: 100, h: 240 },
+                    { x: 1910, y: 560, w: 100, h: 240 }
+                ];
+
+                for (const road of roadRects) {
+                    if (x >= road.x && x <= road.x + road.w && y >= road.y && y <= road.y + road.h) {
+                        return true;
+                    }
+                }
+
+                const ruinFloor = {
+                    x: 2340,
+                    y: 1140,
+                    w: 300,
+                    h: 390
+                };
+
+                if (x >= ruinFloor.x && x <= ruinFloor.x + ruinFloor.w && y >= ruinFloor.y && y <= ruinFloor.y + ruinFloor.h) {
+                    return true;
+                }
+            }
+
+            return false;
+        };
+
+        // Generate grass accents for all colors
+        for (let y = 20; y < loc.height - 20; y += step) {
+            for (let x = 20; x < loc.width - 20; x += step) {
+                if (isBlockedByRoadOrBuilding(x, y)) continue;
+
+                const colorIndex = getGrassColorIndexAtWorld(x, y, seed);
+                
+                // Spawn grass accents - częściej niż wcześniej
+                // colorIndex 0 (ciemna) = 40%, colorIndex 1 (średnia) = 48%, colorIndex 2 (jasna) = 56%
+                const spawnChance = 0.15 + (colorIndex * 0.08);
+                if (Math.random() < spawnChance) {
+                    // Zawsze tylko 1 trawa - bez kepek
+                    const variantIndex = Math.floor(Math.random() * 6); // 0-5 (6 wariantów)
+                    
+                    const jitterX = (Math.random() - 0.5) * 70; // Większy jitter
+                    const jitterY = (Math.random() - 0.5) * 50; // Większy jitter
+                    const finalX = x + jitterX;
+                    const finalY = y + jitterY;
+
+                    if (!isBlockedByRoadOrBuilding(finalX, finalY)) {
+                        const accent = new GrassAccent(finalX, finalY, colorIndex, variantIndex);
+                        grassList.push(accent);
+                    }
+                }
+            }
+        }
+
+        grassList.sort((a, b) => a.y - b.y);
+
+        if (!loc.renderLayers) loc.renderLayers = {};
+        loc.renderLayers['flora'] = grassList;
+    },
+
     setLocation(locationId, options = {}) {
         if (!this.locations[locationId]) return false;
         this.currentLocation = locationId;
+
+        // Generuj chunki w tle od razu po zmianie mapy
+        this.preloadVisibleChunks();
+
         if (options.showBanner && typeof showLocationBanner === 'function') {
             const label = this.getCurrentData()?.name || locationId;
             this.lastAreaBanner = label;
@@ -470,7 +1292,6 @@ const gameMap = {
         if (typeof enemyManager === 'undefined') return;
         const wildEnemies = [];
 
-        // Wilki i jelenie rozmieszczone bliżej w lesie
         for (let i = 0; i < 3; i++) {
             wildEnemies.push(new Enemy({
                 id: 'wolf_s_' + i, type: 'wilk',
@@ -516,37 +1337,20 @@ const gameMap = {
 
     draw(ctx) {
         const loc = this.getCurrentData();
-
+        const renderCtx = this.getRenderingContextData();
         const drawTerrain = () => {
             ctx.fillStyle = loc.bgColor;
             ctx.fillRect(0, 0, loc.width, loc.height);
 
             if (this.currentLocation === 'kruczy_dol') {
-                ctx.fillStyle = '#111e11';
-                ctx.beginPath();
-                ctx.moveTo(2300, 0);
+                drawGrassTexture(ctx, loc);
 
-                for (let y = 0; y <= loc.height; y += 80) {
-                    const waveX = 2300 + Math.sin(y * 0.008) * 110 + (y % 160 === 0 ? 40 : -40);
-                    ctx.lineTo(waveX, y);
-                }
-                ctx.lineTo(loc.width, loc.height);
-                ctx.lineTo(loc.width, 0);
-                ctx.closePath();
-                ctx.fill();
-
-                if (loc.clearings) {
-                    loc.clearings.forEach(c => {
-                        if (!camera.isVisible(c.x - c.radius, c.y - c.radius, c.radius * 2, c.radius * 2)) return;
-                        const grad = ctx.createRadialGradient(c.x, c.y, 20, c.x, c.y, c.radius);
-                        grad.addColorStop(0, '#1d331d');
-                        grad.addColorStop(1, '#111e11');
-                        ctx.fillStyle = grad;
-                        ctx.beginPath();
-                        ctx.arc(c.x, c.y, c.radius, 0, Math.PI * 2);
-                        ctx.fill();
-                    });
-                }
+                const ruinZone = this.ruinZone;
+                const ruinFloorX = 2340;
+                const ruinFloorY = 1140;
+                const ruinFloorW = 300;
+                const ruinFloorH = 390;
+                drawRuinsGroundPatch(ctx, ruinFloorX, ruinFloorY, ruinFloorW, ruinFloorH);
 
                 if (camera.isVisible(0, 500, 2300, 100)) {
                     ctx.fillStyle = CONFIG.COLOR_ROAD;
@@ -560,9 +1364,13 @@ const gameMap = {
                     ctx.fillStyle = CONFIG.COLOR_ROAD;
                     ctx.fillRect(1930, 580, 60, 200);
                 }
+            } else if (['karczma_wnetrze', 'chatka_zielarza', 'kuznia_wnetrze', 'karczma_pietro', 'pokoj_gracza', 'mlyn_wnetrze'].includes(this.currentLocation)) {
+                drawTexturedFloor(ctx, 0, 0, loc.width, loc.height, FLOOR_TEXTURES.wood, 64, 1);
+            } else {
+                drawGrassTexture(ctx, loc);
             }
-        };
 
+        };
         const drawStructures = () => {
             loc.buildings.forEach(b => {
                 if (!camera.isVisible(b.x, b.y, b.width, b.height)) return;
@@ -579,6 +1387,44 @@ const gameMap = {
                     ctx.fillText(b.name, b.x + 10, b.y - 8);
                 }
             });
+        };
+        const getRenderingContextData = () => {
+            const zoom = CONFIG.ZOOM || 1;
+            const margin = 100;
+            return {
+                windTime: Date.now() * 0.0025,
+                bounds: {
+                    left: camera.x - margin,
+                    right: camera.x + (camera.viewportWidth / zoom) + margin,
+                    top: camera.y - margin,
+                    bottom: camera.y + (camera.viewportHeight / zoom) + margin
+                }
+            };
+        };
+        const drawFloraBack = () => {
+            const flora = this.getRenderLayer(this.getCurrentData(), 'flora');
+            if (!Array.isArray(flora) || flora.length === 0) return;
+
+            const playerY = (typeof player !== 'undefined' && player) ? player.y : Infinity;
+            const splitIndex = findBladeSplitIndex(flora, playerY);
+
+            // Rysuj tylko elementy od 0 do splitIndex (ZA graczem)
+            for (let i = 0; i < splitIndex; i++) {
+                flora[i].draw(ctx, renderCtx.bounds);
+            }
+        };
+
+        const drawFloraFront = () => {
+            if (typeof player === 'undefined' || !player) return;
+            const flora = this.getRenderLayer(this.getCurrentData(), 'flora');
+            if (!Array.isArray(flora) || flora.length === 0) return;
+
+            const splitIndex = findBladeSplitIndex(flora, player.y);
+
+            // Rysuj tylko elementy od splitIndex do końca (PRZED graczem)
+            for (let i = splitIndex; i < flora.length; i++) {
+                flora[i].draw(ctx, renderCtx.bounds);
+            }
         };
 
         const drawHerbs = () => {
@@ -721,24 +1567,21 @@ const gameMap = {
                 }
             });
         };
-
         const renderOrder = [
             drawTerrain,
-            () => this.renderLayerList(ctx, this.getRenderLayer(loc, 'backdrop'), (item) => item.draw && item.draw(ctx, this, player)),
             drawStructures,
-            () => this.renderLayerList(ctx, this.getRenderLayer(loc, 'flora'), (item) => item.draw && item.draw(ctx, this, player)),
+            drawFloraBack,
             drawHerbs,
             drawBed,
             drawChests,
             drawNPCs,
             drawDoors,
-            () => this.renderLayerList(ctx, this.getRenderLayer(loc, 'front'), (item) => item.draw && item.draw(ctx, this, player)),
+            drawFloraFront
         ];
-
         renderOrder.forEach(layerDraw => layerDraw());
 
         if (this.currentLocation === 'kruczy_dol' && player.x > 2300) {
-            ctx.fillStyle = 'rgba(5, 15, 5, 0.22)';
+            ctx.fillStyle = 'rgba(5, 15, 5, 0.10)';
             ctx.fillRect(camera.x, camera.y, camera.viewportWidth, camera.viewportHeight);
         }
     },
@@ -884,171 +1727,169 @@ const gameMap = {
     },
 
     tryInteract() {
-    const candidates = [];
+        const candidates = [];
+        const loc = this.getCurrentData();
+        if (this.locations[this.currentLocation].herbs) {
+            this.locations[this.currentLocation].herbs.forEach(herb => {
+                if (!herb.picked) {
+                    const dist = Math.hypot(player.x - herb.x, player.y - herb.y);
+                    if (dist < 40) {
+                        candidates.push({ type: 'herb', dist: dist, obj: herb });
+                    }
+                }
+            });
+        }
 
-    if (this.locations[this.currentLocation].herbs) {
-        this.locations[this.currentLocation].herbs.forEach(herb => {
-            if (!herb.picked) {
-                const dist = Math.hypot(player.x - herb.x, player.y - herb.y);
-                if (dist < 40) {
-                    candidates.push({ type: 'herb', dist: dist, obj: herb });
+        if (this.locations[this.currentLocation].npcs) {
+            this.locations[this.currentLocation].npcs.forEach(npc => {
+                const dist = Math.hypot(player.x - npc.x, player.y - npc.y);
+                const talkRange = npc.talkRadius || 50;
+                if (dist < talkRange && npc.dialogueId) {
+                    candidates.push({ type: 'npc', dist: dist, obj: npc });
+                }
+            });
+        }
+        if (loc.chests) {
+            loc.chests.forEach(chest => {
+                if (chest.opened) return;
+                const chestCenterX = chest.x + chest.width / 2;
+                const chestCenterY = chest.y + chest.height / 2;
+                const dist = Math.hypot(player.x - chestCenterX, player.y - chestCenterY);
+                if (dist < 55) candidates.push({ type: 'chest', dist, obj: chest });
+            });
+        }
+        if (loc.paperLoot && !loc.paperLoot.collected) {
+            const noteDist = Math.hypot(player.x - loc.paperLoot.x, player.y - loc.paperLoot.y);
+            if (noteDist < 36) {
+                candidates.push({ type: 'paper', dist: noteDist, obj: loc.paperLoot });
+            }
+        }
+
+        loc.doors.forEach(d => {
+            const doorCenterX = d.x + d.width / 2;
+            const doorCenterY = d.y + d.height / 2;
+            const dist = Math.hypot(player.x - doorCenterX, player.y - doorCenterY);
+            if (dist < 45) {
+                candidates.push({ type: 'door', dist: dist, obj: d });
+            }
+        });
+
+        if (this.currentLocation === 'pokoj_gracza') {
+            const bed = loc.buildings.find(b => b.id === 'bed');
+            if (bed) {
+                const dist = Math.hypot(player.x - (bed.x + bed.width / 2), player.y - (bed.y + bed.height / 2));
+                if (dist < 80) {
+                    candidates.push({ type: 'bed', dist: dist, obj: bed });
                 }
             }
-        });
-    }
-
-    if (this.locations[this.currentLocation].npcs) {
-        this.locations[this.currentLocation].npcs.forEach(npc => {
-            const dist = Math.hypot(player.x - npc.x, player.y - npc.y);
-            const talkRange = npc.talkRadius || 50;
-            if (dist < talkRange && npc.dialogueId) {
-                candidates.push({ type: 'npc', dist: dist, obj: npc });
-            }
-        });
-    }
-
-    const loc = this.getCurrentData();
-    if (loc.chests) {
-        loc.chests.forEach(chest => {
-            if (chest.opened) return;
-            const chestCenterX = chest.x + chest.width / 2;
-            const chestCenterY = chest.y + chest.height / 2;
-            const dist = Math.hypot(player.x - chestCenterX, player.y - chestCenterY);
-            if (dist < 55) candidates.push({ type: 'chest', dist, obj: chest });
-        });
-    }
-    if (loc.paperLoot && !loc.paperLoot.collected) {
-        const noteDist = Math.hypot(player.x - loc.paperLoot.x, player.y - loc.paperLoot.y);
-        if (noteDist < 36) {
-            candidates.push({ type: 'paper', dist: noteDist, obj: loc.paperLoot });
         }
-    }
 
-    loc.doors.forEach(d => {
-        const doorCenterX = d.x + d.width / 2;
-        const doorCenterY = d.y + d.height / 2;
-        const dist = Math.hypot(player.x - doorCenterX, player.y - doorCenterY);
-        if (dist < 45) {
-            candidates.push({ type: 'door', dist: dist, obj: d });
-        }
-    });
-
-    if (this.currentLocation === 'pokoj_gracza') {
-        const bed = loc.buildings.find(b => b.id === 'bed');
-        if (bed) {
-            const dist = Math.hypot(player.x - (bed.x + bed.width / 2), player.y - (bed.y + bed.height / 2));
-            if (dist < 80) {
-                candidates.push({ type: 'bed', dist: dist, obj: bed });
+        if (this.currentLocation === 'kruczy_dol' && !player.isMounted && player.horse) {
+            const dist = Math.hypot(player.x - player.horse.x, player.y - player.horse.y);
+            if (dist < 60) {
+                candidates.push({ type: 'horse', dist: dist, obj: player.horse });
             }
         }
-    }
 
-    if (this.currentLocation === 'kruczy_dol' && !player.isMounted && player.horse) {
-        const dist = Math.hypot(player.x - player.horse.x, player.y - player.horse.y);
-        if (dist < 60) {
-            candidates.push({ type: 'horse', dist: dist, obj: player.horse });
-        }
-    }
+        if (candidates.length === 0) return false;
 
-    if (candidates.length === 0) return false;
+        candidates.sort((a, b) => a.dist - b.dist);
+        const closest = candidates[0];
 
-    candidates.sort((a, b) => a.dist - b.dist);
-    const closest = candidates[0];
+        switch (closest.type) {
+            case 'herb':
+                const itemData = ITEMS_DB[closest.obj.type];
+                if (player.addItem(closest.obj.type, itemData.name, itemData.icon, itemData.type, itemData.weight, itemData.stats)) {
+                    closest.obj.picked = true;
+                    return true;
+                }
+                return false;
 
-    switch (closest.type) {
-        case 'herb':
-            const itemData = ITEMS_DB[closest.obj.type];
-            if (player.addItem(closest.obj.type, itemData.name, itemData.icon, itemData.type, itemData.weight, itemData.stats)) {
-                closest.obj.picked = true;
+            case 'paper': {
+                const paper = closest.obj;
+                const item = paper.item || {
+                    id: 'mlyn_secret_letter',
+                    name: 'List z Młyna',
+                    icon: '📜',
+                    type: 'document',
+                    content: 'Zagubiony list z młyna.'
+                };
+                if (player.addItem(item.id, item.name, item.icon, item.type, item.weight || 0.1, item.stats || '', 1)) {
+                    paper.collected = true;
+                    questManager.completeObjective('Q1', 6);
+                    documentViewer.open(item.name, item.content, item.monologueId || null, item.questTrigger || { questId: 'Q1', step: 7 });
+                    showToast('Podnosisz zmięty list z młyna!');
+                    return true;
+                }
+                return false;
+            }
+
+            case 'chest': {
+                const chest = closest.obj;
+                if (!chest) return false;
+                chest.opened = true;
+                if (typeof chestSystem !== 'undefined') {
+                    chestSystem.open(chest);
+                }
                 return true;
             }
-            return false;
 
-        case 'paper': {
-            const paper = closest.obj;
-            const item = paper.item || {
-                id: 'mlyn_secret_letter',
-                name: 'List z Młyna',
-                icon: '📜',
-                type: 'document',
-                content: 'Zagubiony list z młyna.'
-            };
-            if (player.addItem(item.id, item.name, item.icon, item.type, item.weight || 0.1, item.stats || '', 1)) {
-                paper.collected = true;
-                questManager.completeObjective('Q1', 6);
-                documentViewer.open(item.name, item.content, item.monologueId || null, item.questTrigger || { questId: 'Q1', step: 7 });
-                showToast('Podnosisz zmięty list z młyna!');
+            case 'npc':
+                dialogueManager.start(closest.obj.dialogueId);
                 return true;
-            }
-            return false;
-        }
 
-        case 'chest': {
-            const chest = closest.obj;
-            if (!chest) return false;
-            chest.opened = true;
-            if (typeof chestSystem !== 'undefined') {
-                chestSystem.open(chest);
-            }
-            return true;
-        }
+            case 'horse':
+                player.isMounted = true;
+                player.horse.isMounted = true;
+                showToast('Wsiadłeś na konia!');
+                return true;
 
-        case 'npc':
-            dialogueManager.start(closest.obj.dialogueId);
-            return true;
+            case 'bed':
+                player.startSleep();
+                return true;
 
-        case 'horse':
-            player.isMounted = true;
-            player.horse.isMounted = true;
-            showToast('Wsiadłeś na konia!');
-            return true;
-
-        case 'bed':
-            player.startSleep();
-            return true;
-
-        case 'door':
-            const door = closest.obj;
-            if (door.keyRequired) {
-                if (player.hasItem(door.keyRequired)) {
+            case 'door':
+                const door = closest.obj;
+                if (door.keyRequired) {
+                    if (player.hasItem(door.keyRequired)) {
+                        this.setLocation(door.targetLocation, { showBanner: true });
+                        player.x = door.spawnX;
+                        player.y = door.spawnY;
+                        if (door.targetLocation === 'mlyn_wnetrze' && typeof questManager !== 'undefined') {
+                            questManager.completeObjective('Q1', 4);
+                        }
+                        showToast('Otworzyłeś drzwi!');
+                    } else {
+                        showToast(door.message || 'Zamknięte!');
+                    }
+                    return true;
+                }
+                if (door.targetLocation) {
+                    if (player.isMounted) {
+                        player.isMounted = false;
+                        player.horse.isMounted = false;
+                        player.horse.x = player.x;
+                        player.horse.y = player.y;
+                    }
                     this.setLocation(door.targetLocation, { showBanner: true });
                     player.x = door.spawnX;
                     player.y = door.spawnY;
+
                     if (door.targetLocation === 'mlyn_wnetrze' && typeof questManager !== 'undefined') {
                         questManager.completeObjective('Q1', 4);
                     }
-                    showToast('Otworzyłeś drzwi!');
-                } else {
-                    showToast(door.message || 'Zamknięte!');
-                }
-                return true;
-            }
-            if (door.targetLocation) {
-                if (player.isMounted) {
-                    player.isMounted = false;
-                    player.horse.isMounted = false;
-                    player.horse.x = player.x;
-                    player.horse.y = player.y;
-                }
-                this.setLocation(door.targetLocation, { showBanner: true });
-                player.x = door.spawnX;
-                player.y = door.spawnY;
 
-                if (door.targetLocation === 'mlyn_wnetrze' && typeof questManager !== 'undefined') {
-                    questManager.completeObjective('Q1', 4);
-                }
+                    const targetData = this.getCurrentData();
+                    if (typeof targetData.onEnter === 'function') {
+                        targetData.onEnter();
+                    }
 
-                const targetData = this.getCurrentData();
-                if (typeof targetData.onEnter === 'function') {
-                    targetData.onEnter();
+                    return true;
                 }
-
-                return true;
-            }
-            return false;
+                return false;
+        }
+        return false;
     }
-    return false;
-}
 };
 
 const timeSystem = {

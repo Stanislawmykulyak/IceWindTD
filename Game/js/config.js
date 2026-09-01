@@ -12,7 +12,7 @@ const CONFIG = {
     COLOR_ROAD: '#3a3225',
     COLOR_INTERIOR: '#4a2e18',
     COLOR_CORRIDOR: '#362213',
-    COLOR_NIGHT_FILTER: 'rgba(16, 23, 51, 0.40)',
+    COLOR_NIGHT_FILTER: 'rgba(16, 23, 51, 0.00)',
     COLOR_WATER: '#2980b9',
     COLOR_FOREST_GRASS: '#0a720a',
     COLOR_GLADE: '#27ae60',

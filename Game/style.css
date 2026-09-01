@@ -794,6 +794,59 @@ html {
     color: #e0d5c1;
 }
 
+#loading-screen {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: grid;
+    place-items: center;
+    background: #11180e;
+    transition: opacity 0.35s ease, visibility 0.35s ease;
+}
+
+#loading-screen.is-ready {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+.loading-panel {
+    width: min(420px, calc(100vw - 48px));
+    padding: 28px 30px;
+    border: 1px solid rgba(188, 202, 100, 0.35);
+    background: rgba(20, 31, 14, 0.96);
+    box-shadow: 0 16px 50px rgba(0, 0, 0, 0.45);
+    text-align: center;
+}
+
+.loading-mark {
+    margin-bottom: 22px;
+    color: #b4c95a;
+    font: 700 20px Georgia, serif;
+    letter-spacing: 2px;
+}
+
+#loading-status,
+#loading-percent {
+    color: #d8dfb0;
+    font-size: 13px;
+}
+
+.loading-track {
+    height: 10px;
+    margin: 14px 0 8px;
+    overflow: hidden;
+    border: 1px solid rgba(188, 202, 100, 0.4);
+    background: #27351b;
+}
+
+#loading-progress {
+    width: 0;
+    height: 100%;
+    background: #9fb94b;
+    transition: width 0.2s ease;
+}
+
 #game-container {
     position: relative;
     width: 100vw;
